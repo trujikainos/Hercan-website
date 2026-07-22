@@ -96,6 +96,7 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
       {
         from,
         to: [email],
+        reply_to: to, // si el cliente responde a la confirmación, llega a ventas@hercan.com.mx
         subject: "Recibimos tu solicitud de cotización — HERCAN",
         text: `Hola ${nombre}:\n\nRecibimos tu solicitud y te responderemos a la brevedad con precio y disponibilidad.\n\nHERCAN — Herramental para CNC y equipos de medición.`,
       },
