@@ -1,7 +1,8 @@
 "use server";
 import { headers } from "next/headers";
-import { absoluteUrl } from "@/lib/site";
+import { site, absoluteUrl } from "@/lib/site";
 import { customerEmail, leadEmail, type EmailLine } from "@/lib/quote-email";
+import { createQuoteDraftOrder, type DraftLine } from "@/lib/shopify-admin";
 
 /** Producto elegido del catálogo real (via autocompletar). */
 export interface QuoteProduct {
@@ -54,17 +55,6 @@ async function sendEmail(payload: Record<string, unknown>, key: string) {
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-}
-
-/** Registra la solicitud en Google Sheets (best-effort; no bloquea el resultado). */
-function logToSheet(row: Record<string, unknown>) {
-  const url = process.env.SHEETS_WEBHOOK_URL;
-  if (!url) return;
-  void fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(row),
-  }).catch(() => {});
 }
 
 export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> {
@@ -122,33 +112,46 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
       return { ok: false, code: "SEND_FAIL", message: "No pudimos enviar. Prueba por WhatsApp o reintenta." };
     }
 
-    // Guarda en Google Sheets (si está configurado el webhook).
-    logToSheet({
-      fecha: new Date().toISOString(),
-      nombre,
-      empresa: data.empresa ?? "",
-      correo: email,
-      celular: telefono,
-      tipo: data.recurring ? "Recurrente (mensual)" : "Puntual",
-      productos: emailLines
-        .map((l) => `${l.name}${l.qty ? ` x${l.qty}` : ""}${l.mpn ? ` [${l.mpn}]` : ""}${l.sku ? ` (SKU ${l.sku})` : ""}`)
-        .join(" | "),
-      mensaje,
-    });
+    // Da de alta el lead como Borrador de pedido en Shopify (best-effort).
+    // Se espera (await) para que complete dentro del ciclo de vida serverless.
+    try {
+      const draftLines: DraftLine[] = emailLines.map((l) => ({
+        name: l.name,
+        qty: parseInt((l.qty ?? "").replace(/[^\d]/g, ""), 10) || 1,
+        sku: l.sku ?? null,
+        mpn: l.mpn ?? null,
+      }));
+      await createQuoteDraftOrder({
+        nombre,
+        empresa: data.empresa,
+        email,
+        telefono,
+        recurring: data.recurring,
+        lines: draftLines,
+        mensaje,
+        currency: site.currency,
+      });
+    } catch (e) {
+      console.error("[cotizacion] draftOrder", e);
+    }
 
-    // Autorespuesta al cliente (best-effort, no bloquea el resultado).
-    const conf = customerEmail({ nombre, recurring: data.recurring, lines: emailLines });
-    void sendEmail(
-      {
-        from,
-        to: [email],
-        reply_to: LEADS_TO, // si el cliente responde a la confirmación, llega al equipo
-        subject: "Recibimos tu solicitud de cotización — HERCAN",
-        text: conf.text,
-        html: conf.html,
-      },
-      key,
-    ).catch(() => {});
+    // Autorespuesta al cliente (best-effort; se espera para que complete en serverless).
+    try {
+      const conf = customerEmail({ nombre, recurring: data.recurring, lines: emailLines });
+      await sendEmail(
+        {
+          from,
+          to: [email],
+          reply_to: LEADS_TO, // si el cliente responde a la confirmación, llega al equipo
+          subject: "Recibimos tu solicitud de cotización — HERCAN",
+          text: conf.text,
+          html: conf.html,
+        },
+        key,
+      );
+    } catch (e) {
+      console.error("[cotizacion] autorespuesta", e);
+    }
 
     return { ok: true, message: "¡Solicitud enviada! Te responderemos muy pronto." };
   } catch (e) {
