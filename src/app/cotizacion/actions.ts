@@ -36,6 +36,7 @@ export interface QuoteResult {
   ok: boolean;
   code?: "INVALID" | "PHONE" | "CONSENT" | "RATE" | "EMAIL_UNAVAILABLE" | "SEND_FAIL";
   message: string;
+  folio?: string; // nombre del Borrador de pedido creado (ej. "#D9"), si aplica
 }
 
 // Destino de los leads (a quién le llega la notificación de cotización).
@@ -86,12 +87,7 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
   if (rateLimited(ip))
     return { ok: false, code: "RATE", message: "Demasiadas solicitudes. Intenta en unos minutos." };
 
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || "HERCAN <onboarding@resend.dev>";
-  if (!key || !LEADS_TO)
-    return { ok: false, code: "EMAIL_UNAVAILABLE", message: "El correo aún no está configurado." };
-
-  // Datos de producto listos para las plantillas.
+  // Datos de producto listos para plantillas y borrador.
   const emailLines: EmailLine[] = lines.map((l) => ({
     name: l.product ? l.product.title : (l.text ?? "").trim(),
     qty: l.qty?.trim() || undefined,
@@ -100,87 +96,105 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
     url: l.product?.handle ? absoluteUrl(`/producto/${l.product.handle}`) : null,
   }));
 
-  const lead = leadEmail({
-    nombre,
-    empresa: data.empresa,
-    email,
-    telefono,
-    recurring: data.recurring,
-    frecuencia: data.frecuencia,
-    duracion: data.duracion,
-    fechaInicio: data.fechaInicio,
-    lines: emailLines,
-    mensaje,
-  });
-  const firstTag = lines[0]?.product?.mpn || (lines[0]?.text ?? "").trim();
-  const subject =
-    `Nueva cotización${data.recurring ? " recurrente" : ""} — ${nombre}` +
-    (lines.length > 1 ? ` (${lines.length} productos)` : firstTag ? ` (${firstTag})` : "");
-
+  // ── 1) PRIORIDAD: dar de alta el Borrador de pedido en Shopify (el registro).
+  // Se crea PRIMERO para que el lead nunca se pierda, aunque el correo falle.
+  let folio: string | undefined;
+  let draftOk = false;
   try {
-    const res = await sendEmail(
-      { from, to: [LEADS_TO], reply_to: email, subject, text: lead.text, html: lead.html },
-      key,
-    );
-    if (!res.ok) {
-      console.error("[cotizacion] resend", res.status, await res.text());
-      return { ok: false, code: "SEND_FAIL", message: "No pudimos enviar. Prueba por WhatsApp o reintenta." };
+    const draftLines: DraftLine[] = emailLines.map((l) => ({
+      name: l.name,
+      qty: parseInt((l.qty ?? "").replace(/[^\d]/g, ""), 10) || 1,
+      sku: l.sku ?? null,
+      mpn: l.mpn ?? null,
+    }));
+    const draft = await createQuoteDraftOrder({
+      nombre,
+      empresa: data.empresa,
+      email,
+      telefono,
+      recurring: data.recurring,
+      frecuencia: data.frecuencia,
+      duracion: data.duracion,
+      fechaInicio: data.fechaInicio,
+      lines: draftLines,
+      mensaje,
+      currency: site.currency,
+    });
+    if (draft) {
+      draftOk = true;
+      folio = draft.name;
     }
+  } catch (e) {
+    console.error("[cotizacion] draftOrder", e);
+  }
 
-    // Da de alta el lead como Borrador de pedido en Shopify (best-effort).
-    // Se espera (await) para que complete dentro del ciclo de vida serverless.
+  // ── 2) Notificar por correo (best-effort; el registro ya quedó en Shopify).
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM || "HERCAN <onboarding@resend.dev>";
+  let emailOk = false;
+  if (key && LEADS_TO) {
+    const lead = leadEmail({
+      nombre,
+      empresa: data.empresa,
+      email,
+      telefono,
+      recurring: data.recurring,
+      frecuencia: data.frecuencia,
+      duracion: data.duracion,
+      fechaInicio: data.fechaInicio,
+      lines: emailLines,
+      mensaje,
+    });
+    const firstTag = lines[0]?.product?.mpn || (lines[0]?.text ?? "").trim();
+    const subject =
+      `Nueva cotización${data.recurring ? " recurrente" : ""} — ${nombre}${folio ? ` [${folio}]` : ""}` +
+      (lines.length > 1 ? ` (${lines.length} productos)` : firstTag ? ` (${firstTag})` : "");
     try {
-      const draftLines: DraftLine[] = emailLines.map((l) => ({
-        name: l.name,
-        qty: parseInt((l.qty ?? "").replace(/[^\d]/g, ""), 10) || 1,
-        sku: l.sku ?? null,
-        mpn: l.mpn ?? null,
-      }));
-      await createQuoteDraftOrder({
-        nombre,
-        empresa: data.empresa,
-        email,
-        telefono,
-        recurring: data.recurring,
-        frecuencia: data.frecuencia,
-        duracion: data.duracion,
-        fechaInicio: data.fechaInicio,
-        lines: draftLines,
-        mensaje,
-        currency: site.currency,
-      });
-    } catch (e) {
-      console.error("[cotizacion] draftOrder", e);
-    }
-
-    // Autorespuesta al cliente (best-effort; se espera para que complete en serverless).
-    try {
-      const conf = customerEmail({
-        nombre,
-        recurring: data.recurring,
-        frecuencia: data.frecuencia,
-        duracion: data.duracion,
-        fechaInicio: data.fechaInicio,
-        lines: emailLines,
-      });
-      await sendEmail(
-        {
-          from,
-          to: [email],
-          reply_to: LEADS_TO, // si el cliente responde a la confirmación, llega al equipo
-          subject: "Recibimos tu solicitud de cotización — HERCAN",
-          text: conf.text,
-          html: conf.html,
-        },
+      const res = await sendEmail(
+        { from, to: [LEADS_TO], reply_to: email, subject, text: lead.text, html: lead.html },
         key,
       );
+      if (res.ok) {
+        emailOk = true;
+        // Autorespuesta al cliente (best-effort).
+        try {
+          const conf = customerEmail({
+            nombre,
+            recurring: data.recurring,
+            frecuencia: data.frecuencia,
+            duracion: data.duracion,
+            fechaInicio: data.fechaInicio,
+            lines: emailLines,
+          });
+          await sendEmail(
+            {
+              from,
+              to: [email],
+              reply_to: LEADS_TO, // si el cliente responde, llega al equipo
+              subject: "Recibimos tu solicitud de cotización — HERCAN",
+              text: conf.text,
+              html: conf.html,
+            },
+            key,
+          );
+        } catch (e) {
+          console.error("[cotizacion] autorespuesta", e);
+        }
+      } else {
+        console.error("[cotizacion] resend", res.status, await res.text());
+      }
     } catch (e) {
-      console.error("[cotizacion] autorespuesta", e);
+      console.error("[cotizacion] email", e);
     }
-
-    return { ok: true, message: "¡Solicitud enviada! Te responderemos muy pronto." };
-  } catch (e) {
-    console.error("[cotizacion] error", e);
-    return { ok: false, code: "SEND_FAIL", message: "No pudimos enviar. Prueba por WhatsApp o reintenta." };
   }
+
+  // ── 3) OK si quedó registrado por CUALQUIER canal (borrador o correo).
+  if (draftOk || emailOk) {
+    return { ok: true, folio, message: "¡Solicitud enviada! Te responderemos muy pronto." };
+  }
+  return {
+    ok: false,
+    code: "SEND_FAIL",
+    message: "No pudimos registrar tu solicitud. Reintenta o escríbenos por WhatsApp.",
+  };
 }

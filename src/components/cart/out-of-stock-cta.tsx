@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
+import { WhatsAppRequestButton } from "@/components/whatsapp-request";
+import type { SelectedProduct } from "@/components/product-combobox";
 
 /**
  * Producto agotado en línea: no se puede comprar (política DENY), pero el
- * comprador puede solicitarlo bajo pedido mediante una cotización que llega
- * prellenada con este producto (?producto=<handle>).
+ * comprador puede solicitarlo bajo pedido. Ambos caminos crean el Borrador de
+ * pedido en Shopify: "Solicitar por WhatsApp" (mini-form → borrador → WhatsApp)
+ * o "Solicitar cotización" (formulario completo prellenado).
  */
-export function OutOfStockCTA({ handle }: { handle: string }) {
+export function OutOfStockCTA({ product }: { product: SelectedProduct }) {
   return (
     <div className="mt-5 rounded-lg border border-hc-metal-light bg-hc-soft/50 p-4">
       <p className="text-sm font-semibold text-hc-ink">Agotado en línea</p>
@@ -14,11 +17,12 @@ export function OutOfStockCTA({ handle }: { handle: string }) {
         Solicítalo bajo pedido: te confirmamos disponibilidad, precio por volumen y
         tiempo de entrega.
       </p>
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap gap-3">
+        <WhatsAppRequestButton product={product} variant="solid" />
         <Link
-          href={`/cotizacion?producto=${encodeURIComponent(handle)}`}
+          href={`/cotizacion?producto=${encodeURIComponent(product.handle)}`}
           data-event="generate_lead"
-          className="press inline-flex items-center gap-2 rounded-lg bg-hc-blue px-5 py-2.5 font-medium text-white transition-colors hover:bg-hc-steel"
+          className="press inline-flex items-center gap-2 rounded-lg border border-hc-blue px-5 py-2.5 font-medium text-hc-blue transition hover:bg-hc-soft"
         >
           <FileText className="h-4 w-4" aria-hidden />
           Solicitar cotización

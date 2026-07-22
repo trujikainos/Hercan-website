@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/home-sections";
 import { StockBadge, stockInfo, formatPrice, displayTitle } from "@/components/ui";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { OutOfStockCTA } from "@/components/cart/out-of-stock-cta";
+import { WhatsAppRequestButton } from "@/components/whatsapp-request";
 import { CopyButton } from "@/components/copy-button";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { ProductTabs } from "@/components/product-tabs";
@@ -107,6 +108,13 @@ export default async function ProductPage({
   };
   const specGroups = [generalGroup, ...(product.specGroups ?? [])];
   const faqs = buildProductFaqs(product);
+  // Producto compacto para el mini-form de "Solicitar por WhatsApp".
+  const quickProduct = {
+    handle: product.handle,
+    title: product.title,
+    sku: product.sku ?? null,
+    mpn: product.mpn ?? null,
+  };
 
   return (
     <>
@@ -234,9 +242,10 @@ export default async function ProductPage({
                   <FileText className="h-4 w-4" aria-hidden />
                   Solicitar cotización
                 </Link>
+                <WhatsAppRequestButton product={quickProduct} variant="outline" />
               </div>
             ) : (
-              <OutOfStockCTA handle={product.handle} />
+              <OutOfStockCTA product={quickProduct} />
             )}
 
             {product.fichaTecnicaPdf && (
