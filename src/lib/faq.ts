@@ -39,6 +39,11 @@ export const HOME_FAQS: Faq[] = [
       "Vendemos por pieza y por volumen. Los precios de mayoreo se cotizan según la cantidad; solicita tu cotización para obtener precios B2B.",
   },
   {
+    question: "¿Los precios incluyen IVA?",
+    answer:
+      "Sí, todos los precios ya incluyen el IVA (16%); no se agrega nada extra al momento de pagar.",
+  },
+  {
     question: "¿Puedo comprar en línea?",
     answer:
       "Sí, puedes comprar en línea desde el catálogo, con especificaciones técnicas filtrables por diámetro, número de filos, recubrimiento y designación ISO.",
@@ -141,7 +146,7 @@ export function buildProductFaqs(product: Product): Faq[] {
   // Precio / IVA / unidad
   faqs.push({
     question: "¿El precio incluye IVA?",
-    answer: `Los precios se muestran en ${product.currency} sin IVA; el IVA (16%) se agrega en el checkout.${
+    answer: `Sí, el precio en ${product.currency} ya incluye el IVA (16%); no se agrega nada extra en el checkout.${
       product.unidadVenta ? ` La unidad de venta es ${product.unidadVenta.toLowerCase()}.` : ""
     }`,
   });

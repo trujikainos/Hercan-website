@@ -195,8 +195,7 @@ export default async function ProductPage({
               {formatPrice(product)}
             </p>
             <p className="text-xs text-hc-gunmetal">
-              Precio en {product.currency}, sin IVA. El IVA (16%) se agrega en el
-              checkout.
+              Precio en {product.currency}, IVA incluido.
               {product.unidadVenta ? ` Precio por ${product.unidadVenta.toLowerCase()}.` : ""}
             </p>
             <p className="mt-3 text-sm font-medium">
