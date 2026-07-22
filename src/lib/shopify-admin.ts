@@ -4,7 +4,10 @@
  * con scopes write_draft_orders + read_products.
  * Si el token no está configurado, todo es no-op (la cotización funciona igual).
  */
-const DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
+// Dominio para el Admin API. Por defecto usa SHOPIFY_STORE_DOMAIN, pero se puede
+// forzar con SHOPIFY_ADMIN_DOMAIN si el OAuth se emitió sobre un alias distinto
+// (p. ej. exv1fw-1e.myshopify.com en vez de hercan-2.myshopify.com).
+const DOMAIN = process.env.SHOPIFY_ADMIN_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
 const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
 const API_VERSION = process.env.SHOPIFY_API_VERSION || "2026-07";
 

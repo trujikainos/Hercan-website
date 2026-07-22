@@ -42,9 +42,12 @@ export async function GET(request: Request) {
       false,
     );
   }
-  // Seguridad: shop debe ser un dominio myshopify válido y coincidir con el configurado.
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/.test(shop) || shop !== DOMAIN) {
-    return page("Tienda no válida", `<p>La tienda <code>${esc(shop)}</code> no coincide con la configurada.</p>`, false);
+  // Seguridad: shop debe ser un dominio myshopify válido (evita SSRF a hosts
+  // arbitrarios). No exigimos que coincida con SHOPIFY_STORE_DOMAIN porque una
+  // misma tienda puede tener alias (p. ej. hercan-2 vs exv1fw-1e); el canje del
+  // `code` solo funciona para la tienda que lo emitió, así que ese es el gate real.
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/.test(shop)) {
+    return page("Tienda no válida", `<p>El dominio <code>${esc(shop)}</code> no es un myshopify válido.</p>`, false);
   }
   try {
     const res = await fetch(`https://${shop}/admin/oauth/access_token`, {
@@ -68,7 +71,7 @@ export async function GET(request: Request) {
        <pre style="background:#f4f6f8;padding:14px;border-radius:8px;user-select:all;word-break:break-all;font-size:15px">${esc(
          json.access_token,
        )}</pre>
-       <p>Permisos: <code>${esc(json.scope || "")}</code></p>
+       <p>Permisos: <code>${esc(json.scope || "")}</code> · Tienda: <code>${esc(shop)}</code></p>
        <hr style="border:none;border-top:1px solid #e9eaec;margin:24px 0">
        <p style="color:#6e7175;font-size:14px">Por seguridad, cuando ya lo tengas: en Vercel <b>elimina</b> <code>SHOPIFY_APP_SECRET</code> (y opcionalmente <code>SHOPIFY_APP_CLIENT_ID</code>) para apagar esta página, y haz redeploy.</p>`,
       true,
