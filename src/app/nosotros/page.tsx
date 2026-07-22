@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SiteFooter, BrandsSection, QuoteCTA } from "@/components/home-sections";
+import { DistributionMap } from "@/components/distribution-map";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, breadcrumbNode } from "@/lib/schema";
 import { site } from "@/lib/site";
@@ -165,6 +166,43 @@ export default function NosotrosPage() {
                 />
               </dl>
             </aside>
+          </div>
+        </section>
+
+        {/* Cobertura nacional */}
+        <section className="relative overflow-hidden bg-hc-navy text-white">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -left-24 top-1/4 h-72 w-72 rounded-full bg-hc-steel/20 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-10 right-0 h-72 w-72 rounded-full bg-hc-blue/25 blur-3xl"
+          />
+          <div className="relative mx-auto max-w-7xl px-4 py-16 sm:py-20">
+            <div className="reveal mx-auto max-w-2xl text-center">
+              <span className="inline-block rounded-full bg-hc-blue/80 px-3 py-1 text-xs text-hc-metal-light ring-1 ring-white/10">
+                Cobertura nacional
+              </span>
+              <h2 className="mt-4 font-heading text-[length:var(--step-h2)] text-white">
+                Enviamos a todo México desde Monterrey
+              </h2>
+              <p className="mt-3 text-hc-sky">
+                Desde nuestra sede en {site.address.city} despachamos herramienta de
+                corte y equipos de medición a talleres, plantas e integradores en
+                toda la República.
+              </p>
+            </div>
+
+            <div className="reveal mt-10" style={{ transitionDelay: "0.08s" }}>
+              <DistributionMap />
+            </div>
+
+            <p className="reveal mx-auto mt-5 max-w-3xl text-center text-sm text-hc-metal-light/80">
+              Destinos frecuentes: Tijuana · Hermosillo · Chihuahua · Guadalajara ·
+              León · CDMX · Veracruz · Mérida · Acapulco —{" "}
+              <span className="text-hc-sky">y todo el país</span>. Mapa ilustrativo.
+            </p>
           </div>
         </section>
 
