@@ -400,6 +400,41 @@ export async function getRelatedProducts(product: Product, limit = 8): Promise<P
   return [...sameCat, ...sameBrand, ...rest].slice(0, limit);
 }
 
+/**
+ * Alternativas EN STOCK con características similares (para productos agotados):
+ * misma categoría → misma marca → cualquiera disponible. Solo con existencia real.
+ */
+export async function getInStockAlternatives(product: Product, limit = 4): Promise<Product[]> {
+  const inStock = (p: Product) =>
+    p.handle !== product.handle &&
+    (p.variantAvailable ?? false) &&
+    (p.stock == null || p.stock > 0);
+
+  if (isShopifyConnected) {
+    const seen = new Set<string>([product.handle]);
+    const pool: Product[] = [];
+    const add = (list: Product[]) => {
+      for (const p of list) {
+        if (seen.has(p.handle) || !inStock(p)) continue;
+        seen.add(p.handle);
+        pool.push(p);
+        if (pool.length >= limit) return;
+      }
+    };
+    const AVAIL = "available_for_sale:true";
+    const cat = safeQueryValue(product.category);
+    add(await queryProducts(limit + 6, `product_type:'${cat}' AND ${AVAIL}`));
+    if (pool.length < limit) {
+      const brand = safeQueryValue(product.brand);
+      add(await queryProducts(limit + 6, `vendor:'${brand}' AND ${AVAIL}`));
+    }
+    if (pool.length < limit) add(await queryProducts(limit + 6, AVAIL));
+    if (pool.length > 0) return pool.slice(0, limit);
+  }
+  const all = await getProducts();
+  return all.filter(inStock).slice(0, limit);
+}
+
 // ---- Live search (Storefront predictiveSearch) ----
 export interface SearchResult {
   title: string;

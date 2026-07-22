@@ -10,6 +10,7 @@ import { OutOfStockCTA } from "@/components/cart/out-of-stock-cta";
 import { CopyButton } from "@/components/copy-button";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { ProductTabs } from "@/components/product-tabs";
+import { ProductCard } from "@/components/product-card";
 import { RelatedProducts } from "@/components/related-products";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, productNode, breadcrumbNode, faqNode } from "@/lib/schema";
@@ -18,6 +19,7 @@ import {
   getProductByHandle,
   getAllProductHandles,
   getRelatedProducts,
+  getInStockAlternatives,
 } from "@/lib/shopify";
 
 export async function generateStaticParams() {
@@ -63,7 +65,13 @@ export default async function ProductPage({
   const product = await getProductByHandle(handle);
   if (!product) notFound();
   const stock = stockInfo(product);
-  const related = await getRelatedProducts(product, 12);
+  // Solo se vende lo que hay en existencia (política DENY). Agotado → solicitud + alternativas.
+  const isBuyable =
+    Boolean(product.variantId) &&
+    (product.variantAvailable ?? false) &&
+    (product.stock == null || product.stock > 0);
+  const related = isBuyable ? await getRelatedProducts(product, 12) : [];
+  const alternatives = isBuyable ? [] : await getInStockAlternatives(product, 4);
 
   // Identificadores: el N° de parte real es el mpn (por lo que busca/pide el
   // comprador); el SKU es el código interno de Hercan (menos relevante, pero se
@@ -99,11 +107,6 @@ export default async function ProductPage({
   };
   const specGroups = [generalGroup, ...(product.specGroups ?? [])];
   const faqs = buildProductFaqs(product);
-  // Solo se vende lo que hay en existencia (política DENY). Agotado → solicitud.
-  const isBuyable =
-    Boolean(product.variantId) &&
-    (product.variantAvailable ?? false) &&
-    (product.stock == null || product.stock > 0);
 
   return (
     <>
@@ -238,6 +241,22 @@ export default async function ProductPage({
           </div>
         </div>
 
+        {alternatives.length > 0 && (
+          <section className="reveal mt-12">
+            <h2 className="mb-1 font-heading text-lg text-hc-navy">
+              Alternativas disponibles
+            </h2>
+            <p className="mb-5 text-sm text-hc-gunmetal">
+              Productos similares que tenemos en existencia ahora mismo.
+            </p>
+            <div className="stagger-in grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {alternatives.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Descripción — siempre visible, ancho completo, arriba de las pestañas */}
         {product.description && (
           <section className="reveal mt-10">
@@ -255,7 +274,7 @@ export default async function ProductPage({
           <ProductTabs specGroups={specGroups} />
         </section>
 
-        {related.length > 0 && (
+        {isBuyable && related.length > 0 && (
           <section className="mt-16">
             <h2 className="reveal mb-5 font-heading text-[length:var(--step-h2)] text-hc-navy">
               Productos relacionados

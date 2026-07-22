@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { FileText, MessageCircle } from "lucide-react";
+import { FileText } from "lucide-react";
 import { site } from "@/lib/site";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 
 /**
  * Producto agotado en línea: no se puede comprar (política DENY), pero el
@@ -26,7 +27,7 @@ export function OutOfStockCTA({ title, sku }: { title: string; sku: string }) {
             data-event="generate_lead"
             className="press inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-5 py-2.5 font-medium text-white transition hover:brightness-95"
           >
-            <MessageCircle className="h-4 w-4" aria-hidden />
+            <WhatsAppIcon className="h-5 w-5" />
             Solicitar por WhatsApp
           </a>
         )}
