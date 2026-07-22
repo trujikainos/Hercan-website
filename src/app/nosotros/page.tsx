@@ -79,43 +79,61 @@ export default function NosotrosPage() {
             className="pointer-events-none absolute -bottom-32 left-1/3 h-80 w-80 rounded-full bg-hc-blue/30 blur-3xl"
           />
           <div className="relative mx-auto max-w-7xl px-4 py-16 sm:py-20">
-            <span className="hero-in inline-block rounded-full bg-hc-blue/80 px-3 py-1 text-xs text-hc-metal-light ring-1 ring-white/10">
-              Desde 2013 · {site.address.city}, {site.address.state}
-            </span>
-            <h1 className="mt-4 max-w-3xl font-heading font-semibold leading-[1.05] text-[length:var(--step-hero)]">
-              Distribuidor B2B de herramental para CNC
-            </h1>
-            <p
-              className="hero-in mt-4 max-w-2xl text-hc-sky"
-              style={{ animationDelay: "0.12s" }}
-            >
-              En {site.name} distribuimos herramientas de corte de carburo de
-              tungsteno y equipos de medición para la industria manufacturera de
-              México, con especificaciones técnicas filtrables y atención por
-              cotización.
-            </p>
-            <div
-              className="hero-in mt-7 flex flex-wrap gap-3"
-              style={{ animationDelay: "0.22s" }}
-            >
-              <Link
-                href="/productos"
-                className="press group inline-flex items-center gap-2 rounded-lg bg-hc-steel px-5 py-2.5 font-medium text-white transition-colors hover:bg-hc-blue"
+            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
+              <div>
+                <span className="hero-in inline-block rounded-full bg-hc-blue/80 px-3 py-1 text-xs text-hc-metal-light ring-1 ring-white/10">
+                  Desde 2013 · {site.address.city}, {site.address.state}
+                </span>
+                <h1 className="mt-4 font-heading font-semibold leading-[1.05] text-[length:var(--step-hero)]">
+                  Distribuidor B2B de herramental para CNC
+                </h1>
+                <p
+                  className="hero-in mt-4 text-hc-sky"
+                  style={{ animationDelay: "0.12s" }}
+                >
+                  En {site.name} distribuimos herramientas de corte de carburo de
+                  tungsteno y equipos de medición para la industria manufacturera
+                  de México, con especificaciones técnicas filtrables y atención
+                  por cotización.
+                </p>
+                <div
+                  className="hero-in mt-7 flex flex-wrap gap-3"
+                  style={{ animationDelay: "0.22s" }}
+                >
+                  <Link
+                    href="/productos"
+                    className="press group inline-flex items-center gap-2 rounded-lg bg-hc-steel px-5 py-2.5 font-medium text-white transition-colors hover:bg-hc-blue"
+                  >
+                    Ver catálogo
+                    <ArrowRight
+                      className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                      aria-hidden
+                    />
+                  </Link>
+                  <Link
+                    href="/cotizacion"
+                    data-event="generate_lead"
+                    className="press inline-flex items-center gap-2 rounded-lg border border-white/25 px-5 py-2.5 font-medium text-white transition-colors hover:bg-white/10"
+                  >
+                    <FileText className="h-4 w-4" aria-hidden />
+                    Solicitar cotización
+                  </Link>
+                </div>
+              </div>
+
+              {/* Mapa de partículas: México desde Monterrey */}
+              <div
+                className="hero-in relative"
+                style={{ animationDelay: "0.3s" }}
               >
-                Ver catálogo
-                <ArrowRight
-                  className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
-                  aria-hidden
-                />
-              </Link>
-              <Link
-                href="/cotizacion"
-                data-event="generate_lead"
-                className="press inline-flex items-center gap-2 rounded-lg border border-white/25 px-5 py-2.5 font-medium text-white transition-colors hover:bg-white/10"
-              >
-                <FileText className="h-4 w-4" aria-hidden />
-                Solicitar cotización
-              </Link>
+                <DistributionMap />
+                <p className="mt-3 text-center text-sm text-hc-metal-light/80">
+                  <span className="font-medium text-hc-sky">
+                    Enviamos a todo México
+                  </span>{" "}
+                  desde nuestra sede en {site.address.city} · ilustración
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -166,43 +184,6 @@ export default function NosotrosPage() {
                 />
               </dl>
             </aside>
-          </div>
-        </section>
-
-        {/* Cobertura nacional */}
-        <section className="relative overflow-hidden bg-hc-navy text-white">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -left-24 top-1/4 h-72 w-72 rounded-full bg-hc-steel/20 blur-3xl"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -bottom-10 right-0 h-72 w-72 rounded-full bg-hc-blue/25 blur-3xl"
-          />
-          <div className="relative mx-auto max-w-7xl px-4 py-16 sm:py-20">
-            <div className="reveal mx-auto max-w-2xl text-center">
-              <span className="inline-block rounded-full bg-hc-blue/80 px-3 py-1 text-xs text-hc-metal-light ring-1 ring-white/10">
-                Cobertura nacional
-              </span>
-              <h2 className="mt-4 font-heading text-[length:var(--step-h2)] text-white">
-                Enviamos a todo México desde Monterrey
-              </h2>
-              <p className="mt-3 text-hc-sky">
-                Desde nuestra sede en {site.address.city} despachamos herramienta de
-                corte y equipos de medición a talleres, plantas e integradores en
-                toda la República.
-              </p>
-            </div>
-
-            <div className="reveal mt-10" style={{ transitionDelay: "0.08s" }}>
-              <DistributionMap />
-            </div>
-
-            <p className="reveal mx-auto mt-5 max-w-3xl text-center text-sm text-hc-metal-light/80">
-              Destinos frecuentes: Tijuana · Hermosillo · Chihuahua · Guadalajara ·
-              León · CDMX · Veracruz · Mérida · Acapulco —{" "}
-              <span className="text-hc-sky">y todo el país</span>. Mapa ilustrativo.
-            </p>
           </div>
         </section>
 
