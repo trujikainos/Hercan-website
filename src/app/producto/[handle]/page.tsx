@@ -171,7 +171,10 @@ export default async function ProductPage({
                 {product.brand}
               </span>
               {product.sku && (
-                <span className="font-mono text-hc-metal">SKU {product.sku}</span>
+                <span className="inline-flex items-center gap-0.5 font-mono text-hc-metal">
+                  SKU {product.sku}
+                  <CopyButton value={product.sku} label="SKU" small />
+                </span>
               )}
             </p>
             <h1 className="mt-1 font-heading text-2xl text-hc-ink">
