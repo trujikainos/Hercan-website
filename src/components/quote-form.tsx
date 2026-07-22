@@ -6,6 +6,7 @@ import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { ProductCombobox, type SelectedProduct } from "@/components/product-combobox";
 import { site } from "@/lib/site";
 import { qtyLabelFor } from "@/lib/frequency";
+import { buildWhatsappMessage, waUrl, type WaLine } from "@/lib/whatsapp";
 import { submitQuoteAction, type QuoteInput } from "@/app/cotizacion/actions";
 
 interface Line {
@@ -31,7 +32,7 @@ const EMPTY_CONTACT: Contact = {
   consent: false,
   hp: "",
 };
-const emptyLine = (text = ""): Line => ({ text, qty: "", product: undefined });
+const emptyLine = (text = ""): Line => ({ text, qty: "1", product: undefined });
 
 export function QuoteForm({
   initialSku,
@@ -42,6 +43,7 @@ export function QuoteForm({
 }) {
   const [pending, start] = useTransition();
   const [done, setDone] = useState(false);
+  const [folio, setFolio] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [c, setC] = useState<Contact>(EMPTY_CONTACT);
   const [recurring, setRecurring] = useState(false);
@@ -54,7 +56,7 @@ export function QuoteForm({
   });
   const [lines, setLines] = useState<Line[]>([
     initialProduct
-      ? { text: initialProduct.title, qty: "", product: initialProduct }
+      ? { text: initialProduct.title, qty: "1", product: initialProduct }
       : emptyLine(initialSku ?? ""),
   ]);
 
@@ -92,38 +94,45 @@ export function QuoteForm({
   }
 
   function whatsappUrl() {
-    const qtyLabel = qtyLabelShort;
-    const prod = lines.filter(hasContent).flatMap((l, i) => {
-      const p = l.product;
-      const name = p ? p.title : l.text.trim();
-      const arr = [`${i + 1}. ${name}${l.qty.trim() ? ` — ${qtyLabel}: ${l.qty.trim()}` : ""}`];
-      if (p?.mpn) arr.push(`   N° parte: ${p.mpn}`);
-      if (p?.sku) arr.push(`   SKU: ${p.sku}`);
-      if (p?.handle) arr.push(`   Ficha: ${site.url}/producto/${p.handle}`);
-      return arr;
+    const waLines: WaLine[] = lines.filter(hasContent).map((l) => ({
+      name: l.product ? l.product.title : l.text.trim(),
+      qty: l.qty.trim() || undefined,
+      sku: l.product?.sku ?? null,
+      mpn: l.product?.mpn ?? null,
+    }));
+    const terminos = recurring
+      ? [
+          frecuencia ? `frecuencia ${frecuencia}` : "",
+          rec.duracion ? `duración ${rec.duracion}` : "",
+          rec.fechaInicio ? `inicio ${rec.fechaInicio}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : undefined;
+    const msg = buildWhatsappMessage({
+      folio,
+      lines: waLines,
+      nombre: c.nombre,
+      empresa: c.empresa || undefined,
+      email: c.email,
+      telefono: c.telefono,
+      recurring,
+      terminos,
+      mensaje: c.mensaje || undefined,
     });
-    const txt = [
-      "Solicitud de cotización",
-      `Nombre: ${c.nombre}`,
-      c.empresa && `Empresa: ${c.empresa}`,
-      `Correo: ${c.email}`,
-      c.telefono && `Teléfono: ${c.telefono}`,
-      recurring ? "Tipo: Suministro constante (recurrente)" : null,
-      recurring && frecuencia ? `Frecuencia: ${frecuencia}` : null,
-      recurring && rec.duracion ? `Duración: ${rec.duracion}` : null,
-      recurring && rec.fechaInicio ? `Inicio: ${rec.fechaInicio}` : null,
-      prod.length ? "Productos:" : null,
-      ...prod,
-      c.mensaje && `Mensaje: ${c.mensaje}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-    return `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(txt)}`;
+    return waUrl(site.whatsapp, msg);
   }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    // Cantidades obligatorias (≥ 1) y al menos un producto.
+    const clean = lines.filter(hasContent);
+    if (clean.length === 0) return setError("Agrega al menos un producto.");
+    for (const l of clean) {
+      const q = parseInt(l.qty.replace(/[^\d]/g, ""), 10);
+      if (!q || q < 1) return setError("La cantidad de cada producto debe ser al menos 1.");
+    }
     const payload: QuoteInput = {
       nombre: c.nombre,
       empresa: c.empresa,
@@ -141,6 +150,7 @@ export function QuoteForm({
     start(async () => {
       const r = await submitQuoteAction(payload);
       if (r.ok) {
+        setFolio(r.folio);
         setDone(true);
         // Evento de conversión (KPI B2B) — se dispara si GA4 está montado.
         const w = window as unknown as { gtag?: (...a: unknown[]) => void };
