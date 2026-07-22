@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ImageIcon, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { StockBadge, formatPrice, displayTitle } from "./ui";
+import { ProductImage } from "./product-image";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
@@ -10,16 +11,11 @@ export function ProductCard({ product }: { product: Product }) {
       className="card-hover group flex flex-col overflow-hidden rounded-xl border border-hc-metal-light bg-white hover:border-hc-steel"
     >
       <div className="relative flex h-36 items-center justify-center overflow-hidden bg-hc-soft text-hc-metal">
-        {product.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.image}
-            alt={`${product.title} — ${product.sku}`}
-            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.05]"
-          />
-        ) : (
-          <ImageIcon className="h-9 w-9 transition-transform duration-500 group-hover:scale-110" aria-hidden />
-        )}
+        <ProductImage
+          src={product.image}
+          alt={`${displayTitle(product.title)} — ${product.sku}`}
+          imgClassName="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.05]"
+        />
         {/* Marca (chip) */}
         <span className="absolute left-2 top-2 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-hc-navy ring-1 ring-hc-metal-light backdrop-blur-sm">
           {product.brand}

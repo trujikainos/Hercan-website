@@ -11,6 +11,7 @@ import { WhatsAppRequestButton } from "@/components/whatsapp-request";
 import { CopyButton } from "@/components/copy-button";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { ProductTabs } from "@/components/product-tabs";
+import { ProductImage } from "@/components/product-image";
 import { ProductCard } from "@/components/product-card";
 import { RelatedProducts } from "@/components/related-products";
 import { JsonLd } from "@/components/json-ld";
@@ -144,18 +145,11 @@ export default async function ProductPage({
         <div className="grid gap-8 md:grid-cols-2">
           <div className="reveal grid grid-cols-2 gap-3">
             <div className="col-span-2 flex h-72 items-center justify-center overflow-hidden rounded-xl border border-hc-metal-light bg-white">
-              {product.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.image}
-                  alt={`${displayTitle(product.title)} — ${product.sku}`}
-                  className="h-full w-full object-contain p-4"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-hc-soft text-hc-metal">
-                  <ImageIcon className="h-14 w-14" aria-hidden />
-                </div>
-              )}
+              <ProductImage
+                src={product.image}
+                alt={`${displayTitle(product.title)} — ${product.sku}`}
+                imgClassName="h-full w-full object-contain p-4"
+              />
             </div>
             <div className="flex h-28 items-center justify-center rounded-lg border border-hc-metal-light bg-white text-hc-metal">
               <ImageIcon className="h-8 w-8" aria-hidden />
