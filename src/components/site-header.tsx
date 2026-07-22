@@ -4,6 +4,7 @@ import { FileText, User } from "lucide-react";
 import { CATEGORIES } from "@/lib/mock-data";
 import { CartButton } from "@/components/cart/cart-button";
 import { SearchBar } from "@/components/search-bar";
+import { NavMenu } from "@/components/nav-menu";
 
 // Portal de cuentas de cliente de Shopify (login sin contraseña + pedidos + rastreo).
 const ACCOUNT_URL =
@@ -52,23 +53,25 @@ export function SiteHeader() {
       </div>
 
       <nav className="bg-hc-navy">
-        <ul className="mx-auto flex max-w-7xl items-center gap-5 overflow-x-auto px-4 py-2 font-heading text-sm text-white">
-          {CATEGORIES.map((c) => (
-            <li key={c.slug} className="whitespace-nowrap">
-              <Link href={`/productos?categoria=${c.slug}`} className="hover:text-hc-sky">
-                {c.name}
-              </Link>
-            </li>
-          ))}
-          <li className="ml-auto whitespace-nowrap">
-            <Link href="/blog" className="hover:text-hc-sky">
-              Blog
+        <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 font-heading text-sm text-white">
+          {/* Categorías: scroll horizontal en móvil (min-w-0 permite encoger dentro del flex) */}
+          <ul className="flex min-w-0 items-center gap-5 overflow-x-auto py-2">
+            {CATEGORIES.map((c) => (
+              <li key={c.slug} className="whitespace-nowrap">
+                <Link href={`/productos?categoria=${c.slug}`} className="hover:text-hc-sky">
+                  {c.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {/* Accesos fijos a la derecha (fuera del overflow para que el dropdown no se recorte) */}
+          <div className="ml-auto flex shrink-0 items-center gap-5 py-2">
+            <Link href="/productos" className="whitespace-nowrap text-hc-sky">
+              Ver todo
             </Link>
-          </li>
-          <li className="whitespace-nowrap text-hc-sky">
-            <Link href="/productos">Ver todo</Link>
-          </li>
-        </ul>
+            <NavMenu />
+          </div>
+        </div>
       </nav>
     </header>
   );
