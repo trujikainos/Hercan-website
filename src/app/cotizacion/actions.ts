@@ -29,6 +29,7 @@ export interface QuoteInput {
   duracion?: string; // 3 meses, 6 meses, 12 meses, Indefinido
   fechaInicio?: string; // YYYY-MM-DD
   mensaje?: string;
+  source?: "whatsapp" | "cotizacion"; // canal de origen del lead
   consent: boolean;
   hp?: string; // honeypot (los bots lo llenan)
 }
@@ -99,6 +100,7 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
   // ── 1) PRIORIDAD: dar de alta el Borrador de pedido en Shopify (el registro).
   // Se crea PRIMERO para que el lead nunca se pierda, aunque el correo falle.
   let folio: string | undefined;
+  let adminUrl: string | undefined;
   let draftOk = false;
   try {
     const draftLines: DraftLine[] = emailLines.map((l) => ({
@@ -119,10 +121,12 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
       lines: draftLines,
       mensaje,
       currency: site.currency,
+      source: data.source,
     });
     if (draft) {
       draftOk = true;
       folio = draft.name;
+      adminUrl = draft.adminUrl;
     }
   } catch (e) {
     console.error("[cotizacion] draftOrder", e);
@@ -144,10 +148,14 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
       fechaInicio: data.fechaInicio,
       lines: emailLines,
       mensaje,
+      source: data.source,
+      folio,
+      adminUrl,
     });
     const firstTag = lines[0]?.product?.mpn || (lines[0]?.text ?? "").trim();
+    const canal = data.source === "whatsapp" ? "WhatsApp" : "Cotización";
     const subject =
-      `Nueva cotización${data.recurring ? " recurrente" : ""} — ${nombre}${folio ? ` [${folio}]` : ""}` +
+      `${canal} · Nueva solicitud${data.recurring ? " recurrente" : ""} — ${nombre}${folio ? ` [${folio}]` : ""}` +
       (lines.length > 1 ? ` (${lines.length} productos)` : firstTag ? ` (${firstTag})` : "");
     try {
       const res = await sendEmail(

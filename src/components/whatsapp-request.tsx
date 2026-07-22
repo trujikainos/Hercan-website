@@ -123,6 +123,7 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
         product: l.product,
       })),
       recurring: false,
+      source: "whatsapp",
       consent: true,
     };
     start(async () => {

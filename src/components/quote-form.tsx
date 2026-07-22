@@ -143,6 +143,7 @@ export function QuoteForm({
       hp: c.hp,
       lines: buildLines(),
       recurring,
+      source: "cotizacion",
       ...(recurring
         ? { frecuencia, duracion: rec.duracion, fechaInicio: rec.fechaInicio || undefined }
         : {}),

@@ -335,6 +335,9 @@ export interface LeadEmailInput {
   frecuencia?: string;
   duracion?: string;
   fechaInicio?: string;
+  source?: "whatsapp" | "cotizacion"; // canal de origen del lead
+  folio?: string; // nombre del borrador (ej. #D9)
+  adminUrl?: string; // URL del borrador en el admin de Shopify
 }
 
 export function leadEmail(input: LeadEmailInput): { html: string; text: string } {
@@ -351,7 +354,27 @@ export function leadEmail(input: LeadEmailInput): { html: string; text: string }
       )}`
     : "";
 
+  const isWa = input.source === "whatsapp";
+  const banner = isWa
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e8f8ef;border:1px solid #bfe9cf;border-radius:10px;margin:0 0 18px;">
+         <tr><td style="padding:12px 16px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.55;color:#0f6b3a;">
+           <strong>&#128241;&nbsp; Llegó por WhatsApp</strong><br>El cliente espera respuesta por <strong>WhatsApp</strong> — atiéndelo por ahí para cerrar más rápido.
+         </td></tr>
+       </table>`
+    : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.soft};border:1px solid ${C.metalLight};border-radius:10px;margin:0 0 18px;">
+         <tr><td style="padding:12px 16px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.55;color:${C.navy};">
+           <strong>&#9993;&nbsp; Llegó por el formulario de cotización</strong><br>Respóndele por <strong>correo</strong>${input.telefono ? " (o WhatsApp si prefieres)" : ""}.
+         </td></tr>
+       </table>`;
+
+  const btnMail = button(mailto, "&#9993;&nbsp; Responder al cliente", C.blue);
+  const btnWa = waUrl ? button(waUrl, "&#128172;&nbsp; Responder por WhatsApp", C.green) : "";
+  const btnDraft = input.adminUrl ? button(input.adminUrl, "&#128203;&nbsp; Ver borrador en Shopify", C.steel) : "";
+  const responder = isWa ? `${btnWa}${btnMail}${btnDraft}` : `${btnMail}${btnWa}${btnDraft}`;
+
   const infoRows: [string, string][] = [
+    ["Origen", isWa ? "WhatsApp" : "Formulario de cotización"],
+    ...(input.folio ? ([["Folio (Shopify)", input.folio]] as [string, string][]) : []),
     ["Cliente", input.nombre],
     ...(input.empresa ? ([["Empresa", input.empresa]] as [string, string][]) : []),
     ["Correo", input.email],
@@ -375,7 +398,8 @@ export function leadEmail(input: LeadEmailInput): { html: string; text: string }
 
   const body = `
     <h1 style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:1.3;font-weight:bold;color:${C.navy};">Nueva solicitud de cotización</h1>
-    <p style="margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:${C.gun};">Llegó una solicitud desde el sitio. Responde al cliente cuanto antes.</p>
+    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:${C.gun};">Llegó una solicitud desde el sitio. Responde al cliente cuanto antes.</p>
+    ${banner}
     ${sectionLabel("Datos del cliente")}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.soft};border:1px solid ${C.metalLight};border-radius:12px;margin:0 0 18px;">
       <tr><td style="padding:14px 18px;">${infoHtml}</td></tr>
@@ -383,8 +407,7 @@ export function leadEmail(input: LeadEmailInput): { html: string; text: string }
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.white};border:1px solid ${C.metalLight};border-radius:12px;margin:0 0 6px;">
       <tr><td style="padding:16px 18px 6px;">
         <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;color:${C.gun};margin-bottom:12px;">Responder ahora</div>
-        ${button(mailto, "&#9993;&nbsp; Responder al cliente", C.blue)}
-        ${waUrl ? button(waUrl, "&#128172;&nbsp; Responder por WhatsApp", C.green) : ""}
+        ${responder}
       </td></tr>
     </table>
     ${productsHtml ? sectionLabel("Productos solicitados") + productsHtml : ""}
@@ -402,12 +425,16 @@ export function leadEmail(input: LeadEmailInput): { html: string; text: string }
   `;
 
   const text =
-    "HERCAN — Nueva solicitud de cotización\n\n" +
+    `HERCAN — Nueva solicitud (${isWa ? "WhatsApp" : "Cotización"})\n\n` +
     infoRows.map(([k, v]) => `${k}: ${v}`).join("\n") +
     (input.lines.length ? `\n\nProductos solicitados:\n${linesText(input.lines, qtyLabel, true)}` : "") +
     (input.mensaje ? `\n\nMensaje:\n${input.mensaje}` : "") +
     `\n\nResponder al cliente: ${input.email}` +
-    (waUrl ? `\nWhatsApp: ${waUrl}` : "");
+    (waUrl ? `\nWhatsApp: ${waUrl}` : "") +
+    (input.adminUrl ? `\nBorrador en Shopify: ${input.adminUrl}` : "");
 
-  return { html: shell("Nueva solicitud de cotización", "Nuevo lead", body), text };
+  return {
+    html: shell("Nueva solicitud de cotización", isWa ? "Lead · WhatsApp" : "Lead · Cotización", body),
+    text,
+  };
 }

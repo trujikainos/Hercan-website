@@ -74,6 +74,7 @@ export interface QuoteDraftInput {
   frecuencia?: string;
   duracion?: string;
   fechaInicio?: string;
+  source?: "whatsapp" | "cotizacion"; // canal de origen del lead
 }
 
 /**
@@ -93,7 +94,7 @@ function toE164MX(phone?: string): string | undefined {
 
 export async function createQuoteDraftOrder(
   input: QuoteDraftInput,
-): Promise<{ name: string; invoiceUrl: string | null } | null> {
+): Promise<{ name: string; invoiceUrl: string | null; adminUrl: string } | null> {
   if (!isAdminConfigured) return null;
 
   let skuMap = new Map<string, string>();
@@ -154,7 +155,11 @@ export async function createQuoteDraftOrder(
   const baseInput = {
     email: input.email,
     note,
-    tags: ["cotizacion-web", input.recurring ? "suministro-recurrente" : "compra-puntual"],
+    tags: [
+      "cotizacion-web",
+      input.recurring ? "suministro-recurrente" : "compra-puntual",
+      input.source === "whatsapp" ? "canal-whatsapp" : "canal-cotizacion",
+    ],
     lineItems,
   };
 
@@ -182,5 +187,9 @@ export async function createQuoteDraftOrder(
     console.error("[cotizacion] draftOrderCreate userErrors", JSON.stringify(userErrors));
     return null;
   }
-  return draftOrder ? { name: draftOrder.name, invoiceUrl: draftOrder.invoiceUrl } : null;
+  if (!draftOrder) return null;
+  // URL del borrador en el admin de Shopify (para que ventas lo abra y edite).
+  const numericId = draftOrder.id.split("/").pop();
+  const adminUrl = `https://${DOMAIN}/admin/draft_orders/${numericId}`;
+  return { name: draftOrder.name, invoiceUrl: draftOrder.invoiceUrl, adminUrl };
 }
