@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { Category } from "@/lib/types";
 import { site } from "@/lib/site";
+import { HeroCarousel } from "./hero-carousel";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Drill,
@@ -26,15 +27,17 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-hc-navy text-white">
+      <HeroCarousel />
+      {/* Overlays de marca: aseguran el contraste del texto blanco sobre las fotos */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-24 -top-28 h-96 w-96 rounded-full bg-hc-steel/25 blur-3xl"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-hc-navy via-hc-navy/75 to-transparent"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-32 left-1/3 h-80 w-80 rounded-full bg-hc-blue/30 blur-3xl"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-hc-navy/70 via-hc-navy/10 to-transparent"
       />
-      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:py-20">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:py-20">
         <span className="hero-in inline-block rounded-full bg-hc-blue/80 px-3 py-1 text-xs text-hc-metal-light ring-1 ring-white/10">
           B2B industrial · Monterrey y todo México
         </span>
