@@ -1,10 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FileText, User } from "lucide-react";
-import { CATEGORIES } from "@/lib/mock-data";
 import { CartButton } from "@/components/cart/cart-button";
 import { SearchBar } from "@/components/search-bar";
 import { NavMenu } from "@/components/nav-menu";
+import { MegaMenu } from "@/components/mega-menu";
 
 // Portal de cuentas de cliente de Shopify (login sin contraseña + pedidos + rastreo).
 const ACCOUNT_URL =
@@ -20,7 +20,7 @@ export function AnnouncementBar() {
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-hc-metal-light bg-white/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-hc-metal-light bg-white">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
         <Link href="/" className="flex shrink-0 items-center" aria-label="HERCAN — inicio">
           <Image
@@ -54,17 +54,10 @@ export function SiteHeader() {
 
       <nav className="bg-hc-navy">
         <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 font-heading text-sm text-white">
-          {/* Categorías: scroll horizontal en móvil (min-w-0 permite encoger dentro del flex) */}
-          <ul className="flex min-w-0 items-center gap-5 overflow-x-auto py-2">
-            {CATEGORIES.map((c) => (
-              <li key={c.slug} className="whitespace-nowrap">
-                <Link href={`/productos?categoria=${c.slug}`} className="hover:text-hc-sky">
-                  {c.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          {/* Accesos fijos a la derecha (fuera del overflow para que el dropdown no se recorte) */}
+          {/* Trigger del mega menú: las categorías viven ahora en el riel del panel.
+              Fuera de cualquier overflow para que el panel ancho no se recorte. */}
+          <MegaMenu />
+          {/* Accesos fijos a la derecha: "Ver todo" + dropdown "Más" (páginas de empresa) */}
           <div className="ml-auto flex shrink-0 items-center gap-5 py-2">
             <Link href="/productos" className="whitespace-nowrap text-hc-sky">
               Ver todo
