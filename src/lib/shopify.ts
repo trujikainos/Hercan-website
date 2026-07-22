@@ -367,25 +367,57 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 /**
- * Productos relacionados: consulta acotada por categoría (product_type) y, si
- * hacen falta más, rellena con la misma marca (vendor). No recorre el catálogo
- * completo, así que escala con 3266+ SKUs.
+ * Filtros de similitud del MÁS específico al MÁS amplio (mismas características).
+ * Usa los tags de spec (tipo/material/recubrimiento) que el catálogo real trae por
+ * SKU (ver build_shopify_csv.py → tags()). Con datos escasos cae a categoría → marca.
+ * Cuando cargue el catálogo real, los tiers específicos empiezan a matchear solos.
  */
+function similarityTiers(product: Product): string[] {
+  const cat = `product_type:'${safeQueryValue(product.category)}'`;
+  const type = product.type ? `tag:'${safeQueryValue(product.type)}'` : null;
+  const material = product.material ? `tag:'${safeQueryValue(product.material)}'` : null;
+  const coating = product.coating ? `tag:'${safeQueryValue(product.coating)}'` : null;
+  const specs = [type, material, coating].filter(Boolean) as string[];
+  const tiers: string[] = [];
+  if (specs.length >= 2) tiers.push([cat, ...specs].join(" AND ")); // categoría + todas las specs
+  if (type && material) tiers.push([cat, type, material].join(" AND ")); // categoría + tipo + material
+  if (type) tiers.push([cat, type].join(" AND ")); // categoría + tipo
+  tiers.push(cat); // misma categoría
+  tiers.push(`vendor:'${safeQueryValue(product.brand)}'`); // misma marca
+  return [...new Set(tiers)];
+}
+
+/** Recorre los tiers acumulando hasta `limit`, opcionalmente solo en stock. */
+async function collectByTiers(
+  product: Product,
+  { inStockOnly, limit }: { inStockOnly: boolean; limit: number },
+): Promise<Product[]> {
+  const AVAIL = "available_for_sale:true";
+  const ok = (p: Product) =>
+    p.handle !== product.handle &&
+    (!inStockOnly || ((p.variantAvailable ?? false) && (p.stock == null || p.stock > 0)));
+  const seen = new Set<string>([product.handle]);
+  const pool: Product[] = [];
+  const tiers = [...similarityTiers(product), ...(inStockOnly ? [AVAIL] : [])];
+  for (const base of tiers) {
+    if (pool.length >= limit) break;
+    const q = inStockOnly && base !== AVAIL ? `${base} AND ${AVAIL}` : base;
+    const list = await queryProducts(limit + 6, q);
+    for (const p of list) {
+      if (seen.has(p.handle) || !ok(p)) continue;
+      seen.add(p.handle);
+      pool.push(p);
+      if (pool.length >= limit) break;
+    }
+  }
+  return pool.slice(0, limit);
+}
+
+/** Productos relacionados: por características (specs → categoría → marca). */
 export async function getRelatedProducts(product: Product, limit = 8): Promise<Product[]> {
   if (isShopifyConnected) {
-    const pool = (
-      await queryProducts(limit + 5, `product_type:'${safeQueryValue(product.category)}'`)
-    ).filter((p) => p.handle !== product.handle);
-    if (pool.length < limit) {
-      const more = await queryProducts(limit + 5, `vendor:'${safeQueryValue(product.brand)}'`);
-      for (const p of more) {
-        if (pool.length >= limit) break;
-        if (p.handle !== product.handle && !pool.some((x) => x.handle === p.handle)) {
-          pool.push(p);
-        }
-      }
-    }
-    if (pool.length > 0) return pool.slice(0, limit);
+    const pool = await collectByTiers(product, { inStockOnly: false, limit });
+    if (pool.length > 0) return pool;
   }
   // Fallback (modo mock o sin resultados): deriva del listado disponible.
   const all = await getProducts();
@@ -401,38 +433,23 @@ export async function getRelatedProducts(product: Product, limit = 8): Promise<P
 }
 
 /**
- * Alternativas EN STOCK con características similares (para productos agotados):
- * misma categoría → misma marca → cualquiera disponible. Solo con existencia real.
+ * Alternativas EN STOCK con las mismas características (para productos agotados).
+ * Mismo matching por specs que los relacionados, pero solo con existencia real.
  */
 export async function getInStockAlternatives(product: Product, limit = 4): Promise<Product[]> {
-  const inStock = (p: Product) =>
-    p.handle !== product.handle &&
-    (p.variantAvailable ?? false) &&
-    (p.stock == null || p.stock > 0);
-
   if (isShopifyConnected) {
-    const seen = new Set<string>([product.handle]);
-    const pool: Product[] = [];
-    const add = (list: Product[]) => {
-      for (const p of list) {
-        if (seen.has(p.handle) || !inStock(p)) continue;
-        seen.add(p.handle);
-        pool.push(p);
-        if (pool.length >= limit) return;
-      }
-    };
-    const AVAIL = "available_for_sale:true";
-    const cat = safeQueryValue(product.category);
-    add(await queryProducts(limit + 6, `product_type:'${cat}' AND ${AVAIL}`));
-    if (pool.length < limit) {
-      const brand = safeQueryValue(product.brand);
-      add(await queryProducts(limit + 6, `vendor:'${brand}' AND ${AVAIL}`));
-    }
-    if (pool.length < limit) add(await queryProducts(limit + 6, AVAIL));
-    if (pool.length > 0) return pool.slice(0, limit);
+    const pool = await collectByTiers(product, { inStockOnly: true, limit });
+    if (pool.length > 0) return pool;
   }
   const all = await getProducts();
-  return all.filter(inStock).slice(0, limit);
+  return all
+    .filter(
+      (p) =>
+        p.handle !== product.handle &&
+        (p.variantAvailable ?? false) &&
+        (p.stock == null || p.stock > 0),
+    )
+    .slice(0, limit);
 }
 
 // ---- Live search (Storefront predictiveSearch) ----
