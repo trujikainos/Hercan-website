@@ -56,15 +56,15 @@ export const site = {
 
   // Sucursales físicas (datos reales del cliente, jul-2026). Correos operativos por
   // sucursal en dominio yomarrs.com.mx. Coordenadas aprox. de ciudad (el iframe de
-  // Maps geocodifica por dirección). Ojo: la constancia SAT da CP 64550 para Monterrey
-  // (fiscal); el público confirmado por el cliente es 64530.
+  // Maps geocodifica por dirección). CP Monterrey = 64550 (el de la constancia SAT,
+  // que el cliente confirmó usar también para el público).
   locations: [
     {
       name: "Monterrey",
       street: "C. Magnolia 1781, Col. Reforma",
       city: "Monterrey",
       state: "Nuevo León",
-      postalCode: "64530",
+      postalCode: "64550",
       phone: "+52 812 235 9988",
       whatsapp: "528442861375", // dígitos con lada país (wa.me)
       email: "adminmty@yomarrs.com.mx",
