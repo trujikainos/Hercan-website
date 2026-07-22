@@ -13,6 +13,9 @@ export interface Product {
   mpn?: string | null; // número de parte del fabricante (≠ sku), clave para SEO/B2B
   familia?: string | null;
   unidadVenta?: string | null; // Pieza, Caja, Juego, Par (metafield specs.unidad_venta)
+  disponibilidad?: string | null; // "En stock" / "Sobre pedido" (metafield, etiqueta de negocio)
+  fichaTecnicaPdf?: string | null; // URL del datasheet del fabricante
+  videoUrl?: string | null;
   type?: string | null;
   material?: string | null;
   coating?: string | null;

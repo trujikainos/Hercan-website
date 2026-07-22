@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ImageIcon, Ruler, FileText } from "lucide-react";
+import { ImageIcon, Ruler, FileText, Download } from "lucide-react";
 import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/home-sections";
 import { StockBadge, stockInfo, formatPrice, displayTitle } from "@/components/ui";
@@ -237,6 +237,18 @@ export default async function ProductPage({
               </div>
             ) : (
               <OutOfStockCTA title={displayTitle(product.title)} sku={product.sku} />
+            )}
+
+            {product.fichaTecnicaPdf && (
+              <a
+                href={product.fichaTecnicaPdf}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-hc-blue hover:text-hc-steel"
+              >
+                <Download className="h-4 w-4" aria-hidden />
+                Descargar ficha técnica (PDF)
+              </a>
             )}
           </div>
         </div>

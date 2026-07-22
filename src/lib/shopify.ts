@@ -89,8 +89,10 @@ const SPEC_FIELDS: SpecField[] = [
   { key: "angulo_helice", label: "Ángulo de hélice", group: "Dimensiones" },
   { key: "designacion_iso", label: "Designación ISO", group: "Dimensiones" },
   { key: "tolerancia", label: "Tolerancia", group: "Dimensiones" },
+  { key: "geometria_rompevirutas", label: "Geometría rompevirutas", group: "Dimensiones" },
   { key: "refrigerante", label: "Refrigerante", group: "Corte" },
   { key: "sentido_corte", label: "Sentido de corte", group: "Corte" },
+  { key: "parametros_corte", label: "Parámetros de corte", group: "Corte" },
   { key: "tipo_instrumento", label: "Tipo de instrumento", group: "Medición" },
   { key: "rango_medicion", label: "Rango de medición", group: "Medición" },
   { key: "resolucion", label: "Resolución", group: "Medición" },
@@ -102,8 +104,16 @@ const SPEC_FIELDS: SpecField[] = [
   { key: "salida_datos", label: "Salida de datos", group: "Medición" },
 ];
 // mpn y unidad_venta se muestran en el encabezado / grupo "General", no en specGroups.
-// familia se muestra en el grupo "General" (no en specGroups), pero se consulta igual.
-const SPEC_KEYS = ["mpn", "unidad_venta", "familia", ...SPEC_FIELDS.map((f) => f.key)];
+// Estos se manejan aparte (encabezado, badge, botón de ficha), no en specGroups.
+const SPEC_KEYS = [
+  "mpn",
+  "unidad_venta",
+  "familia",
+  "disponibilidad",
+  "ficha_tecnica_pdf",
+  "video_url",
+  ...SPEC_FIELDS.map((f) => f.key),
+];
 const SPEC_IDENTIFIERS = SPEC_KEYS.map(
   (k) => `{ namespace: "specs", key: "${k}" }`,
 ).join(", ");
@@ -187,6 +197,9 @@ function mapProduct(n: ShopifyProductNode): Product {
     mpn: mf.get("mpn") ?? null,
     familia: mf.get("familia") ?? null,
     unidadVenta: mf.get("unidad_venta") ?? null,
+    disponibilidad: mf.get("disponibilidad") ?? null,
+    fichaTecnicaPdf: mf.get("ficha_tecnica_pdf") ?? null,
+    videoUrl: mf.get("video_url") ?? null,
     // Metafields ganan; si no hay (query de listado), derivamos de los tags.
     type: mf.get("tipo_herramienta") ?? derived.type,
     material: mf.get("material_herramienta") ?? derived.material,
