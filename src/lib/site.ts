@@ -54,6 +54,32 @@ export const site = {
   },
   geo: { lat: null as number | null, lng: null as number | null }, // TODO: coordenadas
 
+  // Sucursales físicas (para /contacto y mapas). Monterrey = domicilio fiscal (constancia).
+  // Saltillo: la lada 844 del WhatsApp confirma tienda ahí, pero falta la dirección exacta.
+  // Coordenadas aprox. de ciudad (el iframe de Maps geocodifica por dirección; refinar).
+  locations: [
+    {
+      name: "Monterrey",
+      street: "Calle Magnolia 1781, Col. Reforma", // domicilio fiscal; confirmar si es el público
+      city: "Monterrey",
+      state: "Nuevo León",
+      postalCode: "64550",
+      lat: 25.6866,
+      lng: -100.3161,
+      isFiscal: true,
+    },
+    {
+      name: "Saltillo",
+      street: "", // TODO: dirección de la tienda de Saltillo
+      city: "Saltillo",
+      state: "Coahuila",
+      postalCode: "",
+      lat: 25.4383,
+      lng: -100.9737,
+      isFiscal: false,
+    },
+  ],
+
   // Redes sociales (Organization.sameAs)
   sameAs: [] as string[], // TODO: URLs de Facebook, LinkedIn, etc.
 

@@ -43,16 +43,47 @@ export function websiteNode() {
   };
 }
 
+/** Una sucursal de site.locations (tipo derivado de la fuente de verdad). */
+type BranchLocation = (typeof site.locations)[number];
+
+/** Slug URL-safe para el @id del nodo por sucursal (sin acentos ni espacios). */
+function locationSlug(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 /**
  * LocalBusiness para la página de contacto: NAP completo derivado de site.ts.
  * Es la misma entidad que la Organization global (enlazada por parentOrganization).
  * Sólo emite campos con dato real → email/teléfono/sameAs/geo condicionales (anti-fabricación).
+ *
+ * Sin argumento → nodo único desde site.address (retrocompatible).
+ * Con `loc` → nodo por sucursal: @id distinto (#localbusiness-<slug>), address de la
+ * sucursal y name "HERCAN — <Ciudad>". Si la sucursal no tiene calle (p. ej. Saltillo,
+ * por confirmar) se omite streetAddress: no se fabrica dirección.
  */
-export function localBusinessNode() {
+export function localBusinessNode(loc?: BranchLocation) {
+  const id = loc
+    ? `${site.url}/#localbusiness-${locationSlug(loc.name)}`
+    : `${site.url}/#localbusiness`;
+  const name = loc ? `${site.name} — ${loc.name}` : site.name;
+
+  const street = loc ? loc.street : site.address.street;
+  const city = loc ? loc.city : site.address.city;
+  const region = loc ? loc.state : site.address.state;
+  const postalCode = loc ? loc.postalCode : site.address.postalCode;
+  const country = loc ? site.country : site.address.country;
+  const lat = loc ? loc.lat : site.geo.lat;
+  const lng = loc ? loc.lng : site.geo.lng;
+
   return {
     "@type": "LocalBusiness",
-    "@id": `${site.url}/#localbusiness`,
-    name: site.name,
+    "@id": id,
+    name,
     legalName: site.legalName,
     url: site.url,
     image: absoluteUrl(site.ogImage),
@@ -63,18 +94,18 @@ export function localBusinessNode() {
     parentOrganization: { "@id": ORG_ID },
     address: {
       "@type": "PostalAddress",
-      ...(site.address.street ? { streetAddress: site.address.street } : {}),
-      addressLocality: site.address.city,
-      addressRegion: site.address.state,
-      ...(site.address.postalCode ? { postalCode: site.address.postalCode } : {}),
-      addressCountry: site.address.country,
+      ...(street ? { streetAddress: street } : {}),
+      addressLocality: city,
+      addressRegion: region,
+      ...(postalCode ? { postalCode } : {}),
+      addressCountry: country,
     },
-    ...(site.geo.lat != null && site.geo.lng != null
+    ...(lat != null && lng != null
       ? {
           geo: {
             "@type": "GeoCoordinates",
-            latitude: site.geo.lat,
-            longitude: site.geo.lng,
+            latitude: lat,
+            longitude: lng,
           },
         }
       : {}),
