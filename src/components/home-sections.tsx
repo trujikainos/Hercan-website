@@ -318,7 +318,7 @@ export function SiteFooter() {
               alt="HERCAN — Herramientas de Carburo de Tungsteno del Norte"
               width={200}
               height={92}
-              className="h-9 w-auto"
+              className="h-11 w-auto"
             />
           </Link>
           <p className="mt-3 text-sm leading-relaxed">
