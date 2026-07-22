@@ -1,7 +1,11 @@
 /**
- * Mensaje de WhatsApp para solicitudes/cotizaciones — con emojis, formato *negrita*
- * de WhatsApp e info organizada (productos con SKU/N° parte, folio del borrador,
- * datos de contacto). Compartido por el mini-form de producto y el form completo.
+ * Mensaje de WhatsApp para solicitudes/cotizaciones — formato *negrita* de WhatsApp
+ * e info organizada (productos con SKU/N° parte, folio del borrador, datos de
+ * contacto). Compartido por el mini-form de producto y el form completo.
+ *
+ * NOTA: se usan SOLO caracteres BMP (viñetas •, separador ·, acentos). Nada de
+ * emojis "astrales" (🔧, 📦, etc.): en algunos WhatsApp de escritorio se corrompen
+ * a "�". El formato con *negritas* + viñetas se ve bien y legible en todos lados.
  */
 export interface WaLine {
   name: string;
@@ -23,26 +27,26 @@ export interface WaMessageInput {
 
 export function buildWhatsappMessage(i: WaMessageInput): string {
   const L: string[] = [];
-  L.push("🔧 *Solicitud a HERCAN*");
-  if (i.folio) L.push(`📋 Folio: *${i.folio}*`);
-  if (i.recurring) L.push(`🔄 Suministro recurrente${i.terminos ? ` · ${i.terminos}` : ""}`);
+  L.push("*Solicitud a HERCAN*");
+  if (i.folio) L.push(`Folio: *${i.folio}*`);
+  if (i.recurring) L.push(`Suministro recurrente${i.terminos ? ` · ${i.terminos}` : ""}`);
 
   L.push("");
-  L.push("🛒 *Productos*");
+  L.push("*Productos*");
   i.lines.forEach((l, idx) => {
     L.push(`${idx + 1}. ${l.name}`);
     const meta = [
-      l.qty ? `📦 Cant. ${l.qty}` : "",
-      l.mpn ? `🔩 N° parte ${l.mpn}` : "",
-      l.sku ? `🏷️ SKU ${l.sku}` : "",
+      l.qty ? `Cant. ${l.qty}` : "",
+      l.mpn ? `N° parte ${l.mpn}` : "",
+      l.sku ? `SKU ${l.sku}` : "",
     ]
       .filter(Boolean)
-      .join("   ·   ");
+      .join("  ·  ");
     if (meta) L.push(`   ${meta}`);
   });
 
   L.push("");
-  L.push("👤 *Mis datos*");
+  L.push("*Mis datos*");
   L.push(`• Nombre: ${i.nombre}`);
   if (i.empresa) L.push(`• Empresa: ${i.empresa}`);
   L.push(`• Correo: ${i.email}`);
@@ -50,12 +54,12 @@ export function buildWhatsappMessage(i: WaMessageInput): string {
 
   if (i.mensaje) {
     L.push("");
-    L.push("📝 *Mensaje / detalle técnico*");
+    L.push("*Mensaje / detalle técnico*");
     L.push(i.mensaje);
   }
 
   L.push("");
-  L.push("¿Me confirman precio y disponibilidad? 🙌");
+  L.push("¿Me confirman precio y disponibilidad?");
   return L.join("\n");
 }
 
