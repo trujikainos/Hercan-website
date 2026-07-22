@@ -6,6 +6,7 @@ import { useCart } from "./cart-provider";
 export function AddToCartButton({
   variantId,
   variantAvailable,
+  stock,
   productTitle,
   handle,
   image,
@@ -14,6 +15,7 @@ export function AddToCartButton({
 }: {
   variantId: string | null;
   variantAvailable: boolean;
+  stock?: number | null;
   productTitle: string;
   handle: string;
   image: string | null;
@@ -24,7 +26,9 @@ export function AddToCartButton({
   const [justAdded, setJustAdded] = useState(false);
   const [qty, setQty] = useState(1);
 
-  const canAdd = enabled && !!variantId && variantAvailable;
+  // Solo se puede vender lo que hay en existencia: tope = stock disponible (máx 99).
+  const maxQty = stock != null && stock > 0 ? Math.min(stock, 99) : 99;
+  const canAdd = enabled && !!variantId && variantAvailable && (stock == null || stock > 0);
 
   if (!canAdd) {
     return (
@@ -39,7 +43,7 @@ export function AddToCartButton({
     );
   }
 
-  const clamp = (n: number) => Math.min(99, Math.max(1, n));
+  const clamp = (n: number) => Math.min(maxQty, Math.max(1, n));
 
   function onClick() {
     if (!variantId) return;
@@ -73,7 +77,7 @@ export function AddToCartButton({
         <input
           type="number"
           min={1}
-          max={99}
+          max={maxQty}
           value={qty}
           onChange={(e) => {
             const v = parseInt(e.target.value, 10);
@@ -85,7 +89,7 @@ export function AddToCartButton({
         <button
           type="button"
           onClick={() => setQty((q) => clamp(q + 1))}
-          disabled={qty >= 99}
+          disabled={qty >= maxQty}
           aria-label="Aumentar cantidad"
           className="px-2.5 py-2 text-hc-gunmetal transition hover:text-hc-blue disabled:opacity-40"
         >

@@ -31,9 +31,9 @@ export function stockInfo(product: Product): {
   if (q != null && q > 5) return { units: q, label: `${q} piezas`, tone: "ok" };
   if (q != null && q >= 1)
     return { units: q, label: q === 1 ? "Última pieza" : `Solo ${q} piezas`, tone: "low" };
-  if (q != null && q <= 0) return { units: 0, label: "Sobre pedido", tone: "back" };
-  // Stock desconocido (variante sin rastreo, modo mock, o sin permiso de inventario):
-  // NO afirmar "En stock" — con política CONTINUE, availableForSale siempre es true.
+  // Con política DENY, stock <= 0 = agotado (no comprable en línea → se solicita).
+  if (q != null && q <= 0) return { units: 0, label: "Agotado", tone: "back" };
+  // Stock desconocido (variante sin rastreo o modo mock): según disponibilidad.
   return {
     units: null,
     label: product.variantAvailable ? "Disponible" : "Agotado",

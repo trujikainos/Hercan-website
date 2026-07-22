@@ -29,7 +29,7 @@ fragment CartFields on Cart {
       id quantity
       cost { amountPerQuantity { amount currencyCode } totalAmount { amount currencyCode } }
       merchandise { ... on ProductVariant {
-        id title sku availableForSale
+        id title sku availableForSale quantityAvailable
         price { amount currencyCode }
         image { url }
         product { title handle }
