@@ -81,6 +81,16 @@ export interface QuoteDraftInput {
  * (via SKU); los renglones sin match quedan como línea personalizada. Devuelve
  * el nombre y la URL de factura, o null si no está configurado o falla.
  */
+/** Teléfono → E.164 MX confiable, o undefined si no es claro (para no romper la dirección). */
+function toE164MX(phone?: string): string | undefined {
+  if (!phone) return undefined;
+  const d = phone.replace(/\D/g, "");
+  if (d.length === 10) return "+52" + d; // MX local (10 dígitos)
+  if (d.length === 12 && d.startsWith("52")) return "+" + d; // 52 + 10
+  if (d.length === 11 && d.startsWith("1")) return "+52" + d.slice(1);
+  return undefined;
+}
+
 export async function createQuoteDraftOrder(
   input: QuoteDraftInput,
 ): Promise<{ name: string; invoiceUrl: string | null } | null> {
@@ -128,19 +138,44 @@ export async function createQuoteDraftOrder(
     .filter(Boolean)
     .join("\n");
 
-  const draftInput = {
+  // Dirección del borrador → Shopify la usa para poblar el Cliente NUEVO (nombre,
+  // empresa, teléfono). Para clientes existentes NO sobrescribe nada (verificado).
+  const [firstName, ...restName] = (input.nombre ?? "").trim().split(/\s+/);
+  const lastName = restName.join(" ");
+  const phone = toE164MX(input.telefono);
+  const billingAddress: Record<string, string> = {
+    firstName: firstName || input.nombre || "Cliente",
+    countryCode: "MX",
+  };
+  if (lastName) billingAddress.lastName = lastName;
+  if (input.empresa) billingAddress.company = input.empresa;
+  if (phone) billingAddress.phone = phone;
+
+  const baseInput = {
     email: input.email,
     note,
     tags: ["cotizacion-web", input.recurring ? "suministro-recurrente" : "compra-puntual"],
     lineItems,
   };
 
-  const data = await adminGraphql<{
-    draftOrderCreate: {
-      draftOrder: { id: string; name: string; invoiceUrl: string | null } | null;
-      userErrors: { field: string[]; message: string }[];
-    };
-  }>(CREATE_DRAFT, { input: draftInput });
+  const run = (withAddress: boolean) =>
+    adminGraphql<{
+      draftOrderCreate: {
+        draftOrder: { id: string; name: string; invoiceUrl: string | null } | null;
+        userErrors: { field: string[]; message: string }[];
+      };
+    }>(CREATE_DRAFT, { input: withAddress ? { ...baseInput, billingAddress } : baseInput });
+
+  // Intenta con dirección (para enriquecer el cliente); si algo en la dirección
+  // falla (p. ej. teléfono raro), reintenta sin ella para no perder el borrador.
+  let data = await run(true);
+  if (data.draftOrderCreate.userErrors?.length) {
+    console.error(
+      "[cotizacion] draft con dirección falló, reintento sin ella:",
+      JSON.stringify(data.draftOrderCreate.userErrors),
+    );
+    data = await run(false);
+  }
 
   const { draftOrder, userErrors } = data.draftOrderCreate;
   if (userErrors?.length) {
