@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hc-navy: #0e3e60;
+  --color-hc-blue: #1f5a82;
+  --color-hc-steel: #2083a3;
+  --color-hc-sky: #5e9cc1;
+  --color-hc-metal: #c0c0c2;
+  --color-hc-metal-light: #e9eaec;
+  --color-hc-gunmetal: #6e7175;
+  --color-hc-ink: #23272b;
+  --color-hc-soft: #f4f6f8;
+
+  --font-heading: var(--font-oswald);
+  --font-body: var(--font-inter);
+
+  /* Easings de marca */
+  --ease-out-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-brand: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+:root {
+  /* Escala fluida (clamp) */
+  --step-hero: clamp(2.15rem, 1.35rem + 3.4vw, 3.5rem);
+  --step-h2: clamp(1.3rem, 1.05rem + 1vw, 1.75rem);
+}
+
+@keyframes heroIn {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Transición de página: solo transform (no opacity) → no retrasa el LCP */
+@keyframes pageEnter {
+  from {
+    transform: translateY(8px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: clip;
+  }
+  body {
+    font-family: var(--font-body), system-ui, sans-serif;
+    color: var(--color-hc-ink);
+    background: #ffffff;
+    /* clip (no hidden): evita scroll horizontal sin romper position: sticky */
+    overflow-x: clip;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-heading {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    letter-spacing: 0.3px;
+  }
+}
+
+@layer components {
+  /* Reveal on-scroll — FOUC-safe: solo se oculta si hay JS (clase .js en <html>) */
+  .reveal {
+    transition:
+      opacity 0.7s var(--ease-out-brand),
+      transform 0.7s var(--ease-out-brand);
+  }
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Entrada del hero al cargar (sin ocultar el H1 = LCP) */
+  .js .hero-in {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: heroIn 0.8s var(--ease-out-brand) forwards;
+  }
+
+  /* Feedback de botón (transición específica, no transition-all) */
+  .press {
+    transition: transform 0.14s var(--ease-out-brand);
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+
+  /* Transición de página (template.tsx re-monta en cada navegación) */
+  .js .page-enter {
+    animation: pageEnter 0.4s var(--ease-out-brand) both;
+  }
+
+  /* Entrada escalonada de hijos (grids client-filtered: productos) */
+  .js .stagger-in > * {
+    animation: fadeUp 0.5s var(--ease-out-brand) both;
+  }
+  .js .stagger-in > *:nth-child(1) { animation-delay: 0.02s; }
+  .js .stagger-in > *:nth-child(2) { animation-delay: 0.06s; }
+  .js .stagger-in > *:nth-child(3) { animation-delay: 0.1s; }
+  .js .stagger-in > *:nth-child(4) { animation-delay: 0.14s; }
+  .js .stagger-in > *:nth-child(5) { animation-delay: 0.18s; }
+  .js .stagger-in > *:nth-child(6) { animation-delay: 0.22s; }
+  .js .stagger-in > *:nth-child(7) { animation-delay: 0.26s; }
+  .js .stagger-in > *:nth-child(8) { animation-delay: 0.3s; }
+  .js .stagger-in > *:nth-child(n + 9) { animation-delay: 0.34s; }
+
+  /* Tarjeta con elevación + sombra al hover */
+  .card-hover {
+    transition:
+      transform 0.3s var(--ease-out-brand),
+      box-shadow 0.3s var(--ease-out-brand),
+      border-color 0.3s var(--ease-out-brand);
+  }
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px -14px rgba(14, 62, 96, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .js .reveal,
+  .js .hero-in,
+  .js .page-enter,
+  .js .stagger-in > * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .card-hover:hover {
+    transform: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
