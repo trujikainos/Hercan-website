@@ -29,43 +29,17 @@ function formatWhatsApp(n: string): string {
 }
 
 /**
- * Query de Google Maps para una sucursal. Si no hay calle (p. ej. Saltillo, por
- * confirmar) se geocodifica por ciudad → NO se inventa dirección.
+ * Query de Google Maps para una sucursal (dirección real → mejor geocodificación).
+ * Si faltara la calle, cae a ciudad+estado (no se inventa dirección).
  */
 function locationMapsQuery(loc: (typeof site.locations)[number]): string {
-  const parts = loc.street
-    ? [loc.street, loc.city, loc.state, loc.postalCode, "México"]
-    : [loc.city, loc.state, "México"];
+  // Se accede a los campos sin condicionar (evita narrowing a never con `as const`);
+  // los vacíos se descartan con filter → si faltara calle/CP, geocodifica por ciudad.
+  const parts = [loc.street, loc.city, loc.state, loc.postalCode, "México"];
   return encodeURIComponent(parts.filter(Boolean).join(", "));
 }
 
-function ContactRow({
-  icon: Icon,
-  label,
-  iconClass = "text-hc-steel",
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  iconClass?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <li className="flex items-start gap-3">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-hc-soft ring-1 ring-hc-metal-light">
-        <Icon className={`h-5 w-5 ${iconClass}`} />
-      </span>
-      <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-hc-gunmetal">
-          {label}
-        </p>
-        <div className="mt-0.5 text-sm">{children}</div>
-      </div>
-    </li>
-  );
-}
-
-/** Tarjeta de una sucursal: dirección (o ciudad) + su propio mapa embebido. */
+/** Tarjeta de una sucursal: dirección, contacto propio (tel/WhatsApp/correo) y su mapa. */
 function BranchCard({
   loc,
   index,
@@ -74,11 +48,11 @@ function BranchCard({
   index: number;
 }) {
   const query = locationMapsQuery(loc);
-  // Sin API key: iframe de Google Maps con ?q=<dirección|ciudad>&output=embed.
-  // Zoom mayor cuando hay calle exacta; menor cuando sólo se ubica la ciudad.
+  // Sin API key: iframe de Google Maps con ?q=<dirección>&output=embed.
   const mapsEmbedUrl = `https://www.google.com/maps?q=${query}&z=${loc.street ? 15 : 12}&output=embed`;
   const mapsLinkUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
-  const hasStreet = Boolean(loc.street);
+  // tel: en E.164 (dígitos con "+"), ej. "+52 812 235 9988" → "tel:+528122359988".
+  const telHref = `tel:+${loc.phone.replace(/\D/g, "")}`;
 
   return (
     <article
@@ -86,6 +60,7 @@ function BranchCard({
       style={{ transitionDelay: `${index * 0.08}s` }}
     >
       <div className="p-5 sm:p-6">
+        {/* Dirección */}
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-hc-soft ring-1 ring-hc-metal-light">
             <MapPin className="h-5 w-5 text-hc-steel" aria-hidden />
@@ -94,36 +69,61 @@ function BranchCard({
             <h3 className="font-heading text-lg text-hc-navy">
               Sucursal {loc.name}
             </h3>
-            {hasStreet ? (
-              <>
-                <p className="mt-0.5 text-sm text-hc-ink">{loc.street}</p>
-                <p className="text-sm text-hc-gunmetal">
-                  {loc.city}, {loc.state}
-                  {loc.postalCode ? ` · C.P. ${loc.postalCode}` : ""}
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="mt-0.5 text-sm text-hc-ink">
-                  {loc.city}, {loc.state}
-                </p>
-                <p className="text-sm italic text-hc-gunmetal">
-                  Dirección exacta por confirmar
-                </p>
-              </>
-            )}
-            <a
-              href={mapsLinkUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1.5 inline-flex items-center gap-1 text-sm text-hc-blue transition-colors hover:text-hc-steel"
-            >
-              Ver en Google Maps
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-            </a>
+            <p className="mt-0.5 text-sm text-hc-ink">{loc.street}</p>
+            <p className="text-sm text-hc-gunmetal">
+              {loc.city}, {loc.state}
+              {loc.postalCode ? ` · C.P. ${loc.postalCode}` : ""}
+            </p>
           </div>
         </div>
+
+        {/* Contacto directo de la sucursal */}
+        <ul className="mt-4 space-y-2.5 border-t border-hc-metal-light pt-4 text-sm">
+          <li className="flex items-center gap-2.5">
+            <Phone className="h-4 w-4 shrink-0 text-hc-steel" aria-hidden />
+            <a
+              href={telHref}
+              className="text-hc-blue transition-colors hover:text-hc-steel"
+              aria-label={`Llamar a la sucursal ${loc.name}`}
+            >
+              {loc.phone}
+            </a>
+          </li>
+          <li className="flex items-center gap-2.5">
+            <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#25D366]" />
+            <a
+              href={`https://wa.me/${loc.whatsapp}?text=${waText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-event="contact_whatsapp"
+              className="text-hc-blue transition-colors hover:text-hc-steel"
+              aria-label={`WhatsApp de la sucursal ${loc.name}`}
+            >
+              {formatWhatsApp(loc.whatsapp)}
+            </a>
+          </li>
+          <li className="flex items-center gap-2.5">
+            <Mail className="h-4 w-4 shrink-0 text-hc-steel" aria-hidden />
+            <a
+              href={`mailto:${loc.email}`}
+              className="break-all text-hc-blue transition-colors hover:text-hc-steel"
+            >
+              {loc.email}
+            </a>
+          </li>
+        </ul>
+
+        <a
+          href={mapsLinkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center gap-1 text-sm text-hc-blue transition-colors hover:text-hc-steel"
+        >
+          Ver en Google Maps
+          <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+        </a>
       </div>
+
       <div className="border-t border-hc-metal-light">
         <iframe
           title={`Mapa de la sucursal de ${site.name} en ${loc.city}, ${loc.state}`}
@@ -163,99 +163,38 @@ export default function ContactoPage() {
           </p>
         </header>
 
-        {/* Datos de contacto generales + CTAs */}
-        <section className="reveal mt-10">
-          <h2 className="font-heading text-[length:var(--step-h2)] text-hc-navy">
-            Datos de contacto
-          </h2>
-          <ul className="mt-5 grid gap-5 sm:grid-cols-2">
-            {site.email && (
-              <ContactRow icon={Mail} label="Correo">
-                <a
-                  href={`mailto:${site.email}`}
-                  className="text-hc-blue transition-colors hover:text-hc-steel"
-                >
-                  {site.email}
-                </a>
-              </ContactRow>
-            )}
-
-            {site.whatsapp && (
-              <ContactRow
-                icon={WhatsAppIcon}
-                label="WhatsApp"
-                iconClass="text-[#25D366]"
-              >
-                <a
-                  href={`https://wa.me/${site.whatsapp}?text=${waText}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-event="contact_whatsapp"
-                  className="text-hc-blue transition-colors hover:text-hc-steel"
-                >
-                  {formatWhatsApp(site.whatsapp)}
-                </a>
-              </ContactRow>
-            )}
-
-            {/* site.phone está vacío hasta confirmar → sólo se renderiza si existe */}
-            {site.phone && (
-              <ContactRow icon={Phone} label="Teléfono">
-                <a
-                  href={`tel:${site.phone}`}
-                  className="text-hc-blue transition-colors hover:text-hc-steel"
-                >
-                  {site.phone}
-                </a>
-              </ContactRow>
-            )}
-            {/* TODO: horario de atención por confirmar con el cliente */}
-          </ul>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            {site.whatsapp && (
-              <a
-                href={`https://wa.me/${site.whatsapp}?text=${waText}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-event="contact_whatsapp"
-                className="press inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-5 py-2.5 font-medium text-white transition hover:brightness-95"
-              >
-                <WhatsAppIcon className="h-5 w-5" />
-                Escríbenos por WhatsApp
-              </a>
-            )}
-            <Link
-              href="/cotizacion"
-              data-event="generate_lead"
-              className="press inline-flex items-center gap-2 rounded-lg bg-hc-steel px-5 py-2.5 font-medium text-white transition-colors hover:bg-hc-blue"
-            >
-              <FileText className="h-4 w-4" aria-hidden />
-              Solicitar cotización
-            </Link>
-          </div>
-
-          <p className="mt-6 text-sm leading-relaxed text-hc-gunmetal">
-            También puedes{" "}
-            <Link
-              href="/cotizacion"
+        {/* CTA general — el contacto por canal vive en cada sucursal (abajo) */}
+        <section className="reveal mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
+          <Link
+            href="/cotizacion"
+            data-event="generate_lead"
+            className="press inline-flex items-center gap-2 rounded-lg bg-hc-steel px-5 py-2.5 font-medium text-white transition-colors hover:bg-hc-blue"
+          >
+            <FileText className="h-4 w-4" aria-hidden />
+            Solicitar cotización
+          </Link>
+          <p className="max-w-md text-sm text-hc-gunmetal">
+            Cotiza con tu lista de productos y recibe precio por volumen, o contáctanos
+            directo en tu{" "}
+            <a
+              href="#sucursales"
               className="text-hc-blue transition-colors hover:text-hc-steel hover:underline"
             >
-              solicitar una cotización en línea
-            </Link>{" "}
-            con tu lista de productos y recibir precio por volumen.
+              sucursal más cercana
+            </a>
+            <span aria-hidden> ↓</span>.
           </p>
         </section>
 
-        {/* Sucursales — una tarjeta con mapa propio por ubicación */}
-        <section className="mt-14">
+        {/* Sucursales — una tarjeta con contacto y mapa propios por ubicación */}
+        <section id="sucursales" className="mt-14 scroll-mt-24">
           <div className="reveal max-w-2xl">
             <h2 className="font-heading text-[length:var(--step-h2)] text-hc-navy">
               Nuestras sucursales
             </h2>
             <p className="mt-2 leading-relaxed text-hc-gunmetal">
               Atendemos a la industria del noreste de México desde nuestras sucursales
-              en {branchNames}.
+              en {branchNames}. Llámanos, escríbenos por WhatsApp o visítanos.
             </p>
           </div>
           <div className="mt-6 grid gap-8 lg:grid-cols-2">

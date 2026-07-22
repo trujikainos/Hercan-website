@@ -54,26 +54,33 @@ export const site = {
   },
   geo: { lat: null as number | null, lng: null as number | null }, // TODO: coordenadas
 
-  // Sucursales físicas (para /contacto y mapas). Monterrey = domicilio fiscal (constancia).
-  // Saltillo: la lada 844 del WhatsApp confirma tienda ahí, pero falta la dirección exacta.
-  // Coordenadas aprox. de ciudad (el iframe de Maps geocodifica por dirección; refinar).
+  // Sucursales físicas (datos reales del cliente, jul-2026). Correos operativos por
+  // sucursal en dominio yomarrs.com.mx. Coordenadas aprox. de ciudad (el iframe de
+  // Maps geocodifica por dirección). Ojo: la constancia SAT da CP 64550 para Monterrey
+  // (fiscal); el público confirmado por el cliente es 64530.
   locations: [
     {
       name: "Monterrey",
-      street: "Calle Magnolia 1781, Col. Reforma", // domicilio fiscal; confirmar si es el público
+      street: "C. Magnolia 1781, Col. Reforma",
       city: "Monterrey",
       state: "Nuevo León",
-      postalCode: "64550",
+      postalCode: "64530",
+      phone: "+52 812 235 9988",
+      whatsapp: "528442861375", // dígitos con lada país (wa.me)
+      email: "adminmty@yomarrs.com.mx",
       lat: 25.6866,
       lng: -100.3161,
       isFiscal: true,
     },
     {
       name: "Saltillo",
-      street: "", // TODO: dirección de la tienda de Saltillo
+      street: "Lago de Texcoco, Col. La Salle",
       city: "Saltillo",
       state: "Coahuila",
-      postalCode: "",
+      postalCode: "25240",
+      phone: "+52 844 415 3531",
+      whatsapp: "528442864095",
+      email: "mostrador@yomarrs.com.mx",
       lat: 25.4383,
       lng: -100.9737,
       isFiscal: false,

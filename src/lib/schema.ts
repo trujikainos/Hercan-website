@@ -79,6 +79,9 @@ export function localBusinessNode(loc?: BranchLocation) {
   const country = loc ? site.country : site.address.country;
   const lat = loc ? loc.lat : site.geo.lat;
   const lng = loc ? loc.lng : site.geo.lng;
+  const email = loc ? loc.email : site.email;
+  // Teléfono a E.164 (dígitos con "+"). Sin arg: site.phone (puede ir vacío → se omite).
+  const telephone = loc ? `+${loc.phone.replace(/\D/g, "")}` : site.phone;
 
   return {
     "@type": "LocalBusiness",
@@ -88,8 +91,8 @@ export function localBusinessNode(loc?: BranchLocation) {
     url: site.url,
     image: absoluteUrl(site.ogImage),
     logo: absoluteUrl(site.ogImage),
-    ...(site.email ? { email: site.email } : {}),
-    ...(site.phone ? { telephone: site.phone } : {}),
+    ...(email ? { email } : {}),
+    ...(telephone ? { telephone } : {}),
     ...(site.sameAs.length ? { sameAs: site.sameAs } : {}),
     parentOrganization: { "@id": ORG_ID },
     address: {
