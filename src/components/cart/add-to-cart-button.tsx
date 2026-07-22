@@ -62,8 +62,11 @@ export function AddToCartButton({
     setQty(1);
   }
 
+  const atStockMax = stock != null && stock > 0 && stock <= 99 && qty >= stock;
+
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-3">
       <div className="flex items-center rounded-lg border border-hc-metal-light">
         <button
           type="button"
@@ -110,6 +113,10 @@ export function AddToCartButton({
         )}
         {justAdded ? "Agregado" : "Agregar al carrito"}
       </button>
+      </div>
+      {atStockMax && (
+        <p className="text-xs text-[#b25e00]">Máximo disponible: {stock}</p>
+      )}
     </div>
   );
 }

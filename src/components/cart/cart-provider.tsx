@@ -27,6 +27,7 @@ interface CartCtx {
   closeCart: () => void;
   notices: CartNotice[];
   dismissNotices: () => void;
+  notify: (message: string) => void;
   add: (i: AddInput) => void;
   updateQty: (lineId: string, qty: number) => void;
   remove: (lineId: string) => void;
@@ -156,6 +157,10 @@ export function CartProvider({
     (lineId: string) => run({ kind: "remove", lineId }, () => removeLineAction(lineId)),
     [run],
   );
+  // Aviso solo-cliente (p. ej. tope de stock), sin ir al servidor.
+  const notify = useCallback((message: string) => {
+    setNotices([{ code: "OUT_OF_STOCK", message }]);
+  }, []);
 
   return (
     <Ctx.Provider
@@ -169,6 +174,7 @@ export function CartProvider({
         closeCart: () => setOpen(false),
         notices,
         dismissNotices: () => setNotices([]),
+        notify,
         add,
         updateQty,
         remove,
