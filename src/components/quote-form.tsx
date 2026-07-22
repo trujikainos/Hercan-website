@@ -402,18 +402,6 @@ export function QuoteForm({
           {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
           Enviar solicitud
         </button>
-        {site.whatsapp && (
-          <a
-            href={whatsappUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-event="generate_lead"
-            className="press inline-flex items-center gap-2 rounded-lg border border-[#25D366] px-5 py-2.5 font-medium text-[#128C4B] transition hover:bg-[#25D366]/10"
-          >
-            <WhatsAppIcon className="h-5 w-5" />
-            Enviar por WhatsApp
-          </a>
-        )}
       </div>
     </form>
   );

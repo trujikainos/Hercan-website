@@ -51,7 +51,7 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [folio, setFolio] = useState<string | undefined>(undefined);
-  const [f, setF] = useState({ nombre: "", email: "", telefono: "", qty: "1", consent: false });
+  const [f, setF] = useState({ nombre: "", empresa: "", email: "", telefono: "", qty: "1", consent: false });
 
   const up =
     (k: keyof typeof f) =>
@@ -74,7 +74,7 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
       "Hola, acabo de enviar mi solicitud por el sitio:",
       `${product.title} — Cantidad: ${f.qty || "1"}`,
       folio ? `Folio: ${folio}` : null,
-      `Mis datos: ${f.nombre} · ${f.email} · ${f.telefono}`,
+      `Mis datos: ${f.nombre}${f.empresa ? ` (${f.empresa})` : ""} · ${f.email} · ${f.telefono}`,
       "Quiero coordinar la compra. ¿Me confirman precio y disponibilidad?",
     ]
       .filter(Boolean)
@@ -87,6 +87,7 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
     setError(null);
     const payload: QuoteInput = {
       nombre: f.nombre,
+      empresa: f.empresa || undefined,
       email: f.email,
       telefono: f.telefono,
       lines: [{ text: product.title, qty: (f.qty || "1").trim(), product }],
@@ -127,9 +128,15 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
         <>
           <p className="mb-3 text-xs font-medium uppercase tracking-wide text-hc-gunmetal">Paso 1 de 2 · Tus datos</p>
           <div className="space-y-3">
-            <div>
-              <label className={lbl} htmlFor="wr-nombre">Nombre *</label>
-              <input id="wr-nombre" value={f.nombre} onChange={up("nombre")} className={inp} autoComplete="name" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className={lbl} htmlFor="wr-nombre">Nombre *</label>
+                <input id="wr-nombre" value={f.nombre} onChange={up("nombre")} className={inp} autoComplete="name" />
+              </div>
+              <div>
+                <label className={lbl} htmlFor="wr-empresa">Empresa</label>
+                <input id="wr-empresa" value={f.empresa} onChange={up("empresa")} className={inp} autoComplete="organization" />
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
