@@ -41,7 +41,16 @@ export interface QuoteResult {
 }
 
 // Destino de los leads (a quién le llega la notificación de cotización).
-const LEADS_TO = process.env.QUOTE_LEADS_TO || "leads@weevolveit.com";
+// Lista separada por comas; se puede sobreescribir en Vercel con QUOTE_LEADS_TO.
+const LEADS_TO = (
+  process.env.QUOTE_LEADS_TO ||
+  "leads@weevolveit.com,ventas@hercan.com.mx,amendoza@saminsa.com.mx"
+)
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+// Buzón monitoreado para el reply_to de la autorespuesta al cliente.
+const LEADS_REPLY_TO = LEADS_TO[0] || "leads@weevolveit.com";
 
 // Rate-limit simple en memoria (por IP). Suficiente para frenar abuso básico.
 const hits = new Map<string, number[]>();
@@ -136,7 +145,7 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM || "HERCAN <onboarding@resend.dev>";
   let emailOk = false;
-  if (key && LEADS_TO) {
+  if (key && LEADS_TO.length) {
     const lead = leadEmail({
       nombre,
       empresa: data.empresa,
@@ -160,7 +169,7 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
       (lines.length > 1 ? ` (${lines.length} productos)` : firstTag ? ` (${firstTag})` : "");
     try {
       const res = await sendEmail(
-        { from, to: [LEADS_TO], reply_to: email, subject, text: lead.text, html: lead.html },
+        { from, to: LEADS_TO, reply_to: email, subject, text: lead.text, html: lead.html },
         key,
       );
       if (res.ok) {
@@ -180,7 +189,7 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
             {
               from,
               to: [email],
-              reply_to: LEADS_TO, // si el cliente responde, llega al equipo
+              reply_to: LEADS_REPLY_TO, // si el cliente responde, llega al equipo
               subject: "Recibimos tu solicitud de cotización — HERCAN",
               text: conf.text,
               html: conf.html,
