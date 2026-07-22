@@ -296,8 +296,8 @@ export default async function ProductPage({
         )}
 
         {faqs.length > 0 && (
-          <section className="reveal mt-16 max-w-3xl">
-            <h2 className="mb-4 font-heading text-lg text-hc-navy">
+          <section className="reveal mx-auto mt-16 max-w-3xl">
+            <h2 className="mb-4 text-center font-heading text-lg text-hc-navy">
               Preguntas frecuentes
             </h2>
             <FaqAccordion faqs={faqs} />
