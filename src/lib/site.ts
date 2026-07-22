@@ -37,14 +37,19 @@ export const site = {
 
   // Contacto / NAP — debe coincidir con el Google Business Profile
   email: "ventas@hercan.com.mx", // TODO: confirmar correo comercial
-  phone: "", // TODO: teléfono comercial (formato +52…)
+  phone: "", // TODO: teléfono comercial (formato +52…) — no viene en la constancia
   whatsapp: "528442864095", // WhatsApp de ventas (dígitos con lada país)
+  // Datos fiscales de la constancia SAT (jul-2026).
+  rfc: "HCT130408CK5",
+  // Razón social EXACTA del SAT (difiere del branding "Tungsteno del Norte"):
+  legalNameSat: "Herramientas de Carburo de Tugsteno del Noreste, S.A. de C.V.",
   address: {
-    // Tomado de la ubicación de inventario en Shopify; confirmar dirección comercial pública
-    street: "Av. Plan de Ayala 1208", // TODO: confirmar
+    // Domicilio FISCAL (constancia SAT). TODO: confirmar si es también el domicilio
+    // comercial público (el de Shopify era "Av. Plan de Ayala 1208" — distinto).
+    street: "Calle Magnolia 1781, Col. Reforma",
     city: "Monterrey",
     state: "Nuevo León",
-    postalCode: "", // TODO
+    postalCode: "64550",
     country: "MX",
   },
   geo: { lat: null as number | null, lng: null as number | null }, // TODO: coordenadas
