@@ -367,6 +367,12 @@ export function leadEmail(input: LeadEmailInput): { html: string; text: string }
          </td></tr>
        </table>`;
 
+  const typeBadge = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;"><tr><td>${
+    input.recurring
+      ? `<span style="display:inline-block;background:#fff4e5;border:1px solid #f2c98a;border-radius:20px;padding:7px 15px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;letter-spacing:.3px;color:#8a5a00;">&#128260;&nbsp; Cadena de suministro · pedido recurrente</span>`
+      : `<span style="display:inline-block;background:#eef4f8;border:1px solid #cfe0ec;border-radius:20px;padding:7px 15px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;letter-spacing:.3px;color:#1f5a82;">&#128722;&nbsp; Venta normal · compra única</span>`
+  }</td></tr></table>`;
+
   const btnMail = button(mailto, "&#9993;&nbsp; Responder al cliente", C.blue);
   const btnWa = waUrl ? button(waUrl, "&#128172;&nbsp; Responder por WhatsApp", C.green) : "";
   const btnDraft = input.adminUrl ? button(input.adminUrl, "&#128203;&nbsp; Ver borrador en Shopify", C.steel) : "";
@@ -379,7 +385,7 @@ export function leadEmail(input: LeadEmailInput): { html: string; text: string }
     ...(input.empresa ? ([["Empresa", input.empresa]] as [string, string][]) : []),
     ["Correo", input.email],
     ...(input.telefono ? ([["Celular / WhatsApp", input.telefono]] as [string, string][]) : []),
-    ["Tipo", input.recurring ? "Suministro constante (recurrente)" : "Compra puntual"],
+    ["Tipo", input.recurring ? "Cadena de suministro (recurrente)" : "Venta normal (compra única)"],
     ...(input.recurring && input.frecuencia ? ([["Frecuencia", input.frecuencia]] as [string, string][]) : []),
     ...(input.recurring && input.duracion ? ([["Duración", input.duracion]] as [string, string][]) : []),
     ...(input.recurring && input.fechaInicio ? ([["Inicio deseado", input.fechaInicio]] as [string, string][]) : []),
@@ -400,6 +406,7 @@ export function leadEmail(input: LeadEmailInput): { html: string; text: string }
     <h1 style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:1.3;font-weight:bold;color:${C.navy};">Nueva solicitud de cotización</h1>
     <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:${C.gun};">Llegó una solicitud desde el sitio. Responde al cliente cuanto antes.</p>
     ${banner}
+    ${typeBadge}
     ${sectionLabel("Datos del cliente")}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.soft};border:1px solid ${C.metalLight};border-radius:12px;margin:0 0 18px;">
       <tr><td style="padding:14px 18px;">${infoHtml}</td></tr>

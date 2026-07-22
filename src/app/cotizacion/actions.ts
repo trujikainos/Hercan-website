@@ -154,8 +154,9 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
     });
     const firstTag = lines[0]?.product?.mpn || (lines[0]?.text ?? "").trim();
     const canal = data.source === "whatsapp" ? "WhatsApp" : "Cotización";
+    const tipo = data.recurring ? "Cadena de suministro" : "Venta";
     const subject =
-      `📢 ${canal} · Nueva solicitud${data.recurring ? " recurrente" : ""} — ${nombre}${folio ? ` [${folio}]` : ""}` +
+      `📢 ${canal} · ${tipo} — ${nombre}${folio ? ` [${folio}]` : ""}` +
       (lines.length > 1 ? ` (${lines.length} productos)` : firstTag ? ` (${firstTag})` : "");
     try {
       const res = await sendEmail(
