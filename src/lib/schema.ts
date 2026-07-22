@@ -43,6 +43,45 @@ export function websiteNode() {
   };
 }
 
+/**
+ * LocalBusiness para la página de contacto: NAP completo derivado de site.ts.
+ * Es la misma entidad que la Organization global (enlazada por parentOrganization).
+ * Sólo emite campos con dato real → email/teléfono/sameAs/geo condicionales (anti-fabricación).
+ */
+export function localBusinessNode() {
+  return {
+    "@type": "LocalBusiness",
+    "@id": `${site.url}/#localbusiness`,
+    name: site.name,
+    legalName: site.legalName,
+    url: site.url,
+    image: absoluteUrl(site.ogImage),
+    logo: absoluteUrl(site.ogImage),
+    ...(site.email ? { email: site.email } : {}),
+    ...(site.phone ? { telephone: site.phone } : {}),
+    ...(site.sameAs.length ? { sameAs: site.sameAs } : {}),
+    parentOrganization: { "@id": ORG_ID },
+    address: {
+      "@type": "PostalAddress",
+      ...(site.address.street ? { streetAddress: site.address.street } : {}),
+      addressLocality: site.address.city,
+      addressRegion: site.address.state,
+      ...(site.address.postalCode ? { postalCode: site.address.postalCode } : {}),
+      addressCountry: site.address.country,
+    },
+    ...(site.geo.lat != null && site.geo.lng != null
+      ? {
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude: site.geo.lat,
+            longitude: site.geo.lng,
+          },
+        }
+      : {}),
+    areaServed: { "@type": "Country", name: "México" },
+  };
+}
+
 export function breadcrumbNode(items: { name: string; path?: string }[]) {
   return {
     "@type": "BreadcrumbList",
