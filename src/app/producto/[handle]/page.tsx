@@ -114,6 +114,8 @@ export default async function ProductPage({
     title: product.title,
     sku: product.sku ?? null,
     mpn: product.mpn ?? null,
+    price: product.price ?? null,
+    currency: product.currency,
   };
 
   return (

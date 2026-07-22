@@ -22,7 +22,14 @@ export default async function CotizacionPage({
   // Si viene ?producto=<handle> (desde una ficha), prellena el producto estructurado.
   const p = producto ? await getProductByHandle(producto) : undefined;
   const initialProduct = p
-    ? { handle: p.handle, title: p.title, sku: p.sku ?? null, mpn: p.mpn ?? null }
+    ? {
+        handle: p.handle,
+        title: p.title,
+        sku: p.sku ?? null,
+        mpn: p.mpn ?? null,
+        price: p.price ?? null,
+        currency: p.currency,
+      }
     : null;
 
   return (

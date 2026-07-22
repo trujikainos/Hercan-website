@@ -473,6 +473,8 @@ export interface SearchResult {
   available: boolean;
   sku: string | null; // SKU interno de Hercan (variante)
   mpn: string | null; // N° de parte del fabricante (metafield specs.mpn)
+  price: number | null; // precio de lista (minVariantPrice); null si placeholder/0
+  currency: string; // ISO del precio, p. ej. "USD"
 }
 
 // products(query) indexa título, marca, tipo Y SKU de variante → busca por nombre
@@ -485,6 +487,7 @@ const SEARCH_QUERY = `
       nodes {
         title handle
         featuredImage { url }
+        priceRange { minVariantPrice { amount currencyCode } }
         variants(first: 1) { nodes { availableForSale sku } }
         mpn: metafield(namespace: "specs", key: "mpn") { value }
       }
@@ -495,6 +498,7 @@ type SearchNode = {
   title: string;
   handle: string;
   featuredImage?: { url: string } | null;
+  priceRange?: { minVariantPrice: { amount: string; currencyCode: string } } | null;
   variants?: { nodes: { availableForSale: boolean; sku: string | null }[] };
   mpn?: { value: string } | null;
 };
@@ -508,14 +512,21 @@ export async function searchProducts(query: string, limit = 7): Promise<SearchRe
     { q: `${term}*`, limit },
     { cache: "no-store" },
   );
-  return (data.products?.nodes ?? []).map((p) => ({
-    title: p.title,
-    handle: p.handle,
-    image: p.featuredImage?.url ?? null,
-    available: p.variants?.nodes?.[0]?.availableForSale ?? true,
-    sku: p.variants?.nodes?.[0]?.sku ?? null,
-    mpn: p.mpn?.value ?? null,
-  }));
+  return (data.products?.nodes ?? []).map((p) => {
+    // Precio de lista de la variante mínima; 0/placeholder → null (desconocido),
+    // igual que mapProduct(), para no mostrar "$0.00" mientras se cargan precios.
+    const amount = parseFloat(p.priceRange?.minVariantPrice?.amount ?? "");
+    return {
+      title: p.title,
+      handle: p.handle,
+      image: p.featuredImage?.url ?? null,
+      available: p.variants?.nodes?.[0]?.availableForSale ?? true,
+      sku: p.variants?.nodes?.[0]?.sku ?? null,
+      mpn: p.mpn?.value ?? null,
+      price: Number.isFinite(amount) && amount > 0 ? amount : null,
+      currency: p.priceRange?.minVariantPrice?.currencyCode ?? "USD",
+    };
+  });
 }
 
 // ---- Blog (Shopify nativo, vía Storefront API) ----

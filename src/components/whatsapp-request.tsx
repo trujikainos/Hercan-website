@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, Check, X, Plus, ArrowRight, ArrowLeft } from "lucide-react";
+import { Loader2, Check, X, Plus, ArrowRight, ArrowLeft, ExternalLink } from "lucide-react";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { ProductCombobox, type SelectedProduct } from "@/components/product-combobox";
+import { formatMoney } from "@/components/ui";
 import { site } from "@/lib/site";
 import { buildWhatsappMessage, waUrl, type WaLine } from "@/lib/whatsapp";
 import { submitQuoteAction, type QuoteInput } from "@/app/cotizacion/actions";
@@ -53,6 +54,16 @@ interface Line {
   product?: SelectedProduct;
 }
 
+/** Cantidad numérica (≥ 0) desde el texto libre del input. */
+function parseQty(qty: string): number {
+  const n = parseInt(qty.replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+/** Formato de dinero de la ficha (Intl en-US, moneda de site.currency). */
+function money(amount: number, currency: string): string {
+  return formatMoney({ amount: String(amount), currencyCode: currency });
+}
+
 function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: () => void }) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [pending, start] = useTransition();
@@ -75,6 +86,16 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
   const addLine = () => setLines((prev) => [...prev, { text: "", qty: "1", product: undefined }]);
   const removeLine = (i: number) => setLines((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev));
   const hasContent = (l: Line) => Boolean(l.product || l.text.trim());
+
+  // Total estimado = Σ (precio de lista × cantidad) de las líneas con precio conocido.
+  // Solo referencia: el precio final se cierra en la cotización (precios por volumen).
+  const pricedLines = lines.filter((l) => l.product?.price != null);
+  const estimatedTotal = pricedLines.reduce(
+    (sum, l) => sum + (l.product?.price ?? 0) * parseQty(l.qty),
+    0,
+  );
+  const totalCurrency = pricedLines[0]?.product?.currency ?? site.currency;
+  const unpricedCount = lines.filter(hasContent).length - pricedLines.length;
 
   function next() {
     if (f.nombre.trim().length < 2) return setError("Escribe tu nombre.");
@@ -196,42 +217,71 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
         <>
           <p className={stepLbl}>Paso 2 de 2 · Confirma tu producto o productos</p>
           <div className="space-y-3">
-            {lines.map((l, i) => (
-              <div key={i} className="space-y-1">
-                <div className="grid grid-cols-[minmax(0,1fr)_4.5rem_1.75rem] items-start gap-2">
-                  <ProductCombobox
-                    value={l.text}
-                    onValueChange={(text) => patchLine(i, { text })}
-                    onSelect={(p) => patchLine(i, p ? { product: p, text: p.title } : { product: undefined })}
-                    placeholder="Título, N° de parte o SKU…"
-                    inputClassName={inp}
-                  />
-                  <input
-                    aria-label="Cantidad"
-                    value={l.qty}
-                    onChange={(e) => patchLine(i, { qty: e.target.value })}
-                    className={inp}
-                    inputMode="numeric"
-                    placeholder="Cant."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeLine(i)}
-                    disabled={lines.length === 1}
-                    aria-label="Quitar producto"
-                    className="press flex h-[42px] items-center justify-center rounded-lg text-hc-gunmetal transition hover:bg-hc-metal-light/40 hover:text-hc-ink disabled:cursor-not-allowed disabled:opacity-25"
-                  >
-                    <X className="h-4 w-4" aria-hidden />
-                  </button>
+            {lines.map((l, i) => {
+              const unit = l.product?.price ?? null;
+              const qtyNum = parseQty(l.qty);
+              const cur = l.product?.currency ?? site.currency;
+              return (
+                <div key={i} className="space-y-1">
+                  <div className="grid grid-cols-[minmax(0,1fr)_4.5rem_1.75rem] items-start gap-2">
+                    <ProductCombobox
+                      value={l.text}
+                      onValueChange={(text) => patchLine(i, { text })}
+                      onSelect={(p) => patchLine(i, p ? { product: p, text: p.title } : { product: undefined })}
+                      placeholder="Título, N° de parte o SKU…"
+                      inputClassName={inp}
+                    />
+                    <input
+                      aria-label="Cantidad"
+                      value={l.qty}
+                      onChange={(e) => patchLine(i, { qty: e.target.value })}
+                      className={inp}
+                      inputMode="numeric"
+                      placeholder="Cant."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeLine(i)}
+                      disabled={lines.length === 1}
+                      aria-label="Quitar producto"
+                      className="press flex h-[42px] items-center justify-center rounded-lg text-hc-gunmetal transition hover:bg-hc-metal-light/40 hover:text-hc-ink disabled:cursor-not-allowed disabled:opacity-25"
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+                  {l.product && (
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pl-1">
+                      <p className="text-xs text-[#2e7d46]">
+                        ✓ {l.product.sku ? `SKU ${l.product.sku}` : "Del catálogo"}
+                        {l.product.mpn ? ` · N° parte ${l.product.mpn}` : ""}
+                      </p>
+                      <div className="flex items-center gap-3">
+                        {unit != null ? (
+                          <span className="text-xs text-hc-gunmetal">
+                            {money(unit, cur)} <span className="text-hc-metal">×</span> {qtyNum} ={" "}
+                            <strong className="font-semibold text-hc-navy">
+                              {money(unit * qtyNum, cur)}
+                            </strong>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-hc-gunmetal">Precio a cotizar</span>
+                        )}
+                        <a
+                          href={`/producto/${l.product.handle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Ver ${l.product.title} (se abre en una pestaña nueva)`}
+                          className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-hc-blue transition-colors hover:text-hc-steel"
+                        >
+                          Ver producto
+                          <ExternalLink className="h-3 w-3" aria-hidden />
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {l.product && (
-                  <p className="pl-1 text-xs text-[#2e7d46]">
-                    ✓ {l.product.sku ? `SKU ${l.product.sku}` : "Del catálogo"}
-                    {l.product.mpn ? ` · N° parte ${l.product.mpn}` : ""}
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
           <button
             type="button"
@@ -240,6 +290,22 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
           >
             <Plus className="h-4 w-4" aria-hidden /> Agregar otro producto
           </button>
+
+          {estimatedTotal > 0 && (
+            <div className="mt-3 border-t border-hc-metal-light pt-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-hc-ink">Total estimado</span>
+                <span className="font-heading text-lg text-hc-navy">
+                  {money(estimatedTotal, totalCurrency)}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-hc-gunmetal">
+                Estimado con precio de lista en {totalCurrency}, IVA incluido — el total final se
+                confirma en tu cotización (aplican precios por volumen).
+                {unpricedCount > 0 ? " Algunos productos se cotizan aparte." : ""}
+              </p>
+            </div>
+          )}
 
           <div className="mt-3">
             <label className={lbl} htmlFor="wr-msg">Mensaje / detalle técnico</label>

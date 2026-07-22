@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Loader2, ImageIcon, Search } from "lucide-react";
+import { formatMoney } from "@/components/ui";
 import type { SearchResult } from "@/lib/shopify";
 
 /** Producto elegido desde el catálogo real (para adjuntar a la cotización). */
@@ -10,6 +11,8 @@ export interface SelectedProduct {
   title: string;
   sku: string | null;
   mpn: string | null;
+  price: number | null; // precio de lista (minVariantPrice); null si desconocido
+  currency: string; // ISO del precio, p. ej. "USD"
 }
 
 /**
@@ -96,7 +99,14 @@ export function ProductCombobox({
     if (timerRef.current) clearTimeout(timerRef.current);
     ctrlRef.current?.abort();
     onValueChange(r.title);
-    onSelect({ handle: r.handle, title: r.title, sku: r.sku, mpn: r.mpn });
+    onSelect({
+      handle: r.handle,
+      title: r.title,
+      sku: r.sku,
+      mpn: r.mpn,
+      price: r.price,
+      currency: r.currency,
+    });
     setPicked(true);
     setOpen(false);
     setResults([]);
@@ -219,12 +229,19 @@ export function ProductCombobox({
                         </span>
                       )}
                     </span>
-                    <span
-                      className={`shrink-0 text-xs ${
-                        r.available ? "text-[#2e7d46]" : "text-hc-gunmetal"
-                      }`}
-                    >
-                      {r.available ? "Disponible" : "Sobre pedido"}
+                    <span className="flex shrink-0 flex-col items-end gap-0.5">
+                      {r.price != null && (
+                        <span className="text-xs font-semibold text-hc-navy">
+                          {formatMoney({ amount: String(r.price), currencyCode: r.currency })}
+                        </span>
+                      )}
+                      <span
+                        className={`text-xs ${
+                          r.available ? "text-[#2e7d46]" : "text-hc-gunmetal"
+                        }`}
+                      >
+                        {r.available ? "Disponible" : "Sobre pedido"}
+                      </span>
                     </span>
                   </button>
                 </li>
