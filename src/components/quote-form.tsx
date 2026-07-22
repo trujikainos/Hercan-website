@@ -181,8 +181,8 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
           <input id="email" type="email" required value={c.email} onChange={updC("email")} className={input} autoComplete="email" />
         </div>
         <div>
-          <label className={label} htmlFor="telefono">Teléfono / WhatsApp</label>
-          <input id="telefono" value={c.telefono} onChange={updC("telefono")} className={input} autoComplete="tel" />
+          <label className={label} htmlFor="telefono">Celular / WhatsApp *</label>
+          <input id="telefono" type="tel" inputMode="tel" required value={c.telefono} onChange={updC("telefono")} className={input} autoComplete="tel" placeholder="Ej. 81 1234 5678" />
         </div>
       </div>
 

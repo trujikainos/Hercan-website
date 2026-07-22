@@ -1,6 +1,7 @@
 "use server";
 import { headers } from "next/headers";
-import { site, absoluteUrl } from "@/lib/site";
+import { absoluteUrl } from "@/lib/site";
+import { customerEmail, leadEmail, type EmailLine } from "@/lib/quote-email";
 
 /** Producto elegido del catálogo real (via autocompletar). */
 export interface QuoteProduct {
@@ -28,9 +29,12 @@ export interface QuoteInput {
 }
 export interface QuoteResult {
   ok: boolean;
-  code?: "INVALID" | "CONSENT" | "RATE" | "EMAIL_UNAVAILABLE" | "SEND_FAIL";
+  code?: "INVALID" | "PHONE" | "CONSENT" | "RATE" | "EMAIL_UNAVAILABLE" | "SEND_FAIL";
   message: string;
 }
+
+// Destino de los leads (a quién le llega la notificación de cotización).
+const LEADS_TO = process.env.QUOTE_LEADS_TO || "leads@weevolveit.com";
 
 // Rate-limit simple en memoria (por IP). Suficiente para frenar abuso básico.
 const hits = new Map<string, number[]>();
@@ -43,8 +47,6 @@ function rateLimited(ip: string, max = 3, windowMs = 10 * 60 * 1000): boolean {
 }
 
 const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-const esc = (s: string) =>
-  s.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c] ?? c);
 
 async function sendEmail(payload: Record<string, unknown>, key: string) {
   return fetch("https://api.resend.com/emails", {
@@ -54,14 +56,28 @@ async function sendEmail(payload: Record<string, unknown>, key: string) {
   });
 }
 
+/** Registra la solicitud en Google Sheets (best-effort; no bloquea el resultado). */
+function logToSheet(row: Record<string, unknown>) {
+  const url = process.env.SHEETS_WEBHOOK_URL;
+  if (!url) return;
+  void fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(row),
+  }).catch(() => {});
+}
+
 export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> {
   // Honeypot: si el campo oculto trae texto, es bot → aceptamos en silencio y descartamos.
   if (data.hp && data.hp.trim()) return { ok: true, message: "Recibido." };
 
   const nombre = (data.nombre ?? "").trim();
   const email = (data.email ?? "").trim();
+  const telefono = (data.telefono ?? "").trim();
   if (nombre.length < 2 || !emailRe.test(email))
     return { ok: false, code: "INVALID", message: "Revisa tu nombre y tu correo." };
+  if (telefono.replace(/\D/g, "").length < 8)
+    return { ok: false, code: "PHONE", message: "Déjanos un celular o WhatsApp para contactarte." };
   if (!data.consent)
     return { ok: false, code: "CONSENT", message: "Acepta el aviso de privacidad para continuar." };
 
@@ -78,91 +94,62 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
 
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM || "HERCAN <onboarding@resend.dev>";
-  const to = site.email;
-  if (!key || !to)
+  if (!key || !LEADS_TO)
     return { ok: false, code: "EMAIL_UNAVAILABLE", message: "El correo aún no está configurado." };
 
-  const qtyLabel = data.recurring ? "Cant. mensual aprox." : "Cantidad";
+  // Datos de producto listos para las plantillas.
+  const emailLines: EmailLine[] = lines.map((l) => ({
+    name: l.product ? l.product.title : (l.text ?? "").trim(),
+    qty: l.qty?.trim() || undefined,
+    mpn: l.product?.mpn ?? null,
+    sku: l.product?.sku ?? null,
+    url: l.product?.handle ? absoluteUrl(`/producto/${l.product.handle}`) : null,
+  }));
 
-  // ── Cuerpo en texto plano ──
-  const head = [
-    `Nombre: ${nombre}`,
-    data.empresa ? `Empresa: ${data.empresa}` : null,
-    `Correo: ${email}`,
-    data.telefono ? `Teléfono: ${data.telefono}` : null,
-    `Tipo de solicitud: ${
-      data.recurring ? "Suministro constante (pedido recurrente)" : "Compra puntual"
-    }`,
-  ].filter((l): l is string => Boolean(l));
-
-  const productText = lines.map((l, i) => {
-    const p = l.product;
-    const name = p ? p.title : (l.text ?? "").trim();
-    const sub = [`${i + 1}. ${name}`];
-    if (l.qty?.trim()) sub.push(`   ${qtyLabel}: ${l.qty.trim()}`);
-    if (p?.mpn) sub.push(`   N° de parte: ${p.mpn}`);
-    if (p?.sku) sub.push(`   SKU: ${p.sku}`);
-    if (p?.handle) sub.push(`   Ficha: ${absoluteUrl(`/producto/${p.handle}`)}`);
-    return sub.join("\n");
-  });
-
-  const text =
-    "Nueva solicitud de cotización desde el sitio:\n\n" +
-    head.join("\n") +
-    (productText.length ? `\n\nProductos solicitados:\n${productText.join("\n\n")}` : "") +
-    (mensaje ? `\n\nMensaje:\n${mensaje}` : "");
-
-  // ── Cuerpo en HTML (escapado) ──
-  const htmlHead = head.map((l) => `<li>${esc(l)}</li>`).join("");
-  const htmlProducts = lines
-    .map((l) => {
-      const p = l.product;
-      const name = esc(p ? p.title : (l.text ?? "").trim());
-      const bits: string[] = [];
-      if (l.qty?.trim()) bits.push(`${esc(qtyLabel)}: ${esc(l.qty.trim())}`);
-      if (p?.mpn) bits.push(`N° de parte: ${esc(p.mpn)}`);
-      if (p?.sku) bits.push(`SKU: ${esc(p.sku)}`);
-      const ficha = p?.handle
-        ? ` — <a href="${esc(absoluteUrl(`/producto/${p.handle}`))}">ver ficha</a>`
-        : "";
-      return `<li><strong>${name}</strong>${
-        bits.length ? `<br><span style="color:#555">${bits.join(" · ")}</span>` : ""
-      }${ficha}</li>`;
-    })
-    .join("");
-
-  const html =
-    "<h2>Nueva solicitud de cotización</h2>" +
-    `<ul>${htmlHead}</ul>` +
-    (htmlProducts ? `<h3>Productos solicitados</h3><ol>${htmlProducts}</ol>` : "") +
-    (mensaje ? `<h3>Mensaje</h3><p>${esc(mensaje)}</p>` : "");
-
-  // Etiqueta para el asunto: N° de parte del 1er producto, o el texto escrito.
+  const lead = leadEmail({ nombre, empresa: data.empresa, email, telefono, recurring: data.recurring, lines: emailLines, mensaje });
   const firstTag = lines[0]?.product?.mpn || (lines[0]?.text ?? "").trim();
   const subject =
-    `Cotización${data.recurring ? " recurrente" : ""} — ${nombre}` +
+    `Nueva cotización${data.recurring ? " recurrente" : ""} — ${nombre}` +
     (lines.length > 1 ? ` (${lines.length} productos)` : firstTag ? ` (${firstTag})` : "");
 
   try {
     const res = await sendEmail(
-      { from, to: [to], reply_to: email, subject, text, html },
+      { from, to: [LEADS_TO], reply_to: email, subject, text: lead.text, html: lead.html },
       key,
     );
     if (!res.ok) {
       console.error("[cotizacion] resend", res.status, await res.text());
       return { ok: false, code: "SEND_FAIL", message: "No pudimos enviar. Prueba por WhatsApp o reintenta." };
     }
+
+    // Guarda en Google Sheets (si está configurado el webhook).
+    logToSheet({
+      fecha: new Date().toISOString(),
+      nombre,
+      empresa: data.empresa ?? "",
+      correo: email,
+      celular: telefono,
+      tipo: data.recurring ? "Recurrente (mensual)" : "Puntual",
+      productos: emailLines
+        .map((l) => `${l.name}${l.qty ? ` x${l.qty}` : ""}${l.mpn ? ` [${l.mpn}]` : ""}${l.sku ? ` (SKU ${l.sku})` : ""}`)
+        .join(" | "),
+      mensaje,
+    });
+
     // Autorespuesta al cliente (best-effort, no bloquea el resultado).
+    const conf = customerEmail({ nombre, recurring: data.recurring, lines: emailLines });
     void sendEmail(
       {
         from,
         to: [email],
-        reply_to: to, // si el cliente responde a la confirmación, llega a ventas@hercan.com.mx
+        reply_to: LEADS_TO, // si el cliente responde a la confirmación, llega al equipo
         subject: "Recibimos tu solicitud de cotización — HERCAN",
-        text: `Hola ${nombre}:\n\nRecibimos tu solicitud y te responderemos a la brevedad con precio y disponibilidad.\n\nHERCAN — Herramental para CNC y equipos de medición.`,
+        text: conf.text,
+        html: conf.html,
       },
       key,
     ).catch(() => {});
+
     return { ok: true, message: "¡Solicitud enviada! Te responderemos muy pronto." };
   } catch (e) {
     console.error("[cotizacion] error", e);
