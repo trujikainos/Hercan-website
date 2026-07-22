@@ -2,24 +2,29 @@
 import { headers } from "next/headers";
 import { site, absoluteUrl } from "@/lib/site";
 
+/** Producto elegido del catálogo real (via autocompletar). */
+export interface QuoteProduct {
+  handle: string;
+  title: string;
+  sku: string | null;
+  mpn: string | null;
+}
+/** Una línea de la cotización: un producto (o texto libre) con su cantidad. */
+export interface QuoteLine {
+  text: string; // título del producto o texto libre escrito a mano
+  qty?: string; // cantidad (mensual aprox. si recurring = true)
+  product?: QuoteProduct;
+}
 export interface QuoteInput {
   nombre: string;
   empresa?: string;
   email: string;
   telefono?: string;
-  sku?: string;
-  cantidad?: string;
+  lines: QuoteLine[]; // uno o varios productos
+  recurring: boolean; // suministro constante (pedido recurrente)
   mensaje?: string;
   consent: boolean;
   hp?: string; // honeypot (los bots lo llenan)
-  // Producto elegido del catálogo real (via autocompletar). Opcional: si el
-  // cliente escribió a mano en vez de elegir, viene undefined y usamos `sku`.
-  product?: {
-    handle: string;
-    title: string;
-    sku: string | null;
-    mpn: string | null;
-  };
 }
 export interface QuoteResult {
   ok: boolean;
@@ -60,6 +65,12 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
   if (!data.consent)
     return { ok: false, code: "CONSENT", message: "Acepta el aviso de privacidad para continuar." };
 
+  // Solo líneas con contenido (producto elegido o texto escrito).
+  const lines = (data.lines ?? []).filter((l) => (l?.text ?? "").trim() || l?.product);
+  const mensaje = (data.mensaje ?? "").trim();
+  if (lines.length === 0 && !mensaje)
+    return { ok: false, code: "INVALID", message: "Cuéntanos qué producto necesitas cotizar." };
+
   const h = await headers();
   const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || "unknown";
   if (rateLimited(ip))
@@ -71,32 +82,70 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
   if (!key || !to)
     return { ok: false, code: "EMAIL_UNAVAILABLE", message: "El correo aún no está configurado." };
 
-  const p = data.product;
-  const lines = [
+  const qtyLabel = data.recurring ? "Cant. mensual aprox." : "Cantidad";
+
+  // ── Cuerpo en texto plano ──
+  const head = [
     `Nombre: ${nombre}`,
     data.empresa ? `Empresa: ${data.empresa}` : null,
     `Correo: ${email}`,
     data.telefono ? `Teléfono: ${data.telefono}` : null,
-    p ? `Producto: ${p.title}` : data.sku ? `Producto / N° de parte: ${data.sku}` : null,
-    p?.mpn ? `N° de parte: ${p.mpn}` : null,
-    p?.sku ? `SKU: ${p.sku}` : null,
-    p?.handle ? `Ficha: ${absoluteUrl(`/producto/${p.handle}`)}` : null,
-    data.cantidad ? `Cantidad: ${data.cantidad}` : null,
-    data.mensaje ? `Mensaje: ${data.mensaje}` : null,
+    `Tipo de solicitud: ${
+      data.recurring ? "Suministro constante (pedido recurrente)" : "Compra puntual"
+    }`,
   ].filter((l): l is string => Boolean(l));
+
+  const productText = lines.map((l, i) => {
+    const p = l.product;
+    const name = p ? p.title : (l.text ?? "").trim();
+    const sub = [`${i + 1}. ${name}`];
+    if (l.qty?.trim()) sub.push(`   ${qtyLabel}: ${l.qty.trim()}`);
+    if (p?.mpn) sub.push(`   N° de parte: ${p.mpn}`);
+    if (p?.sku) sub.push(`   SKU: ${p.sku}`);
+    if (p?.handle) sub.push(`   Ficha: ${absoluteUrl(`/producto/${p.handle}`)}`);
+    return sub.join("\n");
+  });
+
+  const text =
+    "Nueva solicitud de cotización desde el sitio:\n\n" +
+    head.join("\n") +
+    (productText.length ? `\n\nProductos solicitados:\n${productText.join("\n\n")}` : "") +
+    (mensaje ? `\n\nMensaje:\n${mensaje}` : "");
+
+  // ── Cuerpo en HTML (escapado) ──
+  const htmlHead = head.map((l) => `<li>${esc(l)}</li>`).join("");
+  const htmlProducts = lines
+    .map((l) => {
+      const p = l.product;
+      const name = esc(p ? p.title : (l.text ?? "").trim());
+      const bits: string[] = [];
+      if (l.qty?.trim()) bits.push(`${esc(qtyLabel)}: ${esc(l.qty.trim())}`);
+      if (p?.mpn) bits.push(`N° de parte: ${esc(p.mpn)}`);
+      if (p?.sku) bits.push(`SKU: ${esc(p.sku)}`);
+      const ficha = p?.handle
+        ? ` — <a href="${esc(absoluteUrl(`/producto/${p.handle}`))}">ver ficha</a>`
+        : "";
+      return `<li><strong>${name}</strong>${
+        bits.length ? `<br><span style="color:#555">${bits.join(" · ")}</span>` : ""
+      }${ficha}</li>`;
+    })
+    .join("");
+
+  const html =
+    "<h2>Nueva solicitud de cotización</h2>" +
+    `<ul>${htmlHead}</ul>` +
+    (htmlProducts ? `<h3>Productos solicitados</h3><ol>${htmlProducts}</ol>` : "") +
+    (mensaje ? `<h3>Mensaje</h3><p>${esc(mensaje)}</p>` : "");
+
+  // Etiqueta para el asunto: N° de parte del 1er producto, o el texto escrito.
+  const firstTag = lines[0]?.product?.mpn || (lines[0]?.text ?? "").trim();
+  const subject =
+    `Cotización${data.recurring ? " recurrente" : ""} — ${nombre}` +
+    (lines.length > 1 ? ` (${lines.length} productos)` : firstTag ? ` (${firstTag})` : "");
 
   try {
     const res = await sendEmail(
-      {
-        from,
-        to: [to],
-        reply_to: email,
-        subject: `Cotización — ${nombre}${p?.mpn ? ` (${p.mpn})` : data.sku ? ` (${data.sku})` : ""}`,
-        text: `Nueva solicitud de cotización desde el sitio:\n\n${lines.join("\n")}`,
-        html: `<h2>Nueva solicitud de cotización</h2><ul>${lines
-          .map((l) => `<li>${esc(l)}</li>`)
-          .join("")}</ul>`,
-      },
+      { from, to: [to], reply_to: email, subject, text, html },
       key,
     );
     if (!res.ok) {
