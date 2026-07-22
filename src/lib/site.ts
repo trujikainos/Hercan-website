@@ -88,7 +88,10 @@ export const site = {
   clarity: process.env.NEXT_PUBLIC_CLARITY_ID || "", // TODO
   metaPixel: process.env.NEXT_PUBLIC_META_PIXEL_ID || "", // TODO
 
-  ogImage: "/brand/hercan-logo.jpg", // TODO: OG dedicada 1200x630 (Fase OG con next/og)
+  // Logo de la marca para JSON-LD (Organization/LocalBusiness `logo`/`image` en schema.ts).
+  // La og:image de redes NO sale de aquí: la generan los archivos `opengraph-image.tsx`
+  // (next/og, 1200×630) — la convención de archivo gana por ruta, sin duplicar og:image.
+  ogImage: "/brand/hercan-logo.jpg",
 } as const;
 
 export const absoluteUrl = (path = "/") =>
