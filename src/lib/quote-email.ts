@@ -244,6 +244,7 @@ export interface CustomerEmailInput {
   frecuencia?: string;
   duracion?: string;
   fechaInicio?: string;
+  folio?: string; // folio de seguimiento para el cliente (ej. #D9)
 }
 
 /** Resumen corto de los términos del suministro recurrente (para textos). */
@@ -265,6 +266,16 @@ export function customerEmail(input: CustomerEmailInput): { html: string; text: 
     : "";
   const terms = recurringTerms(input);
 
+  const folioHtml = input.folio
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;background:${C.navy};border-radius:12px;">
+         <tr><td style="padding:14px 18px;font-family:Arial,Helvetica,sans-serif;">
+           <div style="font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;color:${C.sky};">Folio de tu solicitud</div>
+           <div style="margin-top:3px;font-family:'Courier New',Courier,monospace;font-size:20px;font-weight:bold;letter-spacing:1px;color:#ffffff;">${esc(input.folio)}</div>
+           <div style="margin-top:3px;font-size:12px;color:${C.mist};">Guárdalo para dar seguimiento a tu solicitud.</div>
+         </td></tr>
+       </table>`
+    : "";
+
   const stepsHtml =
     stepRow("1", "Revisamos tu solicitud", "Un especialista valida los productos y las cantidades.") +
     stepRow("2", "Preparamos tu cotización", "Con precio, disponibilidad y tiempo de entrega.") +
@@ -275,6 +286,7 @@ export function customerEmail(input: CustomerEmailInput): { html: string; text: 
     <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:${C.ink};">
       Hola <strong style="color:${C.navy};">${esc(input.nombre)}</strong>, gracias por escribirnos. Un especialista está revisando tu solicitud y te responderá muy pronto con <strong>precio y disponibilidad</strong>.
     </p>
+    ${folioHtml}
     ${
       input.recurring
         ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;background:${C.soft};border:1px solid ${C.metalLight};border-radius:10px;">
@@ -312,6 +324,7 @@ export function customerEmail(input: CustomerEmailInput): { html: string; text: 
     `HERCAN — ${site.tagline}\n\n` +
     `Hola ${input.nombre}:\n\n` +
     "Recibimos tu solicitud de cotización y te responderemos muy pronto con precio y disponibilidad.\n" +
+    (input.folio ? `\nFolio de tu solicitud: ${input.folio} (guárdalo para dar seguimiento).\n` : "") +
     (input.recurring ? `\nRegistramos tu solicitud como suministro recurrente${terms ? ` (${terms})` : ""}.\n` : "") +
     (input.lines.length ? `\nResumen de tu solicitud:\n${linesText(input.lines, qtyLabel, false)}\n` : "") +
     "\n¿Qué sigue? Revisamos tu solicitud, preparamos la cotización con precio y disponibilidad, y te contactamos.\n" +

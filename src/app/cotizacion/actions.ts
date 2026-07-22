@@ -174,6 +174,7 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
             duracion: data.duracion,
             fechaInicio: data.fechaInicio,
             lines: emailLines,
+            folio,
           });
           await sendEmail(
             {
