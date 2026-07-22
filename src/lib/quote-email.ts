@@ -6,6 +6,7 @@
  * Solo servidor. Todo el contenido dinámico va escapado (anti-inyección HTML).
  */
 import { site } from "./site";
+import { qtyLabelLong } from "./frequency";
 
 const C = {
   navy: "#0e3e60",
@@ -129,7 +130,7 @@ function recurringTerms(t: { frecuencia?: string; duracion?: string; fechaInicio
 }
 
 export function customerEmail(input: CustomerEmailInput): { html: string; text: string } {
-  const qtyLabel = input.recurring ? "Cant. mensual aprox." : "Cantidad";
+  const qtyLabel = qtyLabelLong(input.recurring, input.frecuencia);
   const productsHtml = input.lines.map((l) => productBlock(l, qtyLabel, false)).join("");
   const waSelf = site.whatsapp
     ? `https://wa.me/${site.whatsapp}?text=${encodeURIComponent("Hola, quiero dar seguimiento a mi solicitud de cotización.")}`
@@ -183,7 +184,7 @@ export interface LeadEmailInput {
 }
 
 export function leadEmail(input: LeadEmailInput): { html: string; text: string } {
-  const qtyLabel = input.recurring ? "Cant. mensual aprox." : "Cantidad";
+  const qtyLabel = qtyLabelLong(input.recurring, input.frecuencia);
   const productsHtml = input.lines.map((l) => productBlock(l, qtyLabel, true)).join("");
 
   const mailto = `mailto:${esc(input.email)}?subject=${encodeURIComponent(

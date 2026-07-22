@@ -128,7 +128,7 @@ export async function createQuoteDraftOrder(
 
   const note = [
     `Solicitud web — ${
-      input.recurring ? "SUMINISTRO RECURRENTE (cantidades mensuales aprox.)" : "Compra puntual"
+      input.recurring ? "SUMINISTRO RECURRENTE (cantidades por entrega aprox.)" : "Compra puntual"
     }`,
     input.recurring && terminos ? `Términos: ${terminos}` : "",
     input.empresa ? `Empresa: ${input.empresa}` : "",

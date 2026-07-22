@@ -5,6 +5,7 @@ import { Loader2, Check, Send, Plus, X } from "lucide-react";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { ProductCombobox, type SelectedProduct } from "@/components/product-combobox";
 import { site } from "@/lib/site";
+import { qtyLabelFor } from "@/lib/frequency";
 import { submitQuoteAction, type QuoteInput } from "@/app/cotizacion/actions";
 
 interface Line {
@@ -38,8 +39,19 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [c, setC] = useState<Contact>(EMPTY_CONTACT);
   const [recurring, setRecurring] = useState(false);
-  const [rec, setRec] = useState({ frecuencia: "Mensual", duracion: "12 meses", fechaInicio: "" });
+  const [rec, setRec] = useState({
+    freqPreset: "Mensual",
+    freqN: "2",
+    freqUnidad: "meses",
+    duracion: "12 meses",
+    fechaInicio: "",
+  });
   const [lines, setLines] = useState<Line[]>([emptyLine(initialSku ?? "")]);
+
+  // Frecuencia efectiva (preset o "cada N meses/semanas") + etiqueta de cantidad.
+  const frecuencia =
+    rec.freqPreset === "Otra" ? `Cada ${(rec.freqN || "").trim() || "?"} ${rec.freqUnidad}` : rec.freqPreset;
+  const qtyLabelShort = qtyLabelFor(recurring, frecuencia);
 
   const updC =
     (k: keyof Contact) =>
@@ -70,7 +82,7 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
   }
 
   function whatsappUrl() {
-    const qtyLabel = recurring ? "Cant. mensual" : "Cantidad";
+    const qtyLabel = qtyLabelShort;
     const prod = lines.filter(hasContent).flatMap((l, i) => {
       const p = l.product;
       const name = p ? p.title : l.text.trim();
@@ -87,7 +99,7 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
       `Correo: ${c.email}`,
       c.telefono && `Teléfono: ${c.telefono}`,
       recurring ? "Tipo: Suministro constante (recurrente)" : null,
-      recurring && rec.frecuencia ? `Frecuencia: ${rec.frecuencia}` : null,
+      recurring && frecuencia ? `Frecuencia: ${frecuencia}` : null,
       recurring && rec.duracion ? `Duración: ${rec.duracion}` : null,
       recurring && rec.fechaInicio ? `Inicio: ${rec.fechaInicio}` : null,
       prod.length ? "Productos:" : null,
@@ -113,7 +125,7 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
       lines: buildLines(),
       recurring,
       ...(recurring
-        ? { frecuencia: rec.frecuencia, duracion: rec.duracion, fechaInicio: rec.fechaInicio || undefined }
+        ? { frecuencia, duracion: rec.duracion, fechaInicio: rec.fechaInicio || undefined }
         : {}),
     };
     start(async () => {
@@ -225,15 +237,38 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
                 <label className={label} htmlFor="frecuencia">Frecuencia de entrega</label>
                 <select
                   id="frecuencia"
-                  value={rec.frecuencia}
-                  onChange={(e) => setRec((p) => ({ ...p, frecuencia: e.target.value }))}
+                  value={rec.freqPreset}
+                  onChange={(e) => setRec((p) => ({ ...p, freqPreset: e.target.value }))}
                   className={input}
                 >
                   <option>Mensual</option>
                   <option>Quincenal</option>
                   <option>Trimestral</option>
                   <option>Semestral</option>
+                  <option value="Otra">Otra (personalizada)</option>
                 </select>
+                {rec.freqPreset === "Otra" && (
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <span className="shrink-0 text-sm text-hc-gunmetal">Cada</span>
+                    <input
+                      aria-label="Cada cuántas unidades"
+                      value={rec.freqN}
+                      onChange={(e) => setRec((p) => ({ ...p, freqN: e.target.value }))}
+                      className={`${input} w-14`}
+                      inputMode="numeric"
+                      placeholder="2"
+                    />
+                    <select
+                      aria-label="Unidad de frecuencia"
+                      value={rec.freqUnidad}
+                      onChange={(e) => setRec((p) => ({ ...p, freqUnidad: e.target.value }))}
+                      className={input}
+                    >
+                      <option>semanas</option>
+                      <option>meses</option>
+                    </select>
+                  </div>
+                )}
               </div>
               <div>
                 <label className={label} htmlFor="duracion">Duración del acuerdo</label>
@@ -260,7 +295,7 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
                 />
               </div>
               <p className="text-xs text-hc-gunmetal sm:col-span-3">
-                Indica la <strong>cantidad mensual aproximada</strong> por producto abajo.
+                Indica la <strong>cantidad por entrega</strong> (según la frecuencia) por producto abajo.
               </p>
             </div>
           )}
@@ -282,12 +317,12 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
                   inputClassName={input}
                 />
                 <input
-                  aria-label={recurring ? "Cantidad mensual aproximada" : "Cantidad"}
+                  aria-label={recurring ? `Cantidad por entrega (${frecuencia})` : "Cantidad"}
                   value={l.qty}
                   onChange={(e) => patchLine(i, { qty: e.target.value })}
                   className={input}
                   inputMode="numeric"
-                  placeholder={recurring ? "Cant./mes" : "Cant."}
+                  placeholder={recurring ? qtyLabelShort : "Cant."}
                 />
                 <button
                   type="button"
