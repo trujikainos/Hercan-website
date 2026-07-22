@@ -3,10 +3,9 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, ChevronRight, FileText, LayoutGrid, X } from "lucide-react";
+import { ArrowRight, Boxes, ChevronDown, ChevronRight, FileText, X } from "lucide-react";
 import { CATEGORIES } from "@/lib/mock-data";
 import { site } from "@/lib/site";
-import { WhatsAppIcon } from "@/components/whatsapp-icon";
 
 /**
  * MEGA MENÚ "Catálogo" del nav superior.
@@ -189,24 +188,6 @@ function QuoteCta({ onNavigate }: { onNavigate: Nav }) {
         <span className="text-xs text-hc-sky">Respuesta B2B en horas</span>
       </span>
     </Link>
-  );
-}
-
-function WhatsAppPill({ onNavigate }: { onNavigate: Nav }) {
-  if (!site.whatsapp) return null;
-  const text = encodeURIComponent("Hola, me interesa cotizar herramental para CNC. ");
-  return (
-    <a
-      href={`https://wa.me/${site.whatsapp}?text=${text}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      data-event="contact_whatsapp"
-      onClick={onNavigate}
-      className="press flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-medium text-white transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]"
-    >
-      <WhatsAppIcon className="h-4 w-4" />
-      WhatsApp
-    </a>
   );
 }
 
@@ -393,12 +374,12 @@ export function MegaMenu() {
           setOpen((o) => !o);
         }}
         onKeyDown={onTriggerKeyDown}
-        className="flex items-center gap-1.5 whitespace-nowrap rounded py-2 font-heading text-sm text-white transition-colors hover:text-hc-sky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-sky"
+        className="flex items-center gap-1.5 whitespace-nowrap rounded py-2.5 font-heading text-base text-white transition-colors hover:text-hc-sky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-sky"
       >
-        <LayoutGrid className="h-4 w-4" aria-hidden />
+        <Boxes className="h-5 w-5" aria-hidden />
         Catálogo
         <ChevronDown
-          className={`h-4 w-4 transition-transform duration-200 motion-reduce:transition-none ${
+          className={`h-5 w-5 transition-transform duration-200 motion-reduce:transition-none ${
             open ? "rotate-180" : ""
           }`}
           aria-hidden
@@ -465,11 +446,10 @@ export function MegaMenu() {
               </div>
             </div>
 
-            {/* Panel derecho: marca destacada + CTA + WhatsApp */}
+            {/* Panel derecho: marca destacada + CTA */}
             <div className="w-64 shrink-0 space-y-3 border-l border-hc-metal-light p-5">
               <FeaturedBrandCard onNavigate={() => closeNow(false)} />
               <QuoteCta onNavigate={() => closeNow(false)} />
-              <WhatsAppPill onNavigate={() => closeNow(false)} />
             </div>
           </div>
 
@@ -572,11 +552,10 @@ export function MegaMenu() {
               })}
             </ul>
 
-            {/* Marca destacada + CTA + WhatsApp + marcas + ver todo */}
+            {/* Marca destacada + CTA + marcas + ver todo */}
             <div className="space-y-3 p-4">
               <FeaturedBrandCard onNavigate={() => closeNow(false)} />
               <QuoteCta onNavigate={() => closeNow(false)} />
-              <WhatsAppPill onNavigate={() => closeNow(false)} />
               <div className="pt-2">
                 <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
                   Marcas

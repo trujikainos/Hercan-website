@@ -53,12 +53,12 @@ export function SiteHeader() {
       </div>
 
       <nav className="bg-hc-navy">
-        <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 font-heading text-sm text-white">
+        <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 font-heading text-base text-white">
           {/* Trigger del mega menú: las categorías viven ahora en el riel del panel.
               Fuera de cualquier overflow para que el panel ancho no se recorte. */}
           <MegaMenu />
           {/* Accesos fijos a la derecha: "Ver todo" + dropdown "Más" (páginas de empresa) */}
-          <div className="ml-auto flex shrink-0 items-center gap-5 py-2">
+          <div className="ml-auto flex shrink-0 items-center gap-5 py-2.5">
             <Link href="/productos" className="whitespace-nowrap text-hc-sky">
               Ver todo
             </Link>
