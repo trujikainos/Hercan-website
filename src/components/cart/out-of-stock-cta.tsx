@@ -1,16 +1,12 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
-import { site } from "@/lib/site";
-import { WhatsAppIcon } from "@/components/whatsapp-icon";
 
 /**
  * Producto agotado en línea: no se puede comprar (política DENY), pero el
- * comprador puede solicitarlo bajo pedido por WhatsApp o cotización.
+ * comprador puede solicitarlo bajo pedido mediante una cotización que llega
+ * prellenada con este producto (?producto=<handle>).
  */
-export function OutOfStockCTA({ title, sku }: { title: string; sku: string }) {
-  const waText = encodeURIComponent(
-    `Hola, quiero solicitar la compra de "${title}" (N° de parte ${sku}), que aparece agotado en línea. ¿Me confirman disponibilidad, precio y tiempo de entrega?`,
-  );
+export function OutOfStockCTA({ handle }: { handle: string }) {
   return (
     <div className="mt-5 rounded-lg border border-hc-metal-light bg-hc-soft/50 p-4">
       <p className="text-sm font-semibold text-hc-ink">Agotado en línea</p>
@@ -18,23 +14,11 @@ export function OutOfStockCTA({ title, sku }: { title: string; sku: string }) {
         Solicítalo bajo pedido: te confirmamos disponibilidad, precio por volumen y
         tiempo de entrega.
       </p>
-      <div className="mt-3 flex flex-wrap gap-3">
-        {site.whatsapp && (
-          <a
-            href={`https://wa.me/${site.whatsapp}?text=${waText}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-event="generate_lead"
-            className="press inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-5 py-2.5 font-medium text-white transition hover:brightness-95"
-          >
-            <WhatsAppIcon className="h-5 w-5" />
-            Solicitar por WhatsApp
-          </a>
-        )}
+      <div className="mt-3">
         <Link
-          href={`/cotizacion?sku=${encodeURIComponent(sku)}`}
+          href={`/cotizacion?producto=${encodeURIComponent(handle)}`}
           data-event="generate_lead"
-          className="inline-flex items-center gap-2 rounded-lg border border-hc-blue px-5 py-2.5 font-medium text-hc-blue transition hover:bg-hc-soft"
+          className="press inline-flex items-center gap-2 rounded-lg bg-hc-blue px-5 py-2.5 font-medium text-white transition-colors hover:bg-hc-steel"
         >
           <FileText className="h-4 w-4" aria-hidden />
           Solicitar cotización

@@ -33,7 +33,13 @@ const EMPTY_CONTACT: Contact = {
 };
 const emptyLine = (text = ""): Line => ({ text, qty: "", product: undefined });
 
-export function QuoteForm({ initialSku }: { initialSku?: string }) {
+export function QuoteForm({
+  initialSku,
+  initialProduct,
+}: {
+  initialSku?: string;
+  initialProduct?: SelectedProduct | null;
+}) {
   const [pending, start] = useTransition();
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +52,11 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
     duracion: "12 meses",
     fechaInicio: "",
   });
-  const [lines, setLines] = useState<Line[]>([emptyLine(initialSku ?? "")]);
+  const [lines, setLines] = useState<Line[]>([
+    initialProduct
+      ? { text: initialProduct.title, qty: "", product: initialProduct }
+      : emptyLine(initialSku ?? ""),
+  ]);
 
   // Frecuencia efectiva (preset o "cada N meses/semanas") + etiqueta de cantidad.
   const frecuencia =

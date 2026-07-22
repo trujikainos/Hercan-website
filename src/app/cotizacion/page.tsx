@@ -2,6 +2,7 @@ import { FileText, Headset, Clock } from "lucide-react";
 import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/home-sections";
 import { QuoteForm } from "@/components/quote-form";
+import { getProductByHandle } from "@/lib/shopify";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, breadcrumbNode } from "@/lib/schema";
 
@@ -15,9 +16,14 @@ export const metadata = {
 export default async function CotizacionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sku?: string }>;
+  searchParams: Promise<{ sku?: string; producto?: string }>;
 }) {
-  const { sku } = await searchParams;
+  const { sku, producto } = await searchParams;
+  // Si viene ?producto=<handle> (desde una ficha), prellena el producto estructurado.
+  const p = producto ? await getProductByHandle(producto) : undefined;
+  const initialProduct = p
+    ? { handle: p.handle, title: p.title, sku: p.sku ?? null, mpn: p.mpn ?? null }
+    : null;
 
   return (
     <>
@@ -42,7 +48,7 @@ export default async function CotizacionPage({
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_260px]">
           <div className="reveal">
-            <QuoteForm initialSku={sku} />
+            <QuoteForm initialSku={sku} initialProduct={initialProduct} />
           </div>
 
           <aside className="reveal space-y-4 text-sm" style={{ transitionDelay: "0.08s" }}>
