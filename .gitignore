@@ -42,3 +42,6 @@ dev.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# script temporal de pruebas de correo (no forma parte del build)
+_test-emails.mts

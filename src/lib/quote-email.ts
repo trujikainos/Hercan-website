@@ -9,7 +9,7 @@
  * web-safe, botones tabla+bgcolor). Fondos explícitos en cada celda para que
  * también luzca bien en modo oscuro. Sin imágenes, fuentes ni scripts remotos.
  */
-import { site } from "./site";
+import { site, absoluteUrl } from "./site";
 import { qtyLabelLong } from "./frequency";
 
 const C = {
@@ -64,6 +64,7 @@ export interface EmailLine {
 function shell(preheader: string, headerTag: string, bodyHtml: string): string {
   const waFooter = site.whatsapp ? `https://wa.me/${site.whatsapp}` : "";
   const host = site.url.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  const logoUrl = absoluteUrl("/brand/hercan-logo.jpg");
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -89,15 +90,14 @@ function shell(preheader: string, headerTag: string, bodyHtml: string): string {
     <tr><td align="center" style="padding:26px 12px;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:${C.white};border-radius:16px;overflow:hidden;border:1px solid ${C.metalLight};">
 
-        <!-- Encabezado -->
-        <tr><td class="sm-px" style="background:${C.navy};padding:24px 30px;">
+        <!-- Encabezado con logo (banda blanca: el logo es a color sobre blanco) -->
+        <tr><td class="sm-px" style="background:${C.white};padding:22px 30px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
             <td valign="middle">
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:bold;letter-spacing:4px;color:${C.white};line-height:1;">HERCAN</div>
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:${C.sky};letter-spacing:.4px;margin-top:6px;">${esc(site.tagline)}</div>
+              <a href="${esc(site.url)}" style="text-decoration:none;"><img src="${esc(logoUrl)}" width="200" height="92" alt="HERCAN — ${esc(site.tagline)}" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;width:200px;max-width:58%;height:auto;"></a>
             </td>
             <td valign="middle" align="right">
-              <span style="display:inline-block;background:${C.navyDeep};border:1px solid ${C.steel};border-radius:20px;padding:5px 12px;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:${C.sky};white-space:nowrap;">${esc(headerTag)}</span>
+              <span style="display:inline-block;background:${C.soft};border:1px solid ${C.metalLight};border-radius:20px;padding:6px 13px;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:${C.blue};white-space:nowrap;">${esc(headerTag)}</span>
             </td>
           </tr></table>
         </td></tr>
