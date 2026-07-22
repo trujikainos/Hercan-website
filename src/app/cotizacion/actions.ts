@@ -1,6 +1,6 @@
 "use server";
 import { headers } from "next/headers";
-import { site } from "@/lib/site";
+import { site, absoluteUrl } from "@/lib/site";
 
 export interface QuoteInput {
   nombre: string;
@@ -12,6 +12,14 @@ export interface QuoteInput {
   mensaje?: string;
   consent: boolean;
   hp?: string; // honeypot (los bots lo llenan)
+  // Producto elegido del catálogo real (via autocompletar). Opcional: si el
+  // cliente escribió a mano en vez de elegir, viene undefined y usamos `sku`.
+  product?: {
+    handle: string;
+    title: string;
+    sku: string | null;
+    mpn: string | null;
+  };
 }
 export interface QuoteResult {
   ok: boolean;
@@ -63,12 +71,16 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
   if (!key || !to)
     return { ok: false, code: "EMAIL_UNAVAILABLE", message: "El correo aún no está configurado." };
 
+  const p = data.product;
   const lines = [
     `Nombre: ${nombre}`,
     data.empresa ? `Empresa: ${data.empresa}` : null,
     `Correo: ${email}`,
     data.telefono ? `Teléfono: ${data.telefono}` : null,
-    data.sku ? `Producto / SKU: ${data.sku}` : null,
+    p ? `Producto: ${p.title}` : data.sku ? `Producto / N° de parte: ${data.sku}` : null,
+    p?.mpn ? `N° de parte: ${p.mpn}` : null,
+    p?.sku ? `SKU: ${p.sku}` : null,
+    p?.handle ? `Ficha: ${absoluteUrl(`/producto/${p.handle}`)}` : null,
     data.cantidad ? `Cantidad: ${data.cantidad}` : null,
     data.mensaje ? `Mensaje: ${data.mensaje}` : null,
   ].filter((l): l is string => Boolean(l));
@@ -79,7 +91,7 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
         from,
         to: [to],
         reply_to: email,
-        subject: `Cotización — ${nombre}${data.sku ? ` (${data.sku})` : ""}`,
+        subject: `Cotización — ${nombre}${p?.mpn ? ` (${p.mpn})` : data.sku ? ` (${data.sku})` : ""}`,
         text: `Nueva solicitud de cotización desde el sitio:\n\n${lines.join("\n")}`,
         html: `<h2>Nueva solicitud de cotización</h2><ul>${lines
           .map((l) => `<li>${esc(l)}</li>`)

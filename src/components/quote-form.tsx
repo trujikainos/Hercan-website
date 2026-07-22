@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Loader2, Check, Send } from "lucide-react";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
+import { ProductCombobox, type SelectedProduct } from "@/components/product-combobox";
 import { site } from "@/lib/site";
 import { submitQuoteAction, type QuoteInput } from "@/app/cotizacion/actions";
 
@@ -33,13 +34,17 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
       }));
 
   function whatsappUrl() {
+    const p = f.product;
     const lines = [
       "Solicitud de cotización",
       `Nombre: ${f.nombre}`,
       f.empresa && `Empresa: ${f.empresa}`,
       `Correo: ${f.email}`,
       f.telefono && `Teléfono: ${f.telefono}`,
-      f.sku && `Producto / SKU: ${f.sku}`,
+      p ? `Producto: ${p.title}` : f.sku && `Producto / N° de parte: ${f.sku}`,
+      p?.mpn && `N° de parte: ${p.mpn}`,
+      p?.sku && `SKU: ${p.sku}`,
+      p?.handle && `Ficha: ${site.url}/producto/${p.handle}`,
       f.cantidad && `Cantidad: ${f.cantidad}`,
       f.mensaje && `Mensaje: ${f.mensaje}`,
     ]
@@ -127,7 +132,21 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
         </div>
         <div>
           <label className={label} htmlFor="sku">Producto o N° de parte</label>
-          <input id="sku" value={f.sku} onChange={upd("sku")} className={input} placeholder="Ej. 16IR 12 UNJ IC806" />
+          <ProductCombobox
+            id="sku"
+            value={f.sku ?? ""}
+            onValueChange={(text) => setF((prev) => ({ ...prev, sku: text }))}
+            onSelect={(p: SelectedProduct | null) =>
+              setF((prev) => ({ ...prev, product: p ?? undefined }))
+            }
+            placeholder="Escribe título, N° de parte o SKU…"
+            inputClassName={input}
+          />
+          {f.product && (
+            <p className="mt-1 text-xs text-[#2e7d46]">
+              ✓ Producto del catálogo{f.product.sku ? ` · SKU ${f.product.sku}` : ""}
+            </p>
+          )}
         </div>
         <div>
           <label className={label} htmlFor="cantidad">Cantidad</label>

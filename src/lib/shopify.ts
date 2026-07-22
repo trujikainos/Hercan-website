@@ -471,17 +471,22 @@ export interface SearchResult {
   handle: string;
   image: string | null;
   available: boolean;
+  sku: string | null; // SKU interno de Hercan (variante)
+  mpn: string | null; // N° de parte del fabricante (metafield specs.mpn)
 }
 
 // products(query) indexa título, marca, tipo Y SKU de variante → busca por nombre
-// o por número de parte (clave para B2B). Wildcard para autocompletar.
+// o por número de parte (clave para B2B). Además, la fórmula de título incluye el
+// N° de parte (MPN), así que el full-text del título ya matchea el MPN aunque sea
+// un metafield. Devolvemos sku + mpn para mostrarlos y adjuntarlos a la cotización.
 const SEARCH_QUERY = `
   query Search($q: String!, $limit: Int!) {
     products(first: $limit, query: $q, sortKey: RELEVANCE) {
       nodes {
         title handle
         featuredImage { url }
-        variants(first: 1) { nodes { availableForSale } }
+        variants(first: 1) { nodes { availableForSale sku } }
+        mpn: metafield(namespace: "specs", key: "mpn") { value }
       }
     }
   }`;
@@ -490,7 +495,8 @@ type SearchNode = {
   title: string;
   handle: string;
   featuredImage?: { url: string } | null;
-  variants?: { nodes: { availableForSale: boolean }[] };
+  variants?: { nodes: { availableForSale: boolean; sku: string | null }[] };
+  mpn?: { value: string } | null;
 };
 
 export async function searchProducts(query: string, limit = 7): Promise<SearchResult[]> {
@@ -507,6 +513,8 @@ export async function searchProducts(query: string, limit = 7): Promise<SearchRe
     handle: p.handle,
     image: p.featuredImage?.url ?? null,
     available: p.variants?.nodes?.[0]?.availableForSale ?? true,
+    sku: p.variants?.nodes?.[0]?.sku ?? null,
+    mpn: p.mpn?.value ?? null,
   }));
 }
 
