@@ -112,6 +112,20 @@ export interface CustomerEmailInput {
   nombre: string;
   recurring: boolean;
   lines: EmailLine[];
+  frecuencia?: string;
+  duracion?: string;
+  fechaInicio?: string;
+}
+
+/** Resumen corto de los términos del suministro recurrente (para textos). */
+function recurringTerms(t: { frecuencia?: string; duracion?: string; fechaInicio?: string }): string {
+  return [
+    t.frecuencia ? `frecuencia ${t.frecuencia.toLowerCase()}` : "",
+    t.duracion ? `duración ${t.duracion.toLowerCase()}` : "",
+    t.fechaInicio ? `inicio ${t.fechaInicio}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 export function customerEmail(input: CustomerEmailInput): { html: string; text: string } {
@@ -129,7 +143,9 @@ export function customerEmail(input: CustomerEmailInput): { html: string; text: 
     </p>
     ${
       input.recurring
-        ? `<p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:${C.steel};background:${C.soft};padding:10px 14px;border-radius:8px;">Registramos tu solicitud como <strong>suministro recurrente</strong>: prepararemos una propuesta de abasto continuo.</p>`
+        ? `<p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:${C.steel};background:${C.soft};padding:10px 14px;border-radius:8px;">Registramos tu solicitud como <strong>suministro recurrente</strong>${
+            recurringTerms(input) ? ` (${esc(recurringTerms(input))})` : ""
+          }: prepararemos una propuesta de abasto continuo.</p>`
         : ""
     }
     ${
@@ -161,6 +177,9 @@ export interface LeadEmailInput {
   recurring: boolean;
   lines: EmailLine[];
   mensaje?: string;
+  frecuencia?: string;
+  duracion?: string;
+  fechaInicio?: string;
 }
 
 export function leadEmail(input: LeadEmailInput): { html: string; text: string } {
@@ -183,6 +202,9 @@ export function leadEmail(input: LeadEmailInput): { html: string; text: string }
     ["Correo", input.email],
     ...(input.telefono ? ([["Celular / WhatsApp", input.telefono]] as [string, string][]) : []),
     ["Tipo", input.recurring ? "Suministro constante (recurrente)" : "Compra puntual"],
+    ...(input.recurring && input.frecuencia ? ([["Frecuencia", input.frecuencia]] as [string, string][]) : []),
+    ...(input.recurring && input.duracion ? ([["Duración", input.duracion]] as [string, string][]) : []),
+    ...(input.recurring && input.fechaInicio ? ([["Inicio deseado", input.fechaInicio]] as [string, string][]) : []),
   ];
   const infoHtml = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     ${infoRows

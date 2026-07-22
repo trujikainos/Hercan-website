@@ -68,6 +68,9 @@ export interface QuoteDraftInput {
   lines: DraftLine[];
   mensaje?: string;
   currency: string;
+  frecuencia?: string;
+  duracion?: string;
+  fechaInicio?: string;
 }
 
 /**
@@ -102,10 +105,19 @@ export async function createQuoteDraftOrder(
     };
   });
 
+  const terminos = [
+    input.frecuencia ? `frecuencia ${input.frecuencia}` : "",
+    input.duracion ? `duración ${input.duracion}` : "",
+    input.fechaInicio ? `inicio ${input.fechaInicio}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   const note = [
     `Solicitud web — ${
       input.recurring ? "SUMINISTRO RECURRENTE (cantidades mensuales aprox.)" : "Compra puntual"
     }`,
+    input.recurring && terminos ? `Términos: ${terminos}` : "",
     input.empresa ? `Empresa: ${input.empresa}` : "",
     input.telefono ? `Celular / WhatsApp: ${input.telefono}` : "",
     input.mensaje ? `\nMensaje del cliente:\n${input.mensaje}` : "",

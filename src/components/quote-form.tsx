@@ -38,6 +38,7 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [c, setC] = useState<Contact>(EMPTY_CONTACT);
   const [recurring, setRecurring] = useState(false);
+  const [rec, setRec] = useState({ frecuencia: "Mensual", duracion: "12 meses", fechaInicio: "" });
   const [lines, setLines] = useState<Line[]>([emptyLine(initialSku ?? "")]);
 
   const updC =
@@ -86,6 +87,9 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
       `Correo: ${c.email}`,
       c.telefono && `Teléfono: ${c.telefono}`,
       recurring ? "Tipo: Suministro constante (recurrente)" : null,
+      recurring && rec.frecuencia ? `Frecuencia: ${rec.frecuencia}` : null,
+      recurring && rec.duracion ? `Duración: ${rec.duracion}` : null,
+      recurring && rec.fechaInicio ? `Inicio: ${rec.fechaInicio}` : null,
       prod.length ? "Productos:" : null,
       ...prod,
       c.mensaje && `Mensaje: ${c.mensaje}`,
@@ -108,6 +112,9 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
       hp: c.hp,
       lines: buildLines(),
       recurring,
+      ...(recurring
+        ? { frecuencia: rec.frecuencia, duracion: rec.duracion, fechaInicio: rec.fechaInicio || undefined }
+        : {}),
     };
     start(async () => {
       const r = await submitQuoteAction(payload);
@@ -190,21 +197,74 @@ export function QuoteForm({ initialSku }: { initialSku?: string }) {
       <div className="rounded-xl border border-hc-metal-light bg-hc-soft/40 p-4">
         <h2 className="font-heading text-sm font-semibold text-hc-navy">¿Qué necesitas cotizar?</h2>
 
-        {/* Suministro recurrente */}
-        <label className="mt-2 flex items-start gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={recurring}
-            onChange={(e) => setRecurring(e.target.checked)}
-            className="mt-0.5 accent-hc-blue"
-          />
-          <span>
-            <span className="font-medium text-hc-ink">Es un pedido recurrente (suministro constante)</span>
-            <span className="block text-xs text-hc-gunmetal">
-              Márcalo si necesitas abasto continuo; indica la cantidad mensual aproximada por producto.
-            </span>
-          </span>
-        </label>
+        {/* Tipo de solicitud: compra única vs suministro recurrente */}
+        <div className="mt-2">
+          <span className={label}>Tipo de solicitud</span>
+          <div className="inline-flex rounded-lg border border-hc-metal-light bg-white p-0.5">
+            {[
+              { v: false, t: "Compra única" },
+              { v: true, t: "Suministro recurrente" },
+            ].map((o) => (
+              <button
+                key={o.t}
+                type="button"
+                onClick={() => setRecurring(o.v)}
+                aria-pressed={recurring === o.v}
+                className={`rounded-md px-4 py-1.5 text-sm font-medium transition ${
+                  recurring === o.v ? "bg-hc-blue text-white" : "text-hc-gunmetal hover:text-hc-ink"
+                }`}
+              >
+                {o.t}
+              </button>
+            ))}
+          </div>
+
+          {recurring && (
+            <div className="mt-3 grid gap-3 rounded-lg border border-hc-metal-light bg-white p-3 sm:grid-cols-3">
+              <div>
+                <label className={label} htmlFor="frecuencia">Frecuencia de entrega</label>
+                <select
+                  id="frecuencia"
+                  value={rec.frecuencia}
+                  onChange={(e) => setRec((p) => ({ ...p, frecuencia: e.target.value }))}
+                  className={input}
+                >
+                  <option>Mensual</option>
+                  <option>Quincenal</option>
+                  <option>Trimestral</option>
+                  <option>Semestral</option>
+                </select>
+              </div>
+              <div>
+                <label className={label} htmlFor="duracion">Duración del acuerdo</label>
+                <select
+                  id="duracion"
+                  value={rec.duracion}
+                  onChange={(e) => setRec((p) => ({ ...p, duracion: e.target.value }))}
+                  className={input}
+                >
+                  <option>3 meses</option>
+                  <option>6 meses</option>
+                  <option>12 meses</option>
+                  <option>Indefinido</option>
+                </select>
+              </div>
+              <div>
+                <label className={label} htmlFor="inicio">Fecha de inicio</label>
+                <input
+                  id="inicio"
+                  type="date"
+                  value={rec.fechaInicio}
+                  onChange={(e) => setRec((p) => ({ ...p, fechaInicio: e.target.value }))}
+                  className={input}
+                />
+              </div>
+              <p className="text-xs text-hc-gunmetal sm:col-span-3">
+                Indica la <strong>cantidad mensual aproximada</strong> por producto abajo.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Filas de producto */}
         <div className="mt-3 space-y-3">

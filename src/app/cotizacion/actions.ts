@@ -24,6 +24,10 @@ export interface QuoteInput {
   telefono?: string;
   lines: QuoteLine[]; // uno o varios productos
   recurring: boolean; // suministro constante (pedido recurrente)
+  // Términos del suministro recurrente (solo aplican si recurring = true).
+  frecuencia?: string; // Mensual, Quincenal, Trimestral, Semestral
+  duracion?: string; // 3 meses, 6 meses, 12 meses, Indefinido
+  fechaInicio?: string; // YYYY-MM-DD
   mensaje?: string;
   consent: boolean;
   hp?: string; // honeypot (los bots lo llenan)
@@ -96,7 +100,18 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
     url: l.product?.handle ? absoluteUrl(`/producto/${l.product.handle}`) : null,
   }));
 
-  const lead = leadEmail({ nombre, empresa: data.empresa, email, telefono, recurring: data.recurring, lines: emailLines, mensaje });
+  const lead = leadEmail({
+    nombre,
+    empresa: data.empresa,
+    email,
+    telefono,
+    recurring: data.recurring,
+    frecuencia: data.frecuencia,
+    duracion: data.duracion,
+    fechaInicio: data.fechaInicio,
+    lines: emailLines,
+    mensaje,
+  });
   const firstTag = lines[0]?.product?.mpn || (lines[0]?.text ?? "").trim();
   const subject =
     `Nueva cotización${data.recurring ? " recurrente" : ""} — ${nombre}` +
@@ -127,6 +142,9 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
         email,
         telefono,
         recurring: data.recurring,
+        frecuencia: data.frecuencia,
+        duracion: data.duracion,
+        fechaInicio: data.fechaInicio,
         lines: draftLines,
         mensaje,
         currency: site.currency,
@@ -137,7 +155,14 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
 
     // Autorespuesta al cliente (best-effort; se espera para que complete en serverless).
     try {
-      const conf = customerEmail({ nombre, recurring: data.recurring, lines: emailLines });
+      const conf = customerEmail({
+        nombre,
+        recurring: data.recurring,
+        frecuencia: data.frecuencia,
+        duracion: data.duracion,
+        fechaInicio: data.fechaInicio,
+        lines: emailLines,
+      });
       await sendEmail(
         {
           from,
