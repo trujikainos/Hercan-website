@@ -5,5 +5,7 @@ import Image from "./opengraph-image";
 export const alt = "Producto — HERCAN";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+// On-demand (igual que la OG): no pre-generar para los 3,266 productos en build.
+export const dynamic = "force-dynamic";
 
 export default Image;
