@@ -262,7 +262,11 @@ export function customerEmail(input: CustomerEmailInput): { html: string; text: 
   const qtyLabel = qtyLabelLong(input.recurring, input.frecuencia);
   const productsHtml = input.lines.map((l) => productBlock(l, qtyLabel, false)).join("");
   const waSelf = site.whatsapp
-    ? `https://wa.me/${site.whatsapp}?text=${encodeURIComponent("Hola, quiero dar seguimiento a mi solicitud de cotización.")}`
+    ? `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(
+        `Hola, quiero dar seguimiento a mi solicitud de cotización${
+          input.folio ? ` (folio ${input.folio})` : ""
+        }.`,
+      )}`
     : "";
   const terms = recurringTerms(input);
 
