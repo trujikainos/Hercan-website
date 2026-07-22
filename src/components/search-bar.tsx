@@ -66,7 +66,7 @@ export function SearchBar() {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-          placeholder="Buscar por SKU, marca o designación ISO…"
+          placeholder="Buscar SKU, N° de parte, marca u otro atributo…"
           aria-label="Buscar productos"
           className="w-full bg-transparent text-sm outline-none placeholder:text-hc-gunmetal"
         />
