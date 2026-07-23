@@ -4,11 +4,12 @@ import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/home-sections";
 import { CatalogSection } from "@/components/catalog-section";
 import { TaxonomyHero, SiblingStrip } from "@/components/taxonomy";
+import { FaqAccordion } from "@/components/faq-accordion";
 import { JsonLd } from "@/components/json-ld";
-import { pageGraph, collectionNode, breadcrumbNode } from "@/lib/schema";
+import { pageGraph, collectionNode, breadcrumbNode, faqNode } from "@/lib/schema";
 import { buildCatalog } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
-import { CATEGORY_CONTENT } from "@/lib/taxonomy-content";
+import { CATEGORY_CONTENT, CATEGORY_FAQS } from "@/lib/taxonomy-content";
 
 // Slugs prerenderizados desde las 9 categorías del negocio (CATEGORY_CONTENT).
 export function generateStaticParams() {
@@ -28,6 +29,10 @@ export async function generateMetadata({
     // layout (`%s | HERCAN`) lo duplique.
     title: { absolute: content.metaTitle },
     description: content.metaDescription,
+    // Canonical LIMPIO a la ruta base. generateMetadata solo lee `params` (no
+    // searchParams), así las facetas (?marca=, ?material=, ?recubrimiento=,
+    // ?disponibilidad=, ?ver=) canonicalizan a /categoria/[slug] y consolidan
+    // señal en una sola URL en vez de generar duplicados por combinación.
     alternates: { canonical: `/categoria/${slug}` },
   };
 }
@@ -57,6 +62,11 @@ export default async function CategoryPage({
   });
   const basePath = `/categoria/${slug}`;
 
+  // FAQ factual de maquinado (visible + FAQPage). Fuente única en taxonomy-content
+  // → el texto del acordeón y el del schema coinciden exactamente. Puede no existir
+  // para categorías genéricas (p. ej. accesorios): entonces no se renderiza el bloque.
+  const faqs = CATEGORY_FAQS[slug] ?? [];
+
   const siblings = Object.entries(CATEGORY_CONTENT)
     .filter(([s]) => s !== slug)
     .map(([s, c]) => ({ name: c.title, href: `/categoria/${s}` }));
@@ -71,6 +81,7 @@ export default async function CategoryPage({
             { name: "Categorías", path: "/productos" },
             { name: content.title },
           ]),
+          ...(faqs.length ? [faqNode(faqs)] : []),
         )}
       />
       <AnnouncementBar />
@@ -91,6 +102,16 @@ export default async function CategoryPage({
           basePath={basePath}
           hiddenFacets={["categoria"]}
         />
+        {faqs.length > 0 && (
+          <section className="border-t border-hc-metal-light bg-hc-soft/30">
+            <div className="reveal mx-auto max-w-3xl px-4 py-12">
+              <h2 className="mb-4 font-heading text-[length:var(--step-h2)] text-hc-navy">
+                Preguntas frecuentes sobre {content.title.toLowerCase()}
+              </h2>
+              <FaqAccordion faqs={faqs} />
+            </div>
+          </section>
+        )}
         <SiblingStrip
           heading="Otras categorías"
           items={siblings}

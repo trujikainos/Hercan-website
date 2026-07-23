@@ -10,6 +10,9 @@ export const metadata = {
   title: "Catálogo de herramentales CNC y equipos de medición",
   description:
     "Explora herramientas de corte y equipos de medición: fresado, torneado, perforación, roscado, portaherramientas y medición. Iscar, Toolmex, YG, Palbit, Mitutoyo. Filtra por especificaciones técnicas.",
+  // Canonical LIMPIO: metadata estática (no lee searchParams), así toda URL con
+  // facetas (?categoria=, ?marca=, ?material=, ?recubrimiento=, ?disponibilidad=,
+  // ?ver=) canonicaliza a /productos y consolida señal en una sola URL.
   alternates: { canonical: "/productos" },
 };
 

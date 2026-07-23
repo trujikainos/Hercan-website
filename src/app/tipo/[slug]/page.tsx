@@ -4,11 +4,12 @@ import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/home-sections";
 import { CatalogSection } from "@/components/catalog-section";
 import { TaxonomyHero, SiblingStrip } from "@/components/taxonomy";
+import { FaqAccordion } from "@/components/faq-accordion";
 import { JsonLd } from "@/components/json-ld";
-import { pageGraph, collectionNode, breadcrumbNode } from "@/lib/schema";
+import { pageGraph, collectionNode, breadcrumbNode, faqNode } from "@/lib/schema";
 import { buildCatalog } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
-import { TIPO_CONTENT } from "@/lib/taxonomy-content";
+import { TIPO_CONTENT, TIPO_FAQS } from "@/lib/taxonomy-content";
 
 // Slugs prerenderizados desde los tipos de herramienta del negocio (TIPO_CONTENT).
 export function generateStaticParams() {
@@ -28,6 +29,9 @@ export async function generateMetadata({
     // layout (`%s | HERCAN`) lo duplique.
     title: { absolute: content.metaTitle },
     description: content.metaDescription,
+    // Canonical LIMPIO a la ruta base. generateMetadata solo lee `params` (no
+    // searchParams), así las facetas (?categoria=, ?marca=, ?material=,
+    // ?recubrimiento=, ?disponibilidad=, ?ver=) canonicalizan a /tipo/[slug].
     alternates: { canonical: `/tipo/${slug}` },
   };
 }
@@ -57,6 +61,9 @@ export default async function TipoPage({
   });
   const basePath = `/tipo/${slug}`;
 
+  // FAQ factual de maquinado (visible + FAQPage), misma fuente única que el schema.
+  const faqs = TIPO_FAQS[slug] ?? [];
+
   const siblings = Object.entries(TIPO_CONTENT)
     .filter(([s]) => s !== slug)
     .map(([s, c]) => ({ name: c.title, href: `/tipo/${s}` }));
@@ -71,6 +78,7 @@ export default async function TipoPage({
             { name: "Tipos", path: "/productos" },
             { name: content.title },
           ]),
+          ...(faqs.length ? [faqNode(faqs)] : []),
         )}
       />
       <AnnouncementBar />
@@ -87,6 +95,16 @@ export default async function TipoPage({
           bullets={content.bullets}
         />
         <CatalogSection result={result} basePath={basePath} />
+        {faqs.length > 0 && (
+          <section className="border-t border-hc-metal-light bg-hc-soft/30">
+            <div className="reveal mx-auto max-w-3xl px-4 py-12">
+              <h2 className="mb-4 font-heading text-[length:var(--step-h2)] text-hc-navy">
+                Preguntas frecuentes sobre {content.title.toLowerCase()}
+              </h2>
+              <FaqAccordion faqs={faqs} />
+            </div>
+          </section>
+        )}
         <SiblingStrip
           heading="Otros tipos de herramienta"
           items={siblings}

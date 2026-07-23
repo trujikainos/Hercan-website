@@ -19,6 +19,8 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+import type { Faq } from "./faq";
+
 export type BrandContent = {
   /** Valor REAL de la marca (vendor) usado como scope del catálogo. */
   name: string;
@@ -862,4 +864,272 @@ export const ISO_CONTENT: Record<string, IsoContent> = {
       },
     ],
   },
+};
+
+// ── FAQS por CATEGORÍA y por TIPO (AEO/GEO) ───────────────────────────────────
+// Preguntas/respuestas FACTUALES de maquinado (conocimiento general, no marketing
+// ni datos inventados). FUENTE ÚNICA: el mismo array alimenta el bloque VISIBLE
+// (<FaqAccordion>) y el JSON-LD FAQPage (faqNode) de la página → el texto visible
+// coincide EXACTAMENTE con el del schema (regla de la receta build-website).
+// Estilo answer-first: la respuesta va en la primera frase (mejor citabilidad en IA).
+// Claves = mismos slugs que CATEGORY_CONTENT / TIPO_CONTENT. Las taxonomías sin
+// entrada aquí (p. ej. "accesorios", demasiado genérica) simplemente no muestran
+// FAQ: no se fuerza contenido que no sea verificable.
+
+export const CATEGORY_FAQS: Record<string, Faq[]> = {
+  fresado: [
+    {
+      question: "¿Qué es el fresado?",
+      answer:
+        "El fresado es una operación de maquinado en la que una herramienta rotativa de varios filos (la fresa) remueve material de una pieza que normalmente permanece fija. Es una de las operaciones más versátiles del CNC y permite planeado, ranurado, contorneado y cajeado.",
+    },
+    {
+      question: "¿Qué herramienta se usa para fresar?",
+      answer:
+        "Se usan fresas integrales (endmills), cortadores con insertos intercambiables y cabezales de careado. La elección depende de la operación —planeado, ranurado o contorneado— y del material a maquinar.",
+    },
+    {
+      question: "¿Cuál es la diferencia entre fresado y torneado?",
+      answer:
+        "En el fresado la herramienta gira y la pieza permanece fija; en el torneado es la pieza la que gira mientras una herramienta de un solo filo remueve material. El fresado genera superficies planas y perfiles; el torneado, superficies cilíndricas.",
+    },
+  ],
+  torneado: [
+    {
+      question: "¿Qué es el torneado?",
+      answer:
+        "El torneado es una operación de maquinado en la que la pieza gira sobre su eje mientras una herramienta de un solo filo remueve material, normalmente en un torno. Permite generar superficies cilíndricas y cónicas con buena precisión.",
+    },
+    {
+      question: "¿Qué herramienta se usa para tornear?",
+      answer:
+        "Se emplean insertos intercambiables montados en portaherramientas y barras de mandrinar para las operaciones en el interior de la pieza. El inserto se elige según el material a maquinar y si la operación es de desbaste o de acabado.",
+    },
+    {
+      question: "¿Qué es un inserto de torneado?",
+      answer:
+        "Un inserto de torneado es una plaquita de corte intercambiable, casi siempre de metal duro (carburo), que se sujeta mecánicamente en el portaherramientas. Cuando un filo se desgasta, el inserto se indexa a otro filo o se reemplaza, sin reafilar la herramienta.",
+    },
+  ],
+  perforacion: [
+    {
+      question: "¿Qué es la perforación o taladrado?",
+      answer:
+        "La perforación (o taladrado) es la operación de crear o agrandar agujeros mediante una herramienta rotativa de corte, generalmente una broca. Suele ser un proceso previo al roscado, el escariado o el mandrinado.",
+    },
+    {
+      question: "¿Qué broca se usa según el material?",
+      answer:
+        "Para aceros y materiales duros se prefieren brocas de metal duro (carburo) o de acero rápido (HSS) recubiertas; para diámetros grandes existen brocas de inserto intercambiable. El recubrimiento y la geometría de la punta influyen en la penetración y en la vida de la herramienta.",
+    },
+    {
+      question: "¿Cuál es la diferencia entre una broca y un escariador?",
+      answer:
+        "La broca crea o agranda el agujero; el escariador (rima) es una herramienta de acabado que calibra y afina un agujero ya taladrado para mejorar su tolerancia dimensional y su acabado superficial.",
+    },
+  ],
+  roscado: [
+    {
+      question: "¿Qué es el roscado?",
+      answer:
+        "El roscado es la generación de roscas internas o externas sobre una pieza. Por arranque de viruta se realiza con machuelos, fresas de roscar e insertos de roscado; también existe el roscado por conformado, sin arranque de viruta.",
+    },
+    {
+      question: "¿Qué herramienta se usa para roscar?",
+      answer:
+        "Para roscas internas se usan machuelos; para roscas externas, dados o terrajas. Las fresas de roscar y los insertos de roscado permiten generar ambos tipos de rosca en CNC. La elección depende del tipo de rosca y del material a maquinar.",
+    },
+    {
+      question: "¿Cuál es la diferencia entre un machuelo y una fresa de roscar?",
+      answer:
+        "El machuelo genera una rosca del mismo diámetro que la herramienta y avanza girando dentro del agujero; la fresa de roscar interpola la rosca con control CNC, por lo que una misma fresa puede producir distintos diámetros y reduce el riesgo de rotura dentro de la pieza.",
+    },
+  ],
+  ranurado: [
+    {
+      question: "¿Qué son el ranurado y el tronzado?",
+      answer:
+        "El ranurado y el tronzado son operaciones de torneado: el ranurado mecaniza ranuras —axiales, radiales o frontales— y el tronzado corta o separa la pieza terminada del material en bruto. Ambos se realizan con insertos y portaherramientas específicos.",
+    },
+    {
+      question: "¿En qué se diferencia el ranurado del tronzado?",
+      answer:
+        "El ranurado crea una ranura de ancho y profundidad definidos sin separar la pieza; el tronzado lleva el corte hasta el centro para separar por completo la pieza del material en bruto.",
+    },
+    {
+      question: "¿Cómo se elige el inserto de ranurado o tronzado?",
+      answer:
+        "Se selecciona según el ancho de corte y la profundidad de la ranura o el diámetro de la pieza a separar. El ancho del inserto define el ancho de la ranura, y la profundidad alcanzable depende de la rigidez del portaherramientas.",
+    },
+  ],
+  portaherramientas: [
+    {
+      question: "¿Qué es un portaherramientas?",
+      answer:
+        "Un portaherramientas es el sistema de sujeción que conecta la herramienta de corte con el husillo o la torreta de la máquina. De su rigidez y precisión de sujeción dependen la concentricidad, la estabilidad del corte y el acabado de la pieza.",
+    },
+    {
+      question: "¿Qué tipos de cono de portaherramientas existen?",
+      answer:
+        "Los más comunes son los conos BT, HSK y CAT, además de boquillas, mandriles y extensiones. La elección depende de la interfaz del husillo de la máquina y del tipo de herramienta que se va a sujetar.",
+    },
+    {
+      question: "¿Qué diferencia hay entre un cono BT y uno HSK?",
+      answer:
+        "El cono BT hace contacto solo por el cono y es un estándar muy extendido; el HSK es un cono hueco que hace contacto simultáneo por cono y cara, lo que aporta mayor rigidez y precisión a altas revoluciones.",
+    },
+  ],
+  abrasivos: [
+    {
+      question: "¿Qué son los abrasivos en el maquinado?",
+      answer:
+        "Los abrasivos son herramientas que remueven material por abrasión, mediante granos de corte unidos en muelas, discos, bandas o puntas montadas. Se usan en rectificado, desbaste, corte y acabado de superficies.",
+    },
+    {
+      question: "¿Qué abrasivo se usa en cada aplicación?",
+      answer:
+        "Para rectificado de precisión se usan muelas; para corte y desbaste, discos; para acabado y zonas de difícil acceso, puntas montadas, lijas y bandas. La elección depende del material, del acabado buscado y del tipo de máquina.",
+    },
+    {
+      question: "¿Qué es el rectificado?",
+      answer:
+        "El rectificado es una operación de acabado por abrasión que emplea una muela para remover pequeñas cantidades de material, logrando tolerancias estrechas y buen acabado superficial, en especial en piezas endurecidas o de precisión.",
+    },
+  ],
+  medicion: [
+    {
+      question: "¿Qué equipos de medición se usan en un taller de maquinado?",
+      answer:
+        "Los más comunes son calibradores vernier, micrómetros, indicadores de carátula y bloques patrón, en versiones análogas y digitales. Permiten verificar dimensiones, tolerancias y geometrías de las piezas maquinadas.",
+    },
+    {
+      question: "¿Cuál es la diferencia entre un calibrador y un micrómetro?",
+      answer:
+        "El calibrador vernier mide dimensiones exteriores, interiores y de profundidad con una resolución típica de 0.02 mm; el micrómetro cubre un rango más corto pero con mayor resolución (por lo general 0.01 mm o mejor), por lo que se usa cuando se requiere más precisión.",
+    },
+    {
+      question: "¿Qué es un bloque patrón?",
+      answer:
+        "Un bloque patrón (o galga patrón) es un bloque de longitud altamente precisa que sirve como referencia para calibrar y verificar otros instrumentos de medición.",
+    },
+  ],
+};
+
+export const TIPO_FAQS: Record<string, Faq[]> = {
+  inserto: [
+    {
+      question: "¿Qué es un inserto de corte?",
+      answer:
+        "Un inserto (o plaquita) es la pieza de corte intercambiable que se sujeta mecánicamente en un portaherramientas o en el cuerpo de una fresa. Cuando un filo se desgasta, el inserto se indexa a un filo nuevo o se reemplaza, sin reafilar la herramienta.",
+    },
+    {
+      question: "¿Qué significan las letras de un inserto, como CNMG?",
+      answer:
+        "Es el código de la norma ISO 1832: la primera letra indica la forma del inserto (por ejemplo C = rómbico de 80°, T = triangular de 60°) y la segunda, el ángulo de incidencia (por ejemplo N = 0°, negativo). Las posiciones siguientes describen tolerancia, tipo de sujeción y medidas.",
+    },
+    {
+      question: "¿Se pueden intercambiar insertos entre marcas?",
+      answer:
+        "Sí. Al estar normalizados por ISO 1832, los insertos de una misma designación (forma, tamaño y geometría) son intercambiables entre fabricantes, aunque el grado del metal duro y el recubrimiento varían según la marca.",
+    },
+  ],
+  "fresa-endmill": [
+    {
+      question: "¿Qué es una fresa integral o endmill?",
+      answer:
+        "Una fresa integral o endmill es una herramienta rotativa de fresado con filos en la periferia y, según el tipo, también en la cara frontal. Se fabrica en una sola pieza, normalmente de metal duro (carburo) o de acero rápido (HSS).",
+    },
+    {
+      question: "¿Cuántas flautas debe tener una fresa?",
+      answer:
+        "El número de flautas (filos) se elige según el material y la operación: pocas flautas (2 o 3) evacúan mejor la viruta en materiales blandos como el aluminio, mientras que más flautas (4 o más) dan mejor acabado y productividad en aceros.",
+    },
+    {
+      question: "¿Qué diferencia hay entre una fresa integral y un cortador de insertos?",
+      answer:
+        "La fresa integral es de una sola pieza y se reemplaza completa cuando se desgasta; el cortador aloja insertos intercambiables que se reponen por separado. Las fresas integrales dominan en diámetros pequeños y los cortadores de insertos, en diámetros grandes.",
+    },
+  ],
+  broca: [
+    {
+      question: "¿Qué es una broca?",
+      answer:
+        "Una broca es una herramienta rotativa de corte para crear o agrandar agujeros. La broca helicoidal, con dos filos y canales en hélice que evacuan la viruta, es la más común; existe en metal duro (carburo) y acero rápido (HSS).",
+    },
+    {
+      question: "¿Qué broca se usa para acero?",
+      answer:
+        "Para acero se prefieren brocas de HSS o de carburo con recubrimiento (por ejemplo TiN o TiAlN), que resisten mejor el calor. El carburo permite mayores velocidades y vida en producción, mientras que el HSS es más tenaz y económico.",
+    },
+    {
+      question: "¿Qué es una broca de inserto?",
+      answer:
+        "Una broca de inserto es una broca de cuerpo de acero que aloja insertos de corte intercambiables en la punta. Se usa en diámetros grandes, donde reponer solo los insertos resulta más económico que reemplazar toda la broca.",
+    },
+  ],
+  machuelo: [
+    {
+      question: "¿Qué es un machuelo?",
+      answer:
+        "Un machuelo es la herramienta que genera roscas internas por arranque de viruta dentro de un agujero previamente taladrado. Sus filos reproducen el perfil de la rosca a medida que la herramienta avanza girando.",
+    },
+    {
+      question: "¿Qué diámetro de barreno se necesita antes de machuelar?",
+      answer:
+        "El diámetro del agujero previo depende del paso y del tipo de rosca; como regla general, para rosca métrica se aproxima restando el paso al diámetro nominal, y se confirma en tablas de barrenos. Un barreno correcto evita la rotura del machuelo y asegura el porcentaje de rosca deseado.",
+    },
+    {
+      question: "¿Cuál es la diferencia entre un machuelo para agujero pasante y uno ciego?",
+      answer:
+        "El machuelo para agujero pasante expulsa la viruta hacia adelante y es más productivo cuando el agujero atraviesa la pieza; el de agujero ciego evacúa la viruta hacia atrás para no acumularla en el fondo del agujero.",
+    },
+  ],
+  cortador: [
+    {
+      question: "¿Qué es un cortador o cuerpo portainsertos?",
+      answer:
+        "En este catálogo, «cortador» agrupa los cuerpos de fresa y cortadores que alojan insertos intercambiables. El cuerpo sujeta uno o varios insertos que realizan el corte y permite reponer solo los insertos cuando se desgastan.",
+    },
+    {
+      question: "¿Para qué se usa un cortador de insertos?",
+      answer:
+        "Se usa en fresado de careado, escuadrado (hombros a 90°) y ranurado, sobre todo en diámetros grandes donde una fresa integral resultaría costosa. La geometría del inserto se elige según la operación y el material.",
+    },
+  ],
+  escariador: [
+    {
+      question: "¿Qué es un escariador o rima?",
+      answer:
+        "Un escariador (rima) es una herramienta rotativa de acabado que calibra y afina un agujero ya taladrado, mejorando su tolerancia dimensional y su acabado superficial. Remueve una pequeña cantidad de material con varios filos.",
+    },
+    {
+      question: "¿Cuándo se usa un escariador?",
+      answer:
+        "Se usa cuando el agujero requiere un ajuste preciso, por ejemplo para alojar pasadores o bujes. Primero se taladra el agujero ligeramente por debajo de la medida final y luego el escariador lo lleva a la tolerancia buscada.",
+    },
+  ],
+  "barra-mandrinar": [
+    {
+      question: "¿Qué es una barra de mandrinar?",
+      answer:
+        "Una barra de mandrinar es la herramienta que agranda y afina diámetros internos (mandrinado o boring), normalmente en torno. Lleva un inserto o filo en el extremo, y su rigidez determina la profundidad que puede alcanzar sin vibración.",
+    },
+    {
+      question: "¿Qué relación de voladizo se recomienda al mandrinar?",
+      answer:
+        "Cuanto mayor es la relación entre la longitud en voladizo y el diámetro de la barra, mayor es el riesgo de vibración (chatter). Con barras de acero se suele recomendar no exceder unas 4 veces el diámetro; con barras de metal duro o antivibratorias se puede llegar más lejos.",
+    },
+  ],
+  portaherramientas: [
+    {
+      question: "¿Qué es un portaherramientas?",
+      answer:
+        "Un portaherramientas es el elemento de sujeción que conecta la herramienta de corte con el husillo o la torreta de la máquina. Su rigidez y precisión de sujeción determinan la concentricidad, la estabilidad del corte y el acabado obtenido.",
+    },
+    {
+      question: "¿Qué diferencia hay entre un portaherramientas de torno y uno de fresado?",
+      answer:
+        "El de fresado sujeta herramienta rotativa en el husillo mediante un cono (BT, HSK o CAT) con boquilla o mandril; el de torno aloja insertos o herramienta fija en la torreta mientras la pieza gira. En ambos se busca la máxima rigidez y repetibilidad.",
+    },
+  ],
 };

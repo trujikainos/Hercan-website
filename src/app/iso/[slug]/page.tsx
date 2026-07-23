@@ -28,6 +28,9 @@ export async function generateMetadata({
     // layout (`%s | HERCAN`) lo duplique.
     title: { absolute: content.metaTitle },
     description: content.metaDescription,
+    // Canonical LIMPIO a la ruta base. generateMetadata solo lee `params` (no
+    // searchParams), así las facetas (?categoria=, ?marca=, ?material=,
+    // ?recubrimiento=, ?disponibilidad=, ?ver=) canonicalizan a /iso/[slug].
     alternates: { canonical: `/iso/${slug}` },
   };
 }

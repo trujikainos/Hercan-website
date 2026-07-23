@@ -29,6 +29,9 @@ export async function generateMetadata({
     // layout (`%s | HERCAN`) lo duplique.
     title: { absolute: content.metaTitle },
     description: content.metaDescription,
+    // Canonical LIMPIO a la ruta base. generateMetadata solo lee `params` (no
+    // searchParams), así las facetas (?categoria=, ?material=, ?recubrimiento=,
+    // ?disponibilidad=, ?ver=) canonicalizan a /marca/[slug] y consolidan señal.
     alternates: { canonical: `/marca/${slug}` },
   };
 }
