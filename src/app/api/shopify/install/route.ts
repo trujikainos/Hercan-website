@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
  */
 const DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const CLIENT_ID = process.env.SHOPIFY_APP_CLIENT_ID;
-const SCOPES = "write_draft_orders,read_products";
+const SCOPES =
+  "write_draft_orders,read_products,write_products,read_inventory,write_inventory,read_publications,write_publications";
 
 export async function GET(request: Request) {
   if (!DOMAIN || !CLIENT_ID || !process.env.SHOPIFY_APP_SECRET) {

@@ -45,6 +45,10 @@ export type Scope = {
   tipo?: string;
   /** Familia ISO 1832 = prefijo de `designacion_iso` (p. ej. "CNMG", "TNMG"). */
   iso?: string;
+  /** Valor EXACTO de material de herramienta (Carburo, HSS, Cobalto) — faceta. */
+  material?: string;
+  /** Valor EXACTO de recubrimiento (TiAlN, TiN, AlCrN…) — faceta. */
+  coating?: string;
 };
 
 export const FACETS: { key: FacetKey; param: string; label: string }[] = [
@@ -159,6 +163,8 @@ export function buildCatalog({
   // vuelve implícita — vive en la ruta. El sidebar oculta ese grupo con `hiddenFacets`.
   if (scope?.brand) selected.brand = [scope.brand];
   if (scope?.category) selected.category = [scope.category];
+  if (scope?.material) selected.material = [scope.material];
+  if (scope?.coating) selected.coating = [scope.coating];
 
   // Scope NO-faceta (tipo/iso): predicado extra aplicado a TODO (lista + conteos),
   // porque `tipo`/`iso` no viven en `selected`. `tipo` = valor exacto de

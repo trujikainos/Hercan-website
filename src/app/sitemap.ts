@@ -2,7 +2,13 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 import { getAllProductHandles, getArticles } from "@/lib/shopify";
 import { brandSlug } from "@/lib/catalog";
-import { CATEGORY_CONTENT, TIPO_CONTENT, ISO_CONTENT } from "@/lib/taxonomy-content";
+import {
+  CATEGORY_CONTENT,
+  TIPO_CONTENT,
+  ISO_CONTENT,
+  MATERIAL_CONTENT,
+  RECUBRIMIENTO_CONTENT,
+} from "@/lib/taxonomy-content";
 
 /**
  * Sitemap dinámico auto-derivado de la FUENTE ÚNICA DE VERDAD:
@@ -11,6 +17,8 @@ import { CATEGORY_CONTENT, TIPO_CONTENT, ISO_CONTENT } from "@/lib/taxonomy-cont
  *   - Categorías: keys de CATEGORY_CONTENT   → misma derivación que /categoria/[slug].
  *   - Tipos:      keys de TIPO_CONTENT       → misma derivación que /tipo/[slug].
  *   - ISO:        keys de ISO_CONTENT        → misma derivación que /iso/[slug].
+ *   - Materiales: keys de MATERIAL_CONTENT   → misma derivación que /material/[slug].
+ *   - Recubrim.:  keys de RECUBRIMIENTO_CONTENT → misma derivación que /recubrimiento/[slug].
  *   - Catálogo:   handles reales de Shopify (cursor).
  *   - Blog:       artículos de Shopify (lastModified = fecha real del post).
  * Cero desincronización: agregar una marca/categoría/producto lo mete solo aquí.
@@ -59,6 +67,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // Materiales de herramienta: faceta real poblada → mismo peso de pilar (0.8).
+  const materialPages: MetadataRoute.Sitemap = Object.keys(MATERIAL_CONTENT).map((slug) => ({
+    url: `${site.url}/material/${slug}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
+
+  // Recubrimientos: faceta real poblada → mismo peso de pilar (0.8).
+  const recubrimientoPages: MetadataRoute.Sitemap = Object.keys(RECUBRIMIENTO_CONTENT).map(
+    (slug) => ({
+      url: `${site.url}/recubrimiento/${slug}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }),
+  );
+
   // Familias ISO: pilar forward-compatible (hoy sin volumen en el catálogo) → 0.7,
   // un escalón por debajo de tipo/categoría hasta que se importen los insertos.
   const isoPages: MetadataRoute.Sitemap = Object.keys(ISO_CONTENT).map((slug) => ({
@@ -87,6 +113,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...brandPages,
     ...categoryPages,
     ...tipoPages,
+    ...materialPages,
+    ...recubrimientoPages,
     ...isoPages,
     ...productPages,
     ...articlePages,

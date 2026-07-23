@@ -1,8 +1,24 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
+import { usePathname } from "next/navigation";
 import { Search, Loader2, ImageIcon } from "lucide-react";
 import type { SearchResult } from "@/lib/shopify";
+
+/** Spinner inline en un resultado mientras Next navega a su ficha: feedback
+ *  inmediato antes de que aparezca el skeleton de la página. Tamaño fijo →
+ *  sin layout shift; solo togglea opacidad. */
+function ResultSpinner() {
+  const { pending } = useLinkStatus();
+  return (
+    <Loader2
+      className={`h-4 w-4 shrink-0 text-hc-steel transition-opacity motion-safe:animate-spin ${
+        pending ? "opacity-100" : "opacity-0"
+      }`}
+      aria-hidden
+    />
+  );
+}
 
 export function SearchBar() {
   const [q, setQ] = useState("");
@@ -48,6 +64,13 @@ export function SearchBar() {
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
+  // Al completarse la navegación a un resultado (cambia la ruta) se cierra el
+  // panel. No cerramos en el onClick del enlace para que su spinner sea visible.
+  const pathname = usePathname();
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   const showDropdown = open && q.trim().length >= 2;
 
   return (
@@ -81,7 +104,6 @@ export function SearchBar() {
                 <li key={r.handle}>
                   <Link
                     href={`/producto/${r.handle}`}
-                    onClick={() => setOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 transition-colors hover:bg-hc-soft"
                   >
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-hc-soft text-hc-metal">
@@ -98,6 +120,7 @@ export function SearchBar() {
                         {r.available ? "Disponible" : "Sobre pedido"}
                       </span>
                     </span>
+                    <ResultSpinner />
                   </Link>
                 </li>
               ))}

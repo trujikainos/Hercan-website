@@ -65,6 +65,36 @@ export type IsoContent = {
   bullets?: { heading: string; items: string[] }[];
 };
 
+export type MaterialContent = {
+  /**
+   * Valor EXACTO de `material_herramienta` usado como scope del catálogo
+   * (scope.material). A diferencia de tipo/iso, material SÍ es faceta del sidebar:
+   * la página fija el scope y OCULTA ese grupo con `hiddenFacets={["material"]}`.
+   */
+  name: string;
+  /** H1 del hero. */
+  title: string;
+  metaTitle: string;
+  metaDescription: string;
+  intro: string[];
+  bullets?: { heading: string; items: string[] }[];
+};
+
+export type CoatingContent = {
+  /**
+   * Valor EXACTO de `recubrimiento` usado como scope del catálogo (scope.coating).
+   * Igual que material, es faceta del sidebar: la página fija el scope y OCULTA el
+   * grupo con `hiddenFacets={["recubrimiento"]}`.
+   */
+  name: string;
+  /** H1 del hero. */
+  title: string;
+  metaTitle: string;
+  metaDescription: string;
+  intro: string[];
+  bullets?: { heading: string; items: string[] }[];
+};
+
 // ── MARCAS ──────────────────────────────────────────────────────────────────
 // Claves = slug de marca (minúsculas, sin espacios). Deben cubrir site.brands.
 export const BRAND_CONTENT: Record<string, BrandContent> = {
@@ -861,6 +891,171 @@ export const ISO_CONTENT: Record<string, IsoContent> = {
       {
         heading: "Uso típico",
         items: ["Fresado de escuadrar (90°)", "Careado y ranurado"],
+      },
+    ],
+  },
+};
+
+// ── MATERIALES DE HERRAMIENTA ─────────────────────────────────────────────────
+// Claves = slug de material (del valor real de `material_herramienta`). `name` = el
+// valor EXACTO usado como scope de la faceta `material`. A diferencia de tipo/iso,
+// material SÍ es faceta del sidebar: la página fija el scope y OCULTA ese grupo con
+// `hiddenFacets={["material"]}`. Contenido = metalurgia de corte (conocimiento
+// general, factual), no marketing de fabricante. Sin FAQ (100% verificable).
+export const MATERIAL_CONTENT: Record<string, MaterialContent> = {
+  carburo: {
+    name: "Carburo",
+    title: "Herramientas de carburo",
+    metaTitle: "Herramientas de carburo (metal duro) para CNC | HERCAN",
+    metaDescription:
+      "Fresas, brocas e insertos de carburo de tungsteno para CNC en HERCAN. Alta dureza y velocidades de corte altas. Filtra por categoría, marca y recubrimiento.",
+    intro: [
+      "El carburo de tungsteno (metal duro) es el material de herramienta más usado en el maquinado CNC moderno por su alta dureza y su resistencia al calor, que permiten velocidades de corte muy superiores a las del acero rápido.",
+      "En HERCAN encuentras fresas, brocas, insertos y cortadores de carburo para acero, fundición y no ferrosos; combina categoría, marca y recubrimiento para dar con la geometría exacta.",
+    ],
+    bullets: [
+      {
+        heading: "Ventajas",
+        items: ["Alta dureza en caliente", "Velocidades de corte altas", "Buena vida útil"],
+      },
+      {
+        heading: "Aplicaciones",
+        items: ["Fresado y torneado de producción", "Acero y fundición", "Acabados de precisión"],
+      },
+    ],
+  },
+  hss: {
+    name: "HSS",
+    title: "Herramientas de acero rápido (HSS)",
+    metaTitle: "Herramientas HSS (acero rápido) para CNC | HERCAN",
+    metaDescription:
+      "Brocas, machuelos y fresas de acero rápido HSS en HERCAN. Tenaz y económico para taladrado, roscado y fresado general.",
+    intro: [
+      "El acero rápido (HSS, por High Speed Steel) es un acero de herramienta tenaz y económico. Su resistencia al impacto lo hace ideal para brocas, machuelos y fresas donde importa más la tenacidad que la velocidad de corte.",
+      "HERCAN distribuye herramienta HSS para taladrado, roscado y fresado general; combínala con el filtro de recubrimiento (TiN, TiAlN) para más vida útil.",
+    ],
+    bullets: [
+      {
+        heading: "Ventajas",
+        items: ["Tenaz y resistente al impacto", "Económico", "Reafilable"],
+      },
+      {
+        heading: "Aplicaciones",
+        items: ["Taladrado", "Roscado con machuelo", "Fresado general"],
+      },
+    ],
+  },
+  cobalto: {
+    name: "Cobalto",
+    title: "Herramientas de acero al cobalto (HSS-Co)",
+    metaTitle: "Herramientas HSS-Co (acero al cobalto) para CNC | HERCAN",
+    metaDescription:
+      "Brocas y machuelos de acero rápido al cobalto (HSS-Co) en HERCAN. Más dureza en caliente para acero inoxidable y aleaciones tenaces.",
+    intro: [
+      "El acero rápido al cobalto (HSS-Co, típicamente 5-8% de cobalto como el grado M42) añade cobalto al acero rápido para lograr mayor dureza en caliente y resistencia al desgaste que el HSS convencional.",
+      "Es la opción de HERCAN para materiales duros o abrasivos como el acero inoxidable y las aleaciones tenaces, donde el HSS estándar se desgasta rápido.",
+    ],
+    bullets: [
+      {
+        heading: "Ventajas",
+        items: ["Más dureza en caliente que HSS", "Resiste materiales abrasivos", "Buen filo"],
+      },
+      {
+        heading: "Aplicaciones",
+        items: ["Acero inoxidable", "Aleaciones tenaces", "Taladrado exigente"],
+      },
+    ],
+  },
+};
+
+// ── RECUBRIMIENTOS ────────────────────────────────────────────────────────────
+// Claves = slug de recubrimiento (del valor real de `recubrimiento`). `name` = el
+// valor EXACTO usado como scope de la faceta `coating`. Igual que material, es faceta
+// del sidebar: la página fija el scope y OCULTA el grupo con
+// `hiddenFacets={["recubrimiento"]}`. Contenido = tribología de recubrimientos de
+// corte (factual). Sin FAQ (100% verificable).
+export const RECUBRIMIENTO_CONTENT: Record<string, CoatingContent> = {
+  tialn: {
+    name: "TiAlN",
+    title: "Herramientas con recubrimiento TiAlN",
+    metaTitle: "Recubrimiento TiAlN (nitruro de titanio-aluminio) | HERCAN",
+    metaDescription:
+      "Herramienta con recubrimiento TiAlN para corte en seco y alta velocidad en acero y fundición. Fresas, brocas e insertos en HERCAN.",
+    intro: [
+      "El TiAlN (nitruro de titanio-aluminio) forma una fina capa de óxido de aluminio al calentarse, que protege el filo a alta temperatura. Es uno de los recubrimientos más usados para corte en seco y a alta velocidad.",
+      "En HERCAN el TiAlN cubre fresas, brocas e insertos para acero y fundición, incluidos los endurecidos; combínalo con material y categoría para afinar la selección.",
+    ],
+    bullets: [
+      {
+        heading: "Fortalezas",
+        items: ["Resistencia a alta temperatura", "Ideal para corte en seco", "Acero y fundición"],
+      },
+      {
+        heading: "Aplicaciones",
+        items: ["Alta velocidad", "Materiales endurecidos"],
+      },
+    ],
+  },
+  tin: {
+    name: "TiN",
+    title: "Herramientas con recubrimiento TiN",
+    metaTitle: "Recubrimiento TiN (nitruro de titanio) | HERCAN",
+    metaDescription:
+      "Herramienta con recubrimiento TiN, el de propósito general de color dorado. Mayor dureza superficial y menor fricción, en HERCAN.",
+    intro: [
+      "El TiN (nitruro de titanio), de característico color dorado, es el recubrimiento de propósito general clásico: aumenta la dureza superficial y reduce la fricción, prolongando la vida de la herramienta.",
+      "HERCAN lo ofrece sobre todo en herramienta HSS y de propósito general para acero y aplicaciones sin exigencias térmicas extremas.",
+    ],
+    bullets: [
+      {
+        heading: "Fortalezas",
+        items: ["Propósito general", "Menor fricción", "Buen costo-beneficio"],
+      },
+      {
+        heading: "Reconócelo por",
+        items: ["Color dorado", "Uso versátil"],
+      },
+    ],
+  },
+  ticn: {
+    name: "TiCN",
+    title: "Herramientas con recubrimiento TiCN",
+    metaTitle: "Recubrimiento TiCN (carbonitruro de titanio) | HERCAN",
+    metaDescription:
+      "Herramienta con recubrimiento TiCN, más duro que el TiN y resistente a la abrasión, para aceros duros y avances altos. En HERCAN.",
+    intro: [
+      "El TiCN (carbonitruro de titanio) es más duro que el TiN y resiste mejor la abrasión, lo que lo hace útil en aceros de mayor dureza y en operaciones con avances elevados.",
+      "En HERCAN el TiCN aparece en herramienta para fresado y taladrado de materiales abrasivos donde el TiN se queda corto.",
+    ],
+    bullets: [
+      {
+        heading: "Fortalezas",
+        items: ["Más duro que TiN", "Resiste abrasión", "Avances altos"],
+      },
+      {
+        heading: "Aplicaciones",
+        items: ["Aceros duros", "Fundición", "Materiales abrasivos"],
+      },
+    ],
+  },
+  alcrn: {
+    name: "AlCrN",
+    title: "Herramientas con recubrimiento AlCrN",
+    metaTitle: "Recubrimiento AlCrN (nitruro de aluminio-cromo) | HERCAN",
+    metaDescription:
+      "Herramienta con recubrimiento AlCrN, muy alta resistencia térmica y a la oxidación, para corte en seco y aleaciones difíciles. En HERCAN.",
+    intro: [
+      "El AlCrN (nitruro de aluminio-cromo) resiste temperaturas aún más altas que el TiAlN y ofrece excelente resistencia a la oxidación, por lo que destaca en corte en seco y materiales exigentes.",
+      "HERCAN lo ofrece en herramienta de alto rendimiento para producción demandante y aleaciones difíciles.",
+    ],
+    bullets: [
+      {
+        heading: "Fortalezas",
+        items: ["Muy alta resistencia térmica", "Resiste oxidación", "Corte en seco"],
+      },
+      {
+        heading: "Aplicaciones",
+        items: ["Producción exigente", "Aleaciones difíciles"],
       },
     ],
   },

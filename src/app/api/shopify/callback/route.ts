@@ -65,15 +65,38 @@ export async function GET(request: Request) {
         false,
       );
     }
+    // Cuando el setup corre en local (dev), guarda el token directo en .env.local
+    // para no copiar/pegar a mano. Guarda de seguridad: NUNCA en producción/Vercel.
+    let savedLocal = false;
+    const host = new URL(request.url).host;
+    if (process.env.NODE_ENV !== "production" && /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) {
+      try {
+        const fs = await import("node:fs");
+        const p = ".env.local";
+        if (fs.existsSync(p)) {
+          const txt = fs.readFileSync(p, "utf8");
+          const next = /^SHOPIFY_ADMIN_TOKEN=.*$/m.test(txt)
+            ? txt.replace(/^SHOPIFY_ADMIN_TOKEN=.*$/m, `SHOPIFY_ADMIN_TOKEN=${json.access_token}`)
+            : txt.replace(/\s*$/, "") + `\nSHOPIFY_ADMIN_TOKEN=${json.access_token}\n`;
+          fs.writeFileSync(p, next);
+          savedLocal = true;
+        }
+      } catch {
+        /* si falla, el usuario copia el token de la pantalla */
+      }
+    }
+
     return page(
       "✓ Token generado",
-      `<p>Copia este token y ponlo en <b>Vercel → Environment Variables</b> como <code>SHOPIFY_ADMIN_TOKEN</code> (marca <b>Sensitive</b>):</p>
+      `${
+        savedLocal
+          ? `<p style="background:#e6f4ea;border:1px solid #86c99a;padding:12px 14px;border-radius:8px">✓ <b>Guardado automáticamente</b> en <code>.env.local</code>. No necesitas copiar nada — regresa a la conversación y avisa que ya está.</p>`
+          : `<p>Copia este token y ponlo en <b>Vercel → Environment Variables</b> como <code>SHOPIFY_ADMIN_TOKEN</code> (marca <b>Sensitive</b>):</p>
        <pre style="background:#f4f6f8;padding:14px;border-radius:8px;user-select:all;word-break:break-all;font-size:15px">${esc(
          json.access_token,
-       )}</pre>
-       <p>Permisos: <code>${esc(json.scope || "")}</code> · Tienda: <code>${esc(shop)}</code></p>
-       <hr style="border:none;border-top:1px solid #e9eaec;margin:24px 0">
-       <p style="color:#6e7175;font-size:14px">Por seguridad, cuando ya lo tengas: en Vercel <b>elimina</b> <code>SHOPIFY_APP_SECRET</code> (y opcionalmente <code>SHOPIFY_APP_CLIENT_ID</code>) para apagar esta página, y haz redeploy.</p>`,
+       )}</pre>`
+      }
+       <p>Permisos: <code>${esc(json.scope || "")}</code> · Tienda: <code>${esc(shop)}</code></p>`,
       true,
     );
   } catch (e) {

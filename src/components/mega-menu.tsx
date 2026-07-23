@@ -131,6 +131,15 @@ const MATERIALS: { label: string; value: string }[] = [
   { label: "Cobalto", value: "Cobalto" },
 ];
 
+// Recubrimientos con página de taxonomía propia (SEO/AEO). Enlazan a la taxonomía
+// GLOBAL /recubrimiento/<slug> (eje técnico transversal, no contextual a categoría).
+const COATINGS: { label: string; slug: string }[] = [
+  { label: "TiAlN", slug: "tialn" },
+  { label: "TiN", slug: "tin" },
+  { label: "TiCN", slug: "ticn" },
+  { label: "AlCrN", slug: "alcrn" },
+];
+
 const FEATURED_BRAND = "Iscar";
 
 // ── Constructores de URL ───────────────────────────────────────────────────
@@ -149,6 +158,11 @@ const tipoHref = (slug: string, tipo: string) => {
 };
 const materialHref = (slug: string, value: string) =>
   productosHref({ categoria: slug, material: value });
+// Ejes técnicos GLOBALES como taxonomía con página propia (SEO): material y
+// recubrimiento transversales a toda categoría. Los chips del centro siguen
+// siendo el filtro CONTEXTUAL (categoría+material); estos son la vista global.
+const materialTaxHref = (value: string) => `/material/${slugify(value)}`;
+const coatingTaxHref = (slug: string) => `/recubrimiento/${slug}`;
 // La categoría EN SÍ y la marca EN SÍ son taxonomías con página propia (SEO) →
 // enlazan a /categoria/<slug> y /marca/<brandSlug(name)>, no a filtros de /productos.
 const categoriaHref = (slug: string) => `/categoria/${slug}`;
@@ -253,6 +267,36 @@ function BrandLinks({ onNavigate }: { onNavigate: Nav }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** Ejes técnicos globales (recubrimiento + material) como taxonomías con página
+ *  propia. Se muestran en la zona inferior del panel (desktop y móvil). */
+function GlobalAxes({ onNavigate }: { onNavigate: Nav }) {
+  const row = "flex flex-wrap items-center gap-x-3 gap-y-1";
+  const chip =
+    "text-sm text-hc-steel transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none";
+  const label =
+    "font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal";
+  return (
+    <div className="space-y-1.5">
+      <div className={row}>
+        <span className={label}>Recubrimiento</span>
+        {COATINGS.map((c) => (
+          <Link key={c.slug} href={coatingTaxHref(c.slug)} onClick={onNavigate} className={chip}>
+            {c.label}
+          </Link>
+        ))}
+      </div>
+      <div className={row}>
+        <span className={label}>Material</span>
+        {MATERIALS.map((m) => (
+          <Link key={m.value} href={materialTaxHref(m.value)} onClick={onNavigate} className={chip}>
+            {m.label}
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -529,6 +573,11 @@ export function MegaMenu() {
             </div>
           </div>
 
+          {/* Ejes globales: recubrimiento + material (taxonomías con página propia) */}
+          <div className="border-t border-hc-metal-light px-5 py-3">
+            <GlobalAxes onNavigate={() => closeNow(false)} />
+          </div>
+
           {/* Barra inferior: marcas + ver todo */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hc-metal-light bg-hc-soft px-5 py-3">
             <BrandLinks onNavigate={() => closeNow(false)} />
@@ -636,6 +685,9 @@ export function MegaMenu() {
             <div className="space-y-3 p-4">
               <FeaturedBrandCard onNavigate={() => closeNow(false)} />
               <QuoteCta onNavigate={() => closeNow(false)} />
+              <div className="pt-2">
+                <GlobalAxes onNavigate={() => closeNow(false)} />
+              </div>
               <div className="pt-2">
                 <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
                   Marcas
