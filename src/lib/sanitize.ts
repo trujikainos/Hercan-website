@@ -1,81 +1,61 @@
+import "server-only";
+import DOMPurify from "isomorphic-dompurify";
+
 /**
- * Sanitizador conservador para el `descriptionHtml` de Shopify.
+ * Sanitizador de HTML semi-confiable de Shopify (descripciones de producto y
+ * contenido de blog), apto para RSC/Node (isomorphic-dompurify usa jsdom en el
+ * servidor). Sustituye al sanitizador regex casero por una librería probada
+ * (defensa en profundidad frente a la mutación-XSS que sortea las regex).
  *
- * Estrategia (defensa en profundidad, apta para React Server Components sin DOM):
- *  1. Elimina por completo los bloques con contenido ejecutable o de estilo.
- *  2. Permite SOLO un allowlist de tags de formato y descarta TODOS los atributos.
- *     Al no quedar ningún atributo, desaparece toda la superficie de XSS por
- *     `on*=`, `href="javascript:"`, `src="data:"`, etc.
- *
- * El contenido lo escribe el admin de la tienda, pero el catálogo real se cargará
- * desde exports de proveedores (Iscar/Toolmex), así que tratamos el HTML como
- * semi-confiable y lo limpiamos antes de renderizar.
+ * El contenido lo escribe el admin de la tienda; el catálogo real vendrá de
+ * exports de proveedores (Iscar/Toolmex), así que lo tratamos como semi-confiable
+ * y lo limpiamos antes de renderizar con dangerouslySetInnerHTML.
  */
-const ALLOWED_TAGS = new Set([
+
+// Fuerza atributos seguros en <a> e <img> DESPUÉS de sanear (el hook es global a
+// DOMPurify; sólo <a>/<img> se ven afectados y sólo aparecen en el HTML de blog).
+DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+  if (node.nodeName === "A") {
+    node.setAttribute("rel", "noopener nofollow");
+    node.setAttribute("target", "_blank");
+  }
+  if (node.nodeName === "IMG") {
+    const src = node.getAttribute("src") || "";
+    if (!/^https?:\/\//i.test(src)) node.removeAttribute("src"); // sólo imágenes https
+    else node.setAttribute("loading", "lazy");
+  }
+});
+
+// Descripción de producto: sólo formato, CERO atributos (máxima superficie cerrada).
+const PRODUCT_TAGS = [
   "p", "br", "ul", "ol", "li",
   "strong", "b", "em", "i", "u",
   "h3", "h4", "h5", "span", "small", "sup", "sub",
   "table", "thead", "tbody", "tr", "td", "th",
-]);
+];
 
-// Sanitizador permisivo para contenido de blog (escrito por staff en el admin
-// de Shopify): permite formato rico + enlaces e imágenes con URL validada.
-const RICH_TAGS = new Set([
+// Contenido de blog: formato rico + enlaces e imágenes con URL validada.
+const RICH_TAGS = [
   "p", "br", "hr", "strong", "b", "em", "i", "u", "s", "mark", "small", "sup", "sub",
   "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "blockquote", "pre", "code",
   "a", "img", "figure", "figcaption",
   "table", "thead", "tbody", "tr", "td", "th", "span",
-]);
+];
 
-const attr = (attrs: string, name: string): string | null => {
-  const m = new RegExp(`\\b${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i").exec(attrs);
-  return m ? (m[2] ?? m[3] ?? "").trim() : null;
-};
-
-export function sanitizeRichHtml(html: string | null | undefined): string {
-  if (!html) return "";
-  const cleaned = html
-    .replace(
-      /<(script|style|iframe|object|embed|noscript|template|svg|math|form|input|button)[\s\S]*?<\/\1>/gi,
-      "",
-    )
-    .replace(/<!--[\s\S]*?-->/g, "");
-  return cleaned
-    .replace(/<(\/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>/g, (_m, slash: string, name: string, attrs: string) => {
-      const tag = name.toLowerCase();
-      if (!RICH_TAGS.has(tag)) return "";
-      if (slash) return `</${tag}>`;
-      if (tag === "a") {
-        const href = attr(attrs, "href") ?? "";
-        if (!/^(https?:|mailto:|tel:|\/)/i.test(href)) return "<a>";
-        const safe = href.replace(/"/g, "&quot;");
-        return `<a href="${safe}" rel="noopener nofollow" target="_blank">`;
-      }
-      if (tag === "img") {
-        const src = attr(attrs, "src") ?? "";
-        if (!/^https?:/i.test(src)) return ""; // sin src segura → se descarta
-        const alt = (attr(attrs, "alt") ?? "").replace(/"/g, "&quot;");
-        return `<img src="${src.replace(/"/g, "&quot;")}" alt="${alt}" loading="lazy">`;
-      }
-      return `<${tag}>`; // resto: sin atributos
-    })
-    .trim();
-}
+// Esquemas permitidos en href/src: http(s), mailto, tel y rutas relativas.
+// (Para <img> el hook de arriba exige además https://). Bloquea javascript:/data:.
+const SAFE_URI = /^(?:https?:|mailto:|tel:|\/)/i;
 
 export function sanitizeHtml(html: string | null | undefined): string {
   if (!html) return "";
-  const out = html
-    // 1) Bloques peligrosos completos (apertura … contenido … cierre)
-    .replace(
-      /<(script|style|iframe|object|embed|noscript|template|svg|math)[\s\S]*?<\/\1>/gi,
-      "",
-    )
-    // Comentarios (pueden ocultar condicionales de IE / payloads)
-    .replace(/<!--[\s\S]*?-->/g, "")
-    // 2) Cada tag: si está permitido lo dejamos SIN atributos; si no, lo borramos.
-    .replace(/<(\/?)([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g, (_m, slash: string, name: string) => {
-      const tag = name.toLowerCase();
-      return ALLOWED_TAGS.has(tag) ? `<${slash}${tag}>` : "";
-    });
-  return out.trim();
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: PRODUCT_TAGS, ALLOWED_ATTR: [] }).trim();
+}
+
+export function sanitizeRichHtml(html: string | null | undefined): string {
+  if (!html) return "";
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: RICH_TAGS,
+    ALLOWED_ATTR: ["href", "src", "alt"],
+    ALLOWED_URI_REGEXP: SAFE_URI,
+  }).trim();
 }

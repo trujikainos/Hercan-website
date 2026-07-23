@@ -3,7 +3,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
 /**
- * Rate-limit del formulario de cotización (protege el canal de leads B2B).
+ * Rate-limit del sitio: formulario de cotización (protege leads B2B) y búsqueda en vivo.
  * - Con `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` → límite DURABLE
  *   compartido entre TODAS las funciones serverless de Vercel (sliding window en
  *   Redis). Es lo único que frena de verdad el spam distribuido: el Map en memoria
@@ -24,6 +24,7 @@ export const rateLimitBackend: "upstash" | "memory" = url && token ? "upstash" :
 // ── Upstash (durable) ──
 let ipLimiter: Ratelimit | null = null;
 let emailLimiter: Ratelimit | null = null;
+let searchLimiter: Ratelimit | null = null;
 if (url && token) {
   const redis = new Redis({ url, token });
   // Por IP: 5 / 10 min (holgado para un cliente que corrige y reenvía).
@@ -38,6 +39,14 @@ if (url && token) {
     redis,
     limiter: Ratelimit.slidingWindow(3, "10 m"),
     prefix: "rl:cotizacion:email",
+    analytics: false,
+  });
+  // Búsqueda en vivo (/api/search): tope holgado, es tráfico legítimo alto.
+  // 30 / 10 s por IP cubre el tecleo con debounce y frena el scraping.
+  searchLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, "10 s"),
+    prefix: "rl:search:ip",
     analytics: false,
   });
 }
@@ -57,10 +66,10 @@ function memLimited(key: string, max: number, windowMs: number): boolean {
  * @param kind "ip" o "email" (namespaces separados).
  * @param id   la IP o el correo (se normaliza a minúsculas/trim).
  */
-export async function limited(kind: "ip" | "email", id: string): Promise<boolean> {
+export async function limited(kind: "ip" | "email" | "search", id: string): Promise<boolean> {
   const key = (id ?? "").trim().toLowerCase();
   if (!key || key === "unknown") return false;
-  const limiter = kind === "ip" ? ipLimiter : emailLimiter;
+  const limiter = kind === "ip" ? ipLimiter : kind === "email" ? emailLimiter : searchLimiter;
   if (limiter) {
     try {
       const { success } = await limiter.limit(key);
@@ -70,6 +79,7 @@ export async function limited(kind: "ip" | "email", id: string): Promise<boolean
     }
   }
   // Fallback en memoria (mismos topes que Upstash).
-  const max = kind === "ip" ? 5 : 3;
-  return memLimited(`${kind}:${key}`, max, 10 * 60 * 1000);
+  const [max, windowMs] =
+    kind === "search" ? [30, 10 * 1000] : kind === "email" ? [3, 10 * 60 * 1000] : [5, 10 * 60 * 1000];
+  return memLimited(`${kind}:${key}`, max, windowMs);
 }
