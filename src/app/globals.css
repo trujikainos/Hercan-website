@@ -136,6 +136,56 @@
     transform: translateY(-4px);
     box-shadow: 0 14px 32px -14px rgba(14, 62, 96, 0.28);
   }
+
+  /* Filtros /productos — colapsar/expandir suave de los grupos de facetas.
+     Truco grid-template-rows 0fr⇄1fr: anima la altura sin medir con JS y con
+     transiciones CSS (interrumpibles). Solo se animan transform/opacity/grid. */
+  .hc-collapse {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.22s var(--ease-out-brand);
+  }
+  .hc-collapse[data-open="true"] {
+    grid-template-rows: 1fr;
+  }
+  .hc-collapse-inner {
+    min-height: 0; /* permite colapsar por debajo del alto del contenido */
+    overflow: hidden;
+    /* Saca el contenido colapsado del foco y del lector de pantalla, pero solo
+       cuando termina el colapso (delay = duración del alto) para no cortar la
+       animación de salida. Al abrir se hace visible de inmediato. */
+    visibility: hidden;
+    transition: visibility 0s linear 0.22s;
+  }
+  .hc-collapse[data-open="true"] .hc-collapse-inner {
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .hc-collapse-content {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+      opacity 0.18s var(--ease-out-brand),
+      transform 0.18s var(--ease-out-brand);
+  }
+  .hc-collapse[data-open="true"] .hc-collapse-content {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Header del grupo: feedback de presión + chevron que rota al abrir */
+  .hc-collapse-trigger {
+    transition: transform 0.14s var(--ease-out-brand);
+  }
+  .hc-collapse-trigger:active {
+    transform: scale(0.99);
+  }
+  .hc-collapse-chevron {
+    transition: transform 0.2s var(--ease-out-brand);
+  }
+  .hc-collapse-chevron.is-open {
+    transform: rotate(180deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -152,6 +202,14 @@
   }
   .card-hover:hover {
     transform: none;
+  }
+  /* Filtros: sin desplazamiento (translateY) al expandir; el override global
+     de abajo ya vuelve instantáneo el cambio de altura y del chevron. */
+  .hc-collapse-content {
+    transform: none;
+  }
+  .hc-collapse-inner {
+    transition-delay: 0s; /* sin animación: oculta el contenido colapsado sin esperar */
   }
   *,
   *::before,

@@ -1,7 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 
 export type FacetOption = {
   value: string; // valor que va en la URL (slug para categoría, valor para el resto)
@@ -76,29 +77,64 @@ export function FilterSidebar({ facets }: { facets: FacetGroup[] }) {
       </div>
       {facets.map((f) =>
         f.options.length === 0 ? null : (
-          <details key={f.param} open className="border-b border-hc-metal-light py-2">
-            <summary className="cursor-pointer font-heading text-sm text-hc-navy">
-              {f.label}
-            </summary>
-            <ul className="mt-2 space-y-1.5">
-              {f.options.map((o) => (
-                <li key={o.value}>
-                  <label className="flex items-center gap-2 text-sm text-hc-ink">
-                    <input
-                      type="checkbox"
-                      checked={o.selected}
-                      onChange={() => toggle(f.param, o.value)}
-                      className="accent-hc-blue"
-                    />
-                    <span className="flex-1">{o.label}</span>
-                    <span className="text-xs text-hc-gunmetal">{o.count}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </details>
+          <FilterGroup key={f.param} facet={f} onToggle={toggle} />
         ),
       )}
     </aside>
+  );
+}
+
+/**
+ * Grupo de facetas colapsable. Disclosure controlado (button + aria-expanded +
+ * aria-controls) en lugar de <details> nativo: así la altura se anima de forma
+ * suave e interrumpible con transiciones CSS (grid-template-rows: 0fr⇄1fr).
+ * No toca la lógica de filtrado: solo el motion de abrir/cerrar.
+ */
+function FilterGroup({
+  facet,
+  onToggle,
+}: {
+  facet: FacetGroup;
+  onToggle: (param: string, value: string) => void;
+}) {
+  const [open, setOpen] = useState(true);
+  const contentId = useId();
+
+  return (
+    <div className="border-b border-hc-metal-light">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={contentId}
+        className="hc-collapse-trigger flex w-full cursor-pointer items-center justify-between gap-4 py-2 text-left font-heading text-sm text-hc-navy"
+      >
+        <span>{facet.label}</span>
+        <ChevronDown
+          aria-hidden
+          className={`hc-collapse-chevron h-4 w-4 shrink-0 text-hc-steel${open ? " is-open" : ""}`}
+        />
+      </button>
+      <div id={contentId} className="hc-collapse" data-open={open}>
+        <div className="hc-collapse-inner">
+          <ul className="hc-collapse-content space-y-1.5 pb-2">
+            {facet.options.map((o) => (
+              <li key={o.value}>
+                <label className="flex items-center gap-2 text-sm text-hc-ink">
+                  <input
+                    type="checkbox"
+                    checked={o.selected}
+                    onChange={() => onToggle(facet.param, o.value)}
+                    className="accent-hc-blue"
+                  />
+                  <span className="flex-1">{o.label}</span>
+                  <span className="text-xs text-hc-gunmetal">{o.count}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 }
