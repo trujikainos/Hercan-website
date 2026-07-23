@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ShoppingCart, Loader2, Check, Minus, Plus } from "lucide-react";
 import { useCart } from "./cart-provider";
 
@@ -25,6 +25,8 @@ export function AddToCartButton({
   const { add, enabled, isPending } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const [qty, setQty] = useState(1);
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (addedTimer.current) clearTimeout(addedTimer.current); }, []);
 
   // Solo se puede vender lo que hay en existencia: tope = stock disponible (máx 99).
   const maxQty = stock != null && stock > 0 ? Math.min(stock, 99) : 99;
@@ -58,7 +60,8 @@ export function AddToCartButton({
       },
     });
     setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1800);
+    if (addedTimer.current) clearTimeout(addedTimer.current);
+    addedTimer.current = setTimeout(() => setJustAdded(false), 1800);
     setQty(1);
   }
 

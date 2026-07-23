@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2, ShoppingCart } from "lucide-react";
-import { formatMoney } from "../ui";
+import { formatMoneyOrTBD } from "../ui";
 import { useCart } from "./cart-provider";
 import { getCheckoutUrlAction } from "@/app/cart/actions";
 
@@ -45,7 +45,7 @@ export function CartSummary() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm text-hc-gunmetal">Subtotal (sin IVA)</span>
-        <span className="font-heading text-lg text-hc-navy">{formatMoney(cart.subtotal)}</span>
+        <span className="font-heading text-lg text-hc-navy">{formatMoneyOrTBD(cart.subtotal)}</span>
       </div>
       <p className="text-xs text-hc-gunmetal">El IVA (16%) se calcula en el checkout.</p>
       {err && <p className="text-sm text-red-600">{err}</p>}

@@ -84,3 +84,15 @@ export function formatMoney(m: Money): string {
   if (!Number.isFinite(amount)) return "US$ —";
   return money(amount, m.currencyCode);
 }
+
+// ¿El precio aún no está cargado? (null/no numérico o <= 0). En B2B industrial un
+// precio 0 = "por cotizar", no gratis → se muestra "A confirmar".
+export function isPriceTBD(m: Money): boolean {
+  const a = parseFloat(m.amount);
+  return !Number.isFinite(a) || a <= 0;
+}
+
+/** Como formatMoney, pero muestra "A confirmar" cuando el precio no está cargado. */
+export function formatMoneyOrTBD(m: Money): string {
+  return isPriceTBD(m) ? "A confirmar" : formatMoney(m);
+}

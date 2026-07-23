@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { ImageIcon, Minus, Plus, Trash2 } from "lucide-react";
 import type { CartLine } from "@/lib/cart-types";
-import { formatMoney } from "../ui";
+import { formatMoney, formatMoneyOrTBD, isPriceTBD } from "../ui";
 import { useCart } from "./cart-provider";
 
 export function CartLineItem({ line }: { line: CartLine }) {
@@ -33,7 +33,9 @@ export function CartLineItem({ line }: { line: CartLine }) {
         >
           {line.productTitle}
         </Link>
-        <p className="mt-0.5 text-xs text-hc-gunmetal">{formatMoney(line.unitPrice)} c/u</p>
+        <p className="mt-0.5 text-xs text-hc-gunmetal">
+          {isPriceTBD(line.unitPrice) ? "Precio a confirmar" : `${formatMoney(line.unitPrice)} c/u`}
+        </p>
         {!line.availableForSale ? (
           <p className="mt-0.5 text-xs text-[#b25e00]">Sin stock</p>
         ) : atMax && max != null ? (
@@ -43,7 +45,7 @@ export function CartLineItem({ line }: { line: CartLine }) {
           <div className="flex items-center rounded-lg border border-hc-metal-light">
             <button
               onClick={() => updateQty(line.id, line.quantity - 1)}
-              disabled={isPending}
+              disabled={isPending || line.quantity <= 1}
               aria-label="Disminuir"
               className="px-2 py-1 text-hc-gunmetal hover:text-hc-blue disabled:opacity-50"
             >
@@ -63,7 +65,7 @@ export function CartLineItem({ line }: { line: CartLine }) {
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <span className="font-heading text-sm text-hc-navy">{formatMoney(line.lineTotal)}</span>
+            <span className="font-heading text-sm text-hc-navy">{formatMoneyOrTBD(line.lineTotal)}</span>
             <button
               onClick={() => remove(line.id)}
               disabled={isPending}

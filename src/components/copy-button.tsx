@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Check, Copy } from "lucide-react";
 
 /** Copia un valor al portapapeles (p. ej. el N° de parte para pegarlo en una OC). */
@@ -14,13 +14,16 @@ export function CopyButton({
   small?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current); }, []);
   const size = small ? "h-3 w-3" : "h-3.5 w-3.5";
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopied(false), 1500);
     } catch {
       /* clipboard no disponible (http/permiso) — se ignora en silencio */
     }
