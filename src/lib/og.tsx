@@ -44,8 +44,10 @@ export const OG_CONTENT_TYPE = "image/png";
  */
 export const BRAND_DOMAIN = "hercan.com.mx";
 
-/** Línea de confianza con las marcas que distribuye Hercan (dato de site.ts). */
-const BRANDS_LINE = site.brands.map((b) => b.name).join("  ·  ");
+/** Línea de confianza con las marcas: top 5 + "y más" para no desbordar la OG 1200px. */
+const _brandNames = site.brands.map((b) => b.name);
+const BRANDS_LINE =
+  _brandNames.slice(0, 5).join("  ·  ") + (_brandNames.length > 5 ? "  ·  y más" : "");
 
 // El logo se lee una sola vez por proceso y se cachea como data URL.
 let logoDataUrl: string | undefined;
