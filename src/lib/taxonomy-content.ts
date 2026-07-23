@@ -42,6 +42,27 @@ export type CategoryContent = {
   bullets?: { heading: string; items: string[] }[];
 };
 
+export type TipoContent = {
+  /** Valor REAL de `tipo_herramienta` usado como scope del catálogo (scope.tipo). */
+  name: string;
+  /** H1 del hero. */
+  title: string;
+  metaTitle: string;
+  metaDescription: string;
+  intro: string[];
+  bullets?: { heading: string; items: string[] }[];
+};
+
+export type IsoContent = {
+  /** Código de familia ISO en MAYÚSCULAS; scope por PREFIJO de `designacion_iso`. */
+  code: string;
+  title: string;
+  metaTitle: string;
+  metaDescription: string;
+  intro: string[];
+  bullets?: { heading: string; items: string[] }[];
+};
+
 // ── MARCAS ──────────────────────────────────────────────────────────────────
 // Claves = slug de marca (minúsculas, sin espacios). Deben cubrir site.brands.
 export const BRAND_CONTENT: Record<string, BrandContent> = {
@@ -349,6 +370,496 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     intro: [
       "En accesorios agrupamos los complementos y consumibles que apoyan el uso del herramental y de las máquinas: repuestos, elementos de sujeción y otros artículos auxiliares del taller.",
       "Consulta el catálogo disponible y solicita cotización B2B para tu operación.",
+    ],
+  },
+};
+
+// ── TIPOS DE HERRAMIENTA ──────────────────────────────────────────────────────
+// Claves = slug de tipo (slugify del valor real de `tipo_herramienta`). `name` = el
+// valor EXACTO usado como scope. Cubre los tipos de herramienta de corte del negocio
+// (Bloque 2 del CLAUDE.md), SIN "Otro". El contenido es conocimiento general de
+// maquinado (factual), no marketing de fabricante.
+export const TIPO_CONTENT: Record<string, TipoContent> = {
+  inserto: {
+    name: "Inserto",
+    title: "Insertos intercambiables",
+    metaTitle: "Insertos intercambiables para torno y fresado | HERCAN",
+    metaDescription:
+      "Insertos (plaquitas) de corte intercambiables en HERCAN: metal duro para torneado, fresado y perforación, normalizados por ISO 1832. Filtra por marca, material y recubrimiento.",
+    intro: [
+      "Un inserto (o plaquita) es la pieza de corte intercambiable que se sujeta mecánicamente en un portaherramientas o en el cuerpo de una fresa. Cuando un filo se desgasta, el inserto se indexa a un filo nuevo o se reemplaza, sin necesidad de reafilar la herramienta.",
+      "La mayoría son de metal duro (carburo), con frecuencia recubiertos, y sus formas y medidas están normalizadas por la norma ISO 1832, lo que permite intercambiarlos entre fabricantes.",
+    ],
+    bullets: [
+      {
+        heading: "Operaciones",
+        items: ["Torneado", "Fresado", "Perforación", "Ranurado y roscado"],
+      },
+    ],
+  },
+  "fresa-endmill": {
+    name: "Fresa/Endmill",
+    title: "Fresas integrales (endmills)",
+    metaTitle: "Fresas integrales (endmills) de carburo y HSS | HERCAN",
+    metaDescription:
+      "Fresas integrales o endmills en HERCAN: herramienta rotativa de carburo y HSS para ranurado, contorneado y refrentado de hombros en CNC. Filtra por marca, material y recubrimiento.",
+    intro: [
+      "Una fresa integral o endmill es una herramienta rotativa de fresado con filos de corte en la periferia y, según el tipo, también en la cara frontal. Se fabrica en una sola pieza, normalmente de metal duro (carburo) o acero rápido (HSS).",
+      "Se emplea en ranurado, contorneado, refrentado de hombros y perfilado en fresadoras y centros de maquinado CNC. El número de filos (flautas) y el ángulo de hélice se eligen según el material y el tipo de corte.",
+    ],
+    bullets: [
+      {
+        heading: "Operaciones",
+        items: ["Ranurado", "Contorneado", "Refrentado de hombros", "Perfilado"],
+      },
+    ],
+  },
+  broca: {
+    name: "Broca",
+    title: "Brocas",
+    metaTitle: "Brocas de carburo, HSS y de inserto | HERCAN",
+    metaDescription:
+      "Brocas en HERCAN: brocas helicoidales de carburo y HSS y brocas de inserto intercambiable para taladrado en CNC. Filtra por marca, material y recubrimiento.",
+    intro: [
+      "Una broca es una herramienta rotativa de corte para crear o agrandar agujeros. La broca helicoidal, con dos filos y canales en hélice que evacuan la viruta, es la más común; existen en metal duro (carburo) y acero rápido (HSS), además de brocas de inserto intercambiable.",
+      "El taladrado suele ser una operación previa al roscado, el escariado o el mandrinado. La geometría de la punta y el recubrimiento influyen en la penetración y en la vida de la herramienta.",
+    ],
+    bullets: [
+      {
+        heading: "Tipos comunes",
+        items: ["Broca helicoidal", "Broca de carburo", "Broca de inserto"],
+      },
+    ],
+  },
+  machuelo: {
+    name: "Machuelo",
+    title: "Machuelos",
+    metaTitle: "Machuelos para roscado interno (HSS y carburo) | HERCAN",
+    metaDescription:
+      "Machuelos en HERCAN: herramienta de roscado interno por arranque de viruta, en HSS y metal duro, para agujero pasante y ciego. Cotización B2B en México.",
+    intro: [
+      "Un machuelo es la herramienta que genera roscas internas por arranque de viruta dentro de un agujero previamente taladrado. Sus filos reproducen el perfil de la rosca a medida que la herramienta avanza girando.",
+      "Existen machuelos de acero rápido (HSS) y de metal duro, con variantes para agujero pasante o ciego según cómo evacuen la viruta. El diámetro del barreno previo se define por el paso y el tipo de rosca.",
+    ],
+    bullets: [
+      {
+        heading: "Aplicaciones",
+        items: ["Roscas internas", "Agujero pasante y ciego"],
+      },
+    ],
+  },
+  cortador: {
+    name: "Cortador",
+    title: "Cortadores y portainsertos",
+    metaTitle: "Cortadores y portainsertos para fresado | HERCAN",
+    metaDescription:
+      "Cortadores y cuerpos portainsertos en HERCAN: alojan insertos intercambiables para careado, escuadrado y ranurado en CNC. Filtra por marca y material.",
+    intro: [
+      "En este catálogo, «cortador» agrupa los cuerpos de fresa y cortadores que alojan insertos intercambiables, así como cortadores de fresado que no corresponden a una fresa integral. El cuerpo sujeta uno o varios insertos que realizan el corte.",
+      "Se utilizan en fresado de careado, escuadrado y ranurado, y permiten reponer solo los insertos cuando se desgastan, sin sustituir todo el cortador.",
+    ],
+    bullets: [
+      {
+        heading: "Aplicaciones",
+        items: ["Careado", "Escuadrado", "Ranurado"],
+      },
+    ],
+  },
+  escariador: {
+    name: "Escariador",
+    title: "Escariadores",
+    metaTitle: "Escariadores para acabado de agujeros | HERCAN",
+    metaDescription:
+      "Escariadores (rimas) en HERCAN: herramienta rotativa de acabado que calibra y afina agujeros taladrados a tolerancia estrecha. En HSS y metal duro. Cotización B2B.",
+    intro: [
+      "Un escariador (rima) es una herramienta rotativa de acabado que calibra y afina un agujero ya taladrado, mejorando su tolerancia dimensional y su acabado superficial. Remueve una pequeña cantidad de material con varios filos.",
+      "Se emplea cuando el agujero requiere un ajuste preciso, por ejemplo para alojar pasadores o bujes. Existen escariadores de acero rápido (HSS) y de metal duro.",
+    ],
+    bullets: [
+      {
+        heading: "Aplicaciones",
+        items: ["Calibrado de agujeros", "Acabado de precisión"],
+      },
+    ],
+  },
+  "barra-mandrinar": {
+    name: "Barra mandrinar",
+    title: "Barras de mandrinar",
+    metaTitle: "Barras de mandrinar para diámetros internos | HERCAN",
+    metaDescription:
+      "Barras de mandrinar en HERCAN: herramienta para agrandar y afinar diámetros internos (boring) en torno, con inserto en el extremo. Filtra por marca y material.",
+    intro: [
+      "Una barra de mandrinar es la herramienta que agranda y afina diámetros internos (mandrinado o boring), normalmente en torno. Lleva un inserto o filo en el extremo, y su rigidez determina la profundidad que puede alcanzar sin vibración.",
+      "Se usa para lograr diámetros interiores precisos y buen acabado, en agujeros previamente taladrados o fundidos. La relación de voladizo (longitud/diámetro) es clave para evitar el traqueteo (chatter).",
+    ],
+    bullets: [
+      {
+        heading: "Aplicaciones",
+        items: ["Mandrinado interior", "Acabado de diámetros internos"],
+      },
+    ],
+  },
+  portaherramientas: {
+    name: "Portaherramientas",
+    title: "Portaherramientas",
+    metaTitle: "Portaherramientas para CNC: conos, boquillas y mandriles | HERCAN",
+    metaDescription:
+      "Portaherramientas para CNC en HERCAN: conos (BT, HSK, CAT), boquillas, mandriles portafresas y portaherramientas de torno. Sujeción rígida y concéntrica. Cotización B2B.",
+    intro: [
+      "Un portaherramientas es el elemento de sujeción que conecta la herramienta de corte con el husillo o la torreta de la máquina. Su rigidez y su precisión de sujeción determinan la concentricidad, la estabilidad del corte y, en buena medida, el acabado obtenido.",
+      "Abarca conos de máquina (BT, HSK, CAT), boquillas, mandriles portafresas y portaherramientas de torno que alojan insertos. La elección depende de la interfaz de la máquina, el tipo de herramienta y la operación.",
+    ],
+    bullets: [
+      {
+        heading: "Tipos comunes",
+        items: ["Conos BT / HSK / CAT", "Boquillas y mandriles", "Portaherramientas de torno"],
+      },
+    ],
+  },
+};
+
+// ── FAMILIAS ISO (insertos) ───────────────────────────────────────────────────
+// Claves = código de familia en minúsculas. `code` = prefijo en MAYÚSCULAS con el que
+// se hace el scope (prefijo de `designacion_iso`). Set CURADO de las familias de
+// inserto más comunes de la norma ISO 1832 (torneado + una de fresado). Es
+// FORWARD-COMPATIBLE: hoy el catálogo aún se importa, así que estas páginas pueden dar
+// 0 productos y muestran igual el hero informativo. El contenido decodifica la norma
+// (forma por la 1.ª letra, ángulo de incidencia por la 2.ª) — hecho técnico, no inventado.
+export const ISO_CONTENT: Record<string, IsoContent> = {
+  cnmg: {
+    code: "CNMG",
+    title: "Insertos CNMG",
+    metaTitle: "Insertos CNMG (ISO 1832) para torneado | HERCAN",
+    metaDescription:
+      "Insertos CNMG: forma rómbica de 80°, negativos de doble cara (ISO 1832). Geometría de propósito general para torneado de desbaste a acabado en acero y fundición.",
+    intro: [
+      "La familia CNMG designa insertos de torneado con forma rómbica de 80° (letra C) y ángulo de incidencia de 0° (letra N); es decir, insertos negativos de doble cara. La codificación sigue la norma ISO 1832.",
+      "El ángulo de 80° del vértice ofrece un filo robusto, por lo que el CNMG es una de las geometrías más usadas en torneado exterior de propósito general, del desbaste al acabado, en especial en acero y fundición.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 80° (C)", "Incidencia 0°, negativo (N)", "Doble cara, con agujero"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Torneado exterior general", "Desbaste y semiacabado", "Acero y fundición"],
+      },
+    ],
+  },
+  tnmg: {
+    code: "TNMG",
+    title: "Insertos TNMG",
+    metaTitle: "Insertos TNMG (ISO 1832) para torneado | HERCAN",
+    metaDescription:
+      "Insertos TNMG: forma triangular de 60°, negativos de doble cara (ISO 1832) con tres filos por cara. Torneado general de cilindrado y refrentado.",
+    intro: [
+      "La familia TNMG corresponde a insertos de torneado de forma triangular de 60° (letra T) con incidencia de 0° (letra N): insertos negativos de doble cara, según ISO 1832.",
+      "La forma triangular ofrece tres filos por cara (seis en total), lo que da buena economía por filo en torneado exterior de propósito general. Es habitual en cilindrado y refrentado de acero y fundición.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma triangular 60° (T)", "Incidencia 0°, negativo (N)", "Tres filos por cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Torneado general", "Cilindrado y refrentado", "Acero y fundición"],
+      },
+    ],
+  },
+  dnmg: {
+    code: "DNMG",
+    title: "Insertos DNMG",
+    metaTitle: "Insertos DNMG (ISO 1832) para torneado | HERCAN",
+    metaDescription:
+      "Insertos DNMG: forma rómbica de 55°, negativos de doble cara (ISO 1832). Torneado general con capacidad de perfilado y copiado ligero.",
+    intro: [
+      "DNMG designa insertos de torneado de forma rómbica de 55° (letra D) con incidencia de 0° (letra N): negativos de doble cara, bajo la norma ISO 1832.",
+      "El vértice de 55° es más agudo que el del CNMG, lo que combina buena resistencia con capacidad de perfilado. Se emplea en torneado exterior de propósito general y en copiado ligero.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 55° (D)", "Incidencia 0°, negativo (N)", "Doble cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Torneado general", "Perfilado y copiado ligero"],
+      },
+    ],
+  },
+  wnmg: {
+    code: "WNMG",
+    title: "Insertos WNMG",
+    metaTitle: "Insertos WNMG (ISO 1832) para torneado | HERCAN",
+    metaDescription:
+      "Insertos WNMG: forma trigonal de 80°, negativos de doble cara (ISO 1832) con filo robusto y tres filos por cara. Torneado general de desbaste a semiacabado.",
+    intro: [
+      "WNMG corresponde a insertos de torneado de forma trigonal de 80° (letra W) con incidencia de 0° (letra N): negativos de doble cara (ISO 1832).",
+      "La forma trigonal aporta un filo robusto y tres filos por cara, con buena estabilidad. Es común en torneado exterior de propósito general, del desbaste al semiacabado.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma trigonal 80° (W)", "Incidencia 0°, negativo (N)", "Tres filos por cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Torneado general", "Desbaste y semiacabado"],
+      },
+    ],
+  },
+  snmg: {
+    code: "SNMG",
+    title: "Insertos SNMG",
+    metaTitle: "Insertos SNMG (ISO 1832) para torneado | HERCAN",
+    metaDescription:
+      "Insertos SNMG: forma cuadrada de 90°, negativos de doble cara (ISO 1832) con cuatro filos por cara. Desbaste, refrentado y cortes de alta carga.",
+    intro: [
+      "SNMG designa insertos de torneado de forma cuadrada de 90° (letra S) con incidencia de 0° (letra N): negativos de doble cara según ISO 1832.",
+      "La forma cuadrada ofrece cuatro filos por cara (ocho en total) y un vértice muy resistente, idóneo para desbaste, refrentado y torneado de alta carga en acero y fundición.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma cuadrada 90° (S)", "Incidencia 0°, negativo (N)", "Cuatro filos por cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Desbaste y refrentado", "Cortes de alta carga"],
+      },
+    ],
+  },
+  vnmg: {
+    code: "VNMG",
+    title: "Insertos VNMG",
+    metaTitle: "Insertos VNMG (ISO 1832) para torneado | HERCAN",
+    metaDescription:
+      "Insertos VNMG: forma rómbica de 35°, negativos de doble cara (ISO 1832). Vértice agudo para perfilado y contorneado en torno.",
+    intro: [
+      "VNMG corresponde a insertos de torneado de forma rómbica de 35° (letra V) con incidencia de 0° (letra N): negativos de doble cara (ISO 1832).",
+      "El vértice muy agudo de 35° permite acceso a contornos y cambios de dirección, por lo que se usa en perfilado y copiado. A cambio, el filo es más frágil que en formas de mayor ángulo.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 35° (V)", "Incidencia 0°, negativo (N)", "Doble cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Perfilado y contorneado", "Copiado"],
+      },
+    ],
+  },
+  cnmm: {
+    code: "CNMM",
+    title: "Insertos CNMM",
+    metaTitle: "Insertos CNMM (ISO 1832) para desbaste | HERCAN",
+    metaDescription:
+      "Insertos CNMM: forma rómbica de 80°, negativos de doble cara (ISO 1832) con geometría de desbaste. Para grandes avances y profundidades en torneado.",
+    intro: [
+      "CNMM designa insertos de torneado de forma rómbica de 80° (letra C) con incidencia de 0° (letra N) y una geometría (letra M) orientada al desbaste: insertos negativos de doble cara según ISO 1832.",
+      "Comparte la forma de 80° del CNMG, pero su geometría rompevirutas está pensada para grandes secciones de viruta. Es una elección típica para desbaste pesado en torneado de acero y fundición.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 80° (C)", "Incidencia 0°, negativo (N)", "Geometría de desbaste (M)"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Desbaste pesado", "Grandes avances y profundidades"],
+      },
+    ],
+  },
+  ccmt: {
+    code: "CCMT",
+    title: "Insertos CCMT",
+    metaTitle: "Insertos CCMT (ISO 1832) para acabado y mandrinado | HERCAN",
+    metaDescription:
+      "Insertos CCMT: forma rómbica de 80°, positivos de una cara (ISO 1832). Baja fuerza de corte para acabado, piezas delgadas y mandrinado interior.",
+    intro: [
+      "CCMT designa insertos de torneado de forma rómbica de 80° (letra C) con ángulo de incidencia de 7° (letra C): insertos positivos de una sola cara, según ISO 1832.",
+      "Al ser positivos, generan menores fuerzas de corte que un inserto negativo equivalente, por lo que se usan en acabado y semiacabado, torneado de piezas delgadas y, con frecuencia, en mandrinado interior.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 80° (C)", "Incidencia 7°, positivo (C)", "Una cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Acabado y semiacabado", "Mandrinado interior"],
+      },
+    ],
+  },
+  dcmt: {
+    code: "DCMT",
+    title: "Insertos DCMT",
+    metaTitle: "Insertos DCMT (ISO 1832) para acabado y perfilado | HERCAN",
+    metaDescription:
+      "Insertos DCMT: forma rómbica de 55°, positivos de una cara (ISO 1832). Acabado, perfilado, piezas de diámetro pequeño y mandrinado.",
+    intro: [
+      "DCMT corresponde a insertos de torneado de forma rómbica de 55° (letra D) con incidencia de 7° (letra C): positivos de una sola cara (ISO 1832).",
+      "Combina un vértice de 55° apto para perfilar con la baja fuerza de corte de un inserto positivo. Es habitual en acabado, piezas de diámetro pequeño y mandrinado.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 55° (D)", "Incidencia 7°, positivo (C)", "Una cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Acabado y perfilado", "Mandrinado y piezas pequeñas"],
+      },
+    ],
+  },
+  vbmt: {
+    code: "VBMT",
+    title: "Insertos VBMT",
+    metaTitle: "Insertos VBMT (ISO 1832) para perfilado y acabado | HERCAN",
+    metaDescription:
+      "Insertos VBMT: forma rómbica de 35°, positivos de una cara (ISO 1832). Vértice agudo y baja fuerza de corte para perfilado y contornos.",
+    intro: [
+      "VBMT designa insertos de torneado de forma rómbica de 35° (letra V) con incidencia de 5° (letra B): positivos de una sola cara según ISO 1832.",
+      "El vértice agudo de 35° facilita el perfilado y el acceso a contornos, mientras que el diseño positivo reduce las fuerzas de corte. Se usa en acabado y torneado de contornos.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 35° (V)", "Incidencia 5°, positivo (B)", "Una cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Perfilado y acabado", "Contornos"],
+      },
+    ],
+  },
+  tcmt: {
+    code: "TCMT",
+    title: "Insertos TCMT",
+    metaTitle: "Insertos TCMT (ISO 1832) para acabado y mandrinado | HERCAN",
+    metaDescription:
+      "Insertos TCMT: forma triangular de 60°, positivos de una cara (ISO 1832). Acabado y semiacabado, frecuente en mandrinado interior de diámetros pequeños.",
+    intro: [
+      "TCMT corresponde a insertos de torneado de forma triangular de 60° (letra T) con incidencia de 7° (letra C): positivos de una sola cara (ISO 1832).",
+      "El diseño positivo y la forma triangular lo hacen adecuado para acabado y semiacabado, y es una opción frecuente en mandrinado interior de diámetros pequeños.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma triangular 60° (T)", "Incidencia 7°, positivo (C)", "Una cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Acabado y semiacabado", "Mandrinado interior"],
+      },
+    ],
+  },
+  vcmt: {
+    code: "VCMT",
+    title: "Insertos VCMT",
+    metaTitle: "Insertos VCMT (ISO 1832) para perfilado y acabado | HERCAN",
+    metaDescription:
+      "Insertos VCMT: forma rómbica de 35°, positivos de una cara (ISO 1832). Vértice agudo para perfilar y contornear con baja fuerza de corte.",
+    intro: [
+      "VCMT designa insertos de torneado de forma rómbica de 35° (letra V) con incidencia de 7° (letra C): positivos de una sola cara según ISO 1832.",
+      "Como el VBMT, aprovecha el vértice agudo de 35° para perfilar, con un ángulo de incidencia de 7°. Se emplea en acabado y torneado de contornos con baja fuerza de corte.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 35° (V)", "Incidencia 7°, positivo (C)", "Una cara"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Perfilado y acabado", "Contornos"],
+      },
+    ],
+  },
+  rcmt: {
+    code: "RCMT",
+    title: "Insertos RCMT",
+    metaTitle: "Insertos RCMT (ISO 1832) redondos para copiado | HERCAN",
+    metaDescription:
+      "Insertos RCMT: forma redonda, positivos de una cara (ISO 1832). Filo circular resistente para copiado, perfilado y ramping con acabado uniforme.",
+    intro: [
+      "RCMT corresponde a insertos de torneado de forma redonda (letra R) con incidencia de 7° (letra C): positivos de una sola cara (ISO 1832).",
+      "El filo circular reparte el desgaste y resiste bien, lo que lo hace idóneo para copiado, perfilado y operaciones de ramping. El radio grande genera un acabado uniforme.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma redonda (R)", "Incidencia 7°, positivo (C)", "Filo circular"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Copiado y perfilado", "Ramping"],
+      },
+    ],
+  },
+  ccgt: {
+    code: "CCGT",
+    title: "Insertos CCGT",
+    metaTitle: "Insertos CCGT (ISO 1832) para acabado fino | HERCAN",
+    metaDescription:
+      "Insertos CCGT: forma rómbica de 80°, positivos y de tolerancia estrecha (ISO 1832), normalmente rectificados. Acabado fino de aluminio y no ferrosos.",
+    intro: [
+      "CCGT designa insertos de torneado de forma rómbica de 80° (letra C) con incidencia de 7° (letra C) y clase de tolerancia estrecha (letra G): son insertos positivos, normalmente rectificados de precisión, según ISO 1832.",
+      "Su filo vivo y preciso los hace idóneos para acabado fino, en especial de aluminio y otros materiales no ferrosos, donde se busca bajo rozamiento y buen acabado superficial.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 80° (C)", "Incidencia 7°, positivo (C)", "Tolerancia estrecha (G)"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Acabado fino", "Aluminio y no ferrosos"],
+      },
+    ],
+  },
+  dcgt: {
+    code: "DCGT",
+    title: "Insertos DCGT",
+    metaTitle: "Insertos DCGT (ISO 1832) para acabado y mandrinado | HERCAN",
+    metaDescription:
+      "Insertos DCGT: forma rómbica de 55°, positivos y de tolerancia estrecha (ISO 1832), normalmente rectificados. Acabado de aluminio y no ferrosos y mandrinado de precisión.",
+    intro: [
+      "DCGT corresponde a insertos de torneado de forma rómbica de 55° (letra D) con incidencia de 7° (letra C) y clase de tolerancia estrecha (letra G): positivos, habitualmente rectificados de precisión (ISO 1832).",
+      "Combina un vértice de 55° para perfilar con un filo vivo de precisión. Se emplea en acabado de aluminio y no ferrosos y en mandrinado de diámetros pequeños.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Forma rómbica 55° (D)", "Incidencia 7°, positivo (C)", "Tolerancia estrecha (G)"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Acabado de aluminio y no ferrosos", "Mandrinado de precisión"],
+      },
+    ],
+  },
+  apmt: {
+    code: "APMT",
+    title: "Insertos APMT",
+    metaTitle: "Insertos APMT (ISO 1832) para fresado | HERCAN",
+    metaDescription:
+      "Insertos APMT de fresado: paralelogramo de 85°, positivos (ISO 1832). Para fresado de escuadrar a 90°, careado y ranurado en portainsertos.",
+    intro: [
+      "APMT designa insertos de fresado de forma de paralelogramo de 85° (letra A) con incidencia de 11° (letra P): insertos positivos, según ISO 1832.",
+      "Se montan en cuerpos de fresa y portainsertos para fresado de escuadrar (hombros a 90°), careado y ranurado. El diseño positivo reduce las fuerzas de corte en el fresado.",
+    ],
+    bullets: [
+      {
+        heading: "Geometría",
+        items: ["Paralelogramo 85° (A)", "Incidencia 11°, positivo (P)", "Inserto de fresado"],
+      },
+      {
+        heading: "Uso típico",
+        items: ["Fresado de escuadrar (90°)", "Careado y ranurado"],
+      },
     ],
   },
 };

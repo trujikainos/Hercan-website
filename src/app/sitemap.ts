@@ -2,13 +2,15 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 import { getAllProductHandles, getArticles } from "@/lib/shopify";
 import { brandSlug } from "@/lib/catalog";
-import { CATEGORY_CONTENT } from "@/lib/taxonomy-content";
+import { CATEGORY_CONTENT, TIPO_CONTENT, ISO_CONTENT } from "@/lib/taxonomy-content";
 
 /**
  * Sitemap dinámico auto-derivado de la FUENTE ÚNICA DE VERDAD:
  *   - Estáticas: home + páginas fijas.
  *   - Marcas:     site.brands + brandSlug()  → misma derivación que /marca/[slug].
  *   - Categorías: keys de CATEGORY_CONTENT   → misma derivación que /categoria/[slug].
+ *   - Tipos:      keys de TIPO_CONTENT       → misma derivación que /tipo/[slug].
+ *   - ISO:        keys de ISO_CONTENT        → misma derivación que /iso/[slug].
  *   - Catálogo:   handles reales de Shopify (cursor).
  *   - Blog:       artículos de Shopify (lastModified = fecha real del post).
  * Cero desincronización: agregar una marca/categoría/producto lo mete solo aquí.
@@ -49,6 +51,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // Tipos de herramienta: mismo peso de pilar que marca/categoría (0.8).
+  const tipoPages: MetadataRoute.Sitemap = Object.keys(TIPO_CONTENT).map((slug) => ({
+    url: `${site.url}/tipo/${slug}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
+
+  // Familias ISO: pilar forward-compatible (hoy sin volumen en el catálogo) → 0.7,
+  // un escalón por debajo de tipo/categoría hasta que se importen los insertos.
+  const isoPages: MetadataRoute.Sitemap = Object.keys(ISO_CONTENT).map((slug) => ({
+    url: `${site.url}/iso/${slug}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
   const productPages: MetadataRoute.Sitemap = products.map((p) => ({
     url: `${site.url}/producto/${p.handle}`,
     lastModified: p.updatedAt ? new Date(p.updatedAt) : now,
@@ -63,5 +82,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...brandPages, ...categoryPages, ...productPages, ...articlePages];
+  return [
+    ...staticPages,
+    ...brandPages,
+    ...categoryPages,
+    ...tipoPages,
+    ...isoPages,
+    ...productPages,
+    ...articlePages,
+  ];
 }

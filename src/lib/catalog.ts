@@ -32,8 +32,20 @@ export type FacetGroup = {
  * Faceta fija de una página de taxonomía. Los valores son los REALES del dato
  * (vendor / product_type), no slugs: p. ej. `{ brand: "Iscar" }`,
  * `{ category: "Fresado" }`.
+ *
+ * `brand`/`category` SON facetas del sidebar → se fuerzan inyectándolas en
+ * `selected` (y se ocultan con `hiddenFacets`). `tipo`/`iso` NO son facetas del
+ * sidebar: se aplican como predicado extra (`scopeOk`) sobre el dato del producto
+ * (`tipo_herramienta` → `p.type`; familia de `designacion_iso` → `p.iso`).
  */
-export type Scope = { brand?: string; category?: string };
+export type Scope = {
+  brand?: string;
+  category?: string;
+  /** Valor EXACTO de `tipo_herramienta` (p. ej. "Inserto", "Fresa/Endmill"). */
+  tipo?: string;
+  /** Familia ISO 1832 = prefijo de `designacion_iso` (p. ej. "CNMG", "TNMG"). */
+  iso?: string;
+};
 
 export const FACETS: { key: FacetKey; param: string; label: string }[] = [
   { key: "category", param: "categoria", label: "Categoría" },
@@ -60,6 +72,28 @@ export const brandSlug = (s: string) =>
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "");
+
+/** Normaliza una designación ISO a mayúsculas alfanuméricas ("CNMG 120408" → "CNMG120408"). */
+const normIso = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+
+/**
+ * ¿La designación ISO de un producto pertenece a la familia dada? Compara por
+ * PREFIJO normalizado: "CNMG 120408" ∈ "CNMG". Las familias ISO 1832 (CNMG, TNMG,
+ * CCMT…) son prefijos de 4 letras mutuamente excluyentes, así que el prefijo
+ * identifica la familia sin ambigüedad.
+ */
+export function isoFamilyMatch(
+  productIso: string | null | undefined,
+  family: string,
+): boolean {
+  if (!productIso) return false;
+  return normIso(productIso).startsWith(normIso(family));
+}
 
 type Selected = Record<FacetKey, string[]>;
 
@@ -126,11 +160,21 @@ export function buildCatalog({
   if (scope?.brand) selected.brand = [scope.brand];
   if (scope?.category) selected.category = [scope.category];
 
-  const filtered = products.filter((p) => matches(p, selected));
+  // Scope NO-faceta (tipo/iso): predicado extra aplicado a TODO (lista + conteos),
+  // porque `tipo`/`iso` no viven en `selected`. `tipo` = valor exacto de
+  // `tipo_herramienta`; `iso` = familia (prefijo) de `designacion_iso`.
+  const scopeOk = (p: Product): boolean => {
+    if (scope?.tipo && p.type !== scope.tipo) return false;
+    if (scope?.iso && !isoFamilyMatch(p.iso, scope.iso)) return false;
+    return true;
+  };
 
-  // Opciones + conteos facetados (cada facet cuenta sobre los OTROS filtros activos).
+  const filtered = products.filter((p) => matches(p, selected) && scopeOk(p));
+
+  // Opciones + conteos facetados (cada facet cuenta sobre los OTROS filtros activos,
+  // siempre dentro del scope de tipo/iso).
   const facetGroups: FacetGroup[] = FACETS.map(({ key, param, label }) => {
-    const base = products.filter((p) => matches(p, selected, key));
+    const base = products.filter((p) => matches(p, selected, key) && scopeOk(p));
     const counts = new Map<string, number>();
     for (const p of base) {
       const v = p[key];

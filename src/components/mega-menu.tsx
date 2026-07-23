@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ArrowRight, Boxes, ChevronDown, ChevronRight, FileText, X } from "lucide-react";
 import { site } from "@/lib/site";
-import { brandSlug } from "@/lib/catalog";
+import { brandSlug, slugify } from "@/lib/catalog";
+import { TIPO_CONTENT } from "@/lib/taxonomy-content";
 
 /**
  * MEGA MENÚ "Catálogo" del nav superior.
@@ -34,11 +35,12 @@ import { brandSlug } from "@/lib/catalog";
  *                 Cobalto). Ej: /productos?categoria=fresado&material=Carburo.
  *                 Solo se ofrece en categorías de corte (no en Medición ni
  *                 Accesorios/Abrasivos, que no tienen material de herramienta).
- *   - `tipo` (tipo_herramienta / tipo_instrumento): forward-compatible. Hoy el
- *     catálogo no expone esa faceta, así que el param se ignora y el link
- *     aterriza en la `categoria` (nunca cero resultados); en cuanto se agregue
- *     la faceta el filtro funciona solo. La `categoria` es el filtro que
- *     garantiza resultados.
+ *   - `tipo` (tipo_herramienta): los tipos de herramienta de corte con página de
+ *     taxonomía propia (TIPO_CONTENT) enlazan a /tipo/<slug> (SEO). Los tipos de
+ *     INSTRUMENTO de medición (y cualquiera sin página propia) siguen como FILTRO
+ *     dentro de /productos: forward-compatible — hoy el catálogo no expone esa
+ *     faceta, así que el link aterriza en la `categoria` (nunca cero resultados) y
+ *     en cuanto se agregue la faceta el filtro funciona solo.
  * ---------------------------------------------------------------------------
  */
 
@@ -63,10 +65,11 @@ const MENU_CATEGORIES: MenuCategory[] = [
 ];
 
 // ── Mapeo categoría (slug) → tipos REALES (tipo_herramienta / tipo_instrumento) ──
-// `tipo` es el string REAL de la data (Inserto, Fresa/Endmill, Broca, …). Hoy la
-// faceta `tipo` no se expone, así que estos links son forward-compatible y aterrizan
-// en la `categoria`. Accesorios y Abrasivos solo tienen tipo "Otro" → no se listan
-// (ver hasTipos), igual que Medición usa tipos de INSTRUMENTO.
+// `tipo` es el string REAL de la data (Inserto, Fresa/Endmill, Broca, …). Los tipos
+// de herramienta de corte con página propia (TIPO_CONTENT) enlazan a /tipo/<slug>;
+// los de INSTRUMENTO de medición siguen como filtro forward-compatible en la
+// `categoria` (ver tipoHref). Accesorios y Abrasivos solo tienen tipo "Otro" → no se
+// listan (ver hasTipos).
 type Tipo = { label: string; tipo: string };
 
 const TIPOS_BY_CATEGORY: Record<string, Tipo[]> = {
@@ -134,10 +137,16 @@ const FEATURED_BRAND = "Iscar";
 function productosHref(params: Record<string, string>): string {
   return `/productos?${new URLSearchParams(params).toString()}`;
 }
-// Tipos y material son FILTROS del catálogo → se quedan en /productos (no son
-// taxonomías con página propia).
-const tipoHref = (slug: string, tipo: string) =>
-  productosHref(tipo ? { categoria: slug, tipo } : { categoria: slug });
+// Los tipos de HERRAMIENTA DE CORTE con página de taxonomía propia (TIPO_CONTENT)
+// enlazan a /tipo/<slug> (SEO). Los tipos de INSTRUMENTO de medición (y cualquiera
+// sin página propia) siguen como FILTRO dentro de /productos, forward-compatible:
+// hoy el catálogo no expone la faceta `tipo`, así que el param se ignora y el link
+// aterriza en la `categoria` (nunca cero resultados). El material sigue como filtro.
+const tipoHref = (slug: string, tipo: string) => {
+  const tSlug = tipo ? slugify(tipo) : "";
+  if (tSlug && TIPO_CONTENT[tSlug]) return `/tipo/${tSlug}`;
+  return productosHref(tipo ? { categoria: slug, tipo } : { categoria: slug });
+};
 const materialHref = (slug: string, value: string) =>
   productosHref({ categoria: slug, material: value });
 // La categoría EN SÍ y la marca EN SÍ son taxonomías con página propia (SEO) →
