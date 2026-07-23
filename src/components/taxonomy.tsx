@@ -52,16 +52,20 @@ export function TaxonomyHero({
         <h1 className="font-heading text-[length:var(--step-h2)] text-hc-navy">
           {title}
         </h1>
-        <div className="mt-3 max-w-3xl space-y-3 text-sm leading-relaxed text-hc-gunmetal">
+        {/* Info a ancho completo (columna del layout, sin max-w interno): el intro
+            fluye en 2 columnas en escritorio para ser más ancho y menos alto. */}
+        <div className="mt-4 text-sm leading-relaxed text-hc-gunmetal md:columns-2 md:gap-10">
           {intro.map((p, i) => (
-            <p key={i}>{p}</p>
+            <p key={i} className="mb-3 break-inside-avoid last:mb-0">
+              {p}
+            </p>
           ))}
         </div>
 
         {bullets && bullets.length > 0 && (
-          <div className="mt-6 grid max-w-4xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:flex-wrap">
             {bullets.map((b) => (
-              <div key={b.heading}>
+              <div key={b.heading} className="sm:flex-1 sm:min-w-[220px]">
                 <h2 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
                   {b.heading}
                 </h2>
