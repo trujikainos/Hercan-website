@@ -25,13 +25,18 @@ export const site = {
   country: "MX",
 
   // Marcas que distribuye Hercan (barra de confianza + páginas de marca).
-  // Iscar es la marca ancla (alto valor SEO, sin distribuidor mexicano posicionado).
-  // `logo`: ruta a un archivo oficial en /public/brand/logos/ (vacío = se muestra el nombre).
+  // Orden por VOLUMEN real del catálogo (3,266 SKUs): Toolmex #1. Iscar se mantiene
+  // como marca ancla SEO en el mega menú (FEATURED_BRAND), sin distribuidor mexicano
+  // posicionado. `logo`: archivo en /public/brand/logos/ (vacío = se muestra el nombre).
   brands: [
-    { name: "Iscar", logo: "" },
     { name: "Toolmex", logo: "" },
     { name: "YG", logo: "" },
+    { name: "Iscar", logo: "" },
     { name: "Palbit", logo: "" },
+    { name: "Hercan", logo: "" },
+    { name: "Titanium", logo: "" },
+    { name: "KTA", logo: "" },
+    { name: "Insize", logo: "" },
     { name: "Mitutoyo", logo: "" },
   ] as { name: string; logo: string }[],
 

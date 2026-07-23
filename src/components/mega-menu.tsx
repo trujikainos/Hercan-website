@@ -4,7 +4,6 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ArrowRight, Boxes, ChevronDown, ChevronRight, FileText, X } from "lucide-react";
-import { CATEGORIES } from "@/lib/mock-data";
 import { site } from "@/lib/site";
 
 /**
@@ -23,68 +22,104 @@ import { site } from "@/lib/site";
  *
  * ---------------------------------------------------------------------------
  * ESQUEMA DE URLs (verificado contra src/app/productos/page.tsx):
- *   - categoria = SLUG (fresado, torneado, …)                 ← filtro REAL
- *   - marca     = valor exacto (Iscar, Toolmex, …)            ← filtro REAL
- *   - material  = valor (Carburo, HSS…) → material de la HERRAMIENTA, NO el de
- *                 maquinar. Por eso las fichas "Por material a maquinar" usan un
- *                 parámetro propio `material_a_maquinar` (el metafield real del
- *                 sistema, ver lib/shopify.ts SPEC_FIELDS). Hoy el catálogo aún
- *                 no expone esa faceta, así que ese parámetro se ignora y el link
- *                 aterriza en la categoría (nunca cero resultados); en cuanto se
- *                 agregue la faceta al catálogo el filtro funciona solo.
- *   - `tipo` (tipo_herramienta) idéntico caso: forward-compatible, la `categoria`
- *     que lo acompaña es el filtro REAL que garantiza resultados.
+ *   - categoria = SLUG (fresado, perforacion, …)             ← filtro REAL
+ *   - marca     = valor exacto (Iscar, Toolmex, …)           ← filtro REAL
+ *   - material  = material de la HERRAMIENTA (Carburo, HSS,   ← filtro REAL
+ *                 Cobalto). Ej: /productos?categoria=fresado&material=Carburo.
+ *                 Solo se ofrece en categorías de corte (no en Medición ni
+ *                 Accesorios/Abrasivos, que no tienen material de herramienta).
+ *   - `tipo` (tipo_herramienta / tipo_instrumento): forward-compatible. Hoy el
+ *     catálogo no expone esa faceta, así que el param se ignora y el link
+ *     aterriza en la `categoria` (nunca cero resultados); en cuanto se agregue
+ *     la faceta el filtro funciona solo. La `categoria` es el filtro que
+ *     garantiza resultados.
  * ---------------------------------------------------------------------------
  */
 
-// ── Mapeo categoría (slug) → tipos de herramienta ──────────────────────────
-// Valores de `tipo` alineados al vocabulario tipo_herramienta / tipo_instrumento
-// de CLAUDE.md y a los `type` de la data (Inserto, Fresa/Endmill, Broca, …).
+// ── Categorías del mega menú (orden por VOLUMEN del catálogo real, 3,266 SKUs) ──
+// Lista LOCAL a propósito: muestra las 9 categorías reales en orden de volumen sin
+// alterar `CATEGORIES` de mock-data (que alimenta el grid del home y llms.txt con
+// solo 6). El `slug` coincide con las claves de TIPOS_BY_CATEGORY y con el param
+// `categoria` real. Accesorios/Ranurado/Abrasivos aún no están en `CATEGORIES`, así
+// que hoy sus links aterrizan en el catálogo completo (forward-compatible); cuando
+// el catálogo real exponga las 9 categorías, el filtro por slug funciona solo.
+type MenuCategory = { name: string; slug: string };
+const MENU_CATEGORIES: MenuCategory[] = [
+  { name: "Fresado", slug: "fresado" },
+  { name: "Perforación", slug: "perforacion" },
+  { name: "Roscado", slug: "roscado" },
+  { name: "Torneado", slug: "torneado" },
+  { name: "Portaherramientas", slug: "portaherramientas" },
+  { name: "Accesorios", slug: "accesorios" },
+  { name: "Ranurado/Tronzado", slug: "ranurado" },
+  { name: "Abrasivos", slug: "abrasivos" },
+  { name: "Medición", slug: "medicion" },
+];
+
+// ── Mapeo categoría (slug) → tipos REALES (tipo_herramienta / tipo_instrumento) ──
+// `tipo` es el string REAL de la data (Inserto, Fresa/Endmill, Broca, …). Hoy la
+// faceta `tipo` no se expone, así que estos links son forward-compatible y aterrizan
+// en la `categoria`. Accesorios y Abrasivos solo tienen tipo "Otro" → no se listan
+// (ver hasTipos), igual que Medición usa tipos de INSTRUMENTO.
 type Tipo = { label: string; tipo: string };
 
 const TIPOS_BY_CATEGORY: Record<string, Tipo[]> = {
   fresado: [
-    { label: "Insertos de fresado", tipo: "Inserto" },
     { label: "Fresas integrales / endmills", tipo: "Fresa/Endmill" },
-    { label: "Cabezales intercambiables", tipo: "Cabezal" },
     { label: "Cortadores y portainsertos", tipo: "Cortador" },
-  ],
-  torneado: [
-    { label: "Insertos de torneado", tipo: "Inserto" },
-    { label: "Portaherramientas de torno", tipo: "Portaherramientas" },
-    { label: "Barras de mandrinar", tipo: "Barra mandrinar" },
+    { label: "Insertos de fresado", tipo: "Inserto" },
   ],
   perforacion: [
     { label: "Brocas", tipo: "Broca" },
-    { label: "Cabezales de perforación", tipo: "Cabezal" },
     { label: "Escariadores", tipo: "Escariador" },
+    { label: "Cortadores", tipo: "Cortador" },
   ],
   roscado: [
     { label: "Machuelos", tipo: "Machuelo" },
+    { label: "Cortadores", tipo: "Cortador" },
     { label: "Insertos de roscado", tipo: "Inserto" },
-    { label: "Fresas de roscado", tipo: "Fresa/Endmill" },
+  ],
+  torneado: [
+    { label: "Insertos de torneado", tipo: "Inserto" },
+    { label: "Barras de mandrinar", tipo: "Barra mandrinar" },
+    { label: "Cortadores", tipo: "Cortador" },
   ],
   portaherramientas: [
-    { label: "Mangos y conos (BT/HSK/Weldon)", tipo: "Portaherramientas" },
-    { label: "Barras de mandrinar", tipo: "Barra mandrinar" },
-    { label: "Extensiones y adaptadores", tipo: "Portaherramientas" },
+    { label: "Portaherramientas", tipo: "Portaherramientas" },
+  ],
+  ranurado: [
+    { label: "Insertos de ranurado / tronzado", tipo: "Inserto" },
+    { label: "Cortadores", tipo: "Cortador" },
   ],
   medicion: [
     { label: "Calibradores vernier", tipo: "Calibrador vernier" },
     { label: "Micrómetros", tipo: "Micrómetro" },
-    { label: "Indicadores de carátula", tipo: "Indicador carátula" },
+    { label: "Indicadores de carátula", tipo: "Indicador de carátula" },
   ],
 };
 
-// Grupos ISO 513 de material a maquinar (globales a todas las categorías).
-// `value` sigue la lista maestra de CLAUDE.md (material_a_maquinar).
-const MATERIALS: { code: string; label: string; value: string }[] = [
-  { code: "P", label: "Acero", value: "P-Acero" },
-  { code: "M", label: "Inoxidable", value: "M-Inox" },
-  { code: "K", label: "Fundición", value: "K-Fundición" },
-  { code: "N", label: "No ferrosos", value: "N-No ferrosos" },
-  { code: "S", label: "Superaleaciones", value: "S-Superaleaciones" },
-  { code: "H", label: "Endurecidos", value: "H-Endurecidos" },
+// Categorías de herramienta de corte donde aplica el "material de herramienta"
+// (Carburo/HSS/Cobalto → faceta `material`, filtro REAL). Medición (instrumentos) y
+// Accesorios/Abrasivos no tienen material de herramienta → sin columna de material.
+const TOOL_MATERIAL_CATEGORIES = new Set<string>([
+  "fresado",
+  "perforacion",
+  "roscado",
+  "torneado",
+  "portaherramientas",
+  "ranurado",
+]);
+
+const hasTipos = (slug: string) => (TIPOS_BY_CATEGORY[slug]?.length ?? 0) > 0;
+const hasMaterial = (slug: string) => TOOL_MATERIAL_CATEGORIES.has(slug);
+
+// Materiales de la HERRAMIENTA con datos reales en el catálogo. Enlazan a la faceta
+// `material` (REAL, filtra hoy). Reemplaza al débil "material a maquinar" (P/M/K…),
+// cuyo dominante era P-Acero y cuyo param ni siquiera se expone.
+const MATERIALS: { label: string; value: string }[] = [
+  { label: "Carburo", value: "Carburo" },
+  { label: "HSS", value: "HSS" },
+  { label: "Cobalto", value: "Cobalto" },
 ];
 
 const FEATURED_BRAND = "Iscar";
@@ -96,7 +131,7 @@ function productosHref(params: Record<string, string>): string {
 const tipoHref = (slug: string, tipo: string) =>
   productosHref(tipo ? { categoria: slug, tipo } : { categoria: slug });
 const materialHref = (slug: string, value: string) =>
-  productosHref({ categoria: slug, material_a_maquinar: value });
+  productosHref({ categoria: slug, material: value });
 // Mismo formato exacto que el resto del sitio (home-sections BrandBar).
 const marcaHref = (name: string) => `/productos?marca=${encodeURIComponent(name)}`;
 
@@ -132,22 +167,15 @@ function MaterialChips({
   className?: string;
 }) {
   return (
-    <ul className={className ?? "space-y-0.5"}>
+    <ul className={className ?? "flex flex-wrap gap-1.5"}>
       {MATERIALS.map((m) => (
-        <li key={m.code}>
+        <li key={m.value}>
           <Link
             href={materialHref(slug, m.value)}
             onClick={onNavigate}
-            aria-label={`Material a maquinar ${m.code}: ${m.label}`}
-            className="flex items-center gap-2 rounded-md px-1.5 py-1 text-sm text-hc-ink transition-colors hover:bg-hc-soft hover:text-hc-navy focus-visible:bg-hc-soft focus-visible:outline-none"
+            className="inline-flex items-center rounded-md border border-hc-metal-light bg-white px-2.5 py-1 text-sm text-hc-ink transition-colors hover:border-hc-steel hover:bg-hc-soft hover:text-hc-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-steel"
           >
-            <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-hc-navy text-xs font-bold text-white"
-              aria-hidden
-            >
-              {m.code}
-            </span>
-            <span>{m.label}</span>
+            {m.label}
           </Link>
         </li>
       ))}
@@ -225,7 +253,7 @@ export function MegaMenu() {
   const pendingFocusRail = useRef(false);
 
   const panelId = useId();
-  const activeSlug = CATEGORIES[activeIdx]?.slug ?? CATEGORIES[0].slug;
+  const activeSlug = MENU_CATEGORIES[activeIdx]?.slug ?? MENU_CATEGORIES[0].slug;
 
   const clearTimers = useCallback(() => {
     if (openTimer.current) clearTimeout(openTimer.current);
@@ -343,7 +371,7 @@ export function MegaMenu() {
   };
 
   const onRailKeyDown = (e: React.KeyboardEvent<HTMLAnchorElement>, i: number) => {
-    const n = CATEGORIES.length;
+    const n = MENU_CATEGORIES.length;
     let next = -1;
     if (e.key === "ArrowDown") next = (i + 1) % n;
     else if (e.key === "ArrowUp") next = (i - 1 + n) % n;
@@ -398,7 +426,7 @@ export function MegaMenu() {
           <div className="flex">
             {/* Riel de categorías */}
             <ul className="w-56 shrink-0 border-r border-hc-metal-light bg-hc-soft py-2">
-              {CATEGORIES.map((c, i) => {
+              {MENU_CATEGORIES.map((c, i) => {
                 const isActive = i === activeIdx;
                 return (
                   <li key={c.slug}>
@@ -430,20 +458,49 @@ export function MegaMenu() {
               })}
             </ul>
 
-            {/* Centro: Tipos + Material a maquinar de la categoría activa */}
-            <div className="grid flex-1 grid-cols-2 gap-x-6 gap-y-2 p-5">
-              <div>
-                <h3 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                  Tipos · {CATEGORIES[activeIdx]?.name}
-                </h3>
-                <TiposLinks slug={activeSlug} onNavigate={() => closeNow(false)} />
-              </div>
-              <div>
-                <h3 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                  Por material a maquinar
-                </h3>
-                <MaterialChips slug={activeSlug} onNavigate={() => closeNow(false)} />
-              </div>
+            {/* Centro: Tipos + Material de herramienta de la categoría activa.
+                Accesorios/Abrasivos (sin tipos ni material) → solo "Ver todo". */}
+            <div className="flex-1 p-5">
+              {hasTipos(activeSlug) || hasMaterial(activeSlug) ? (
+                <div
+                  className={`grid gap-x-6 gap-y-2 ${
+                    hasTipos(activeSlug) && hasMaterial(activeSlug)
+                      ? "grid-cols-2"
+                      : "grid-cols-1"
+                  }`}
+                >
+                  {hasTipos(activeSlug) && (
+                    <div>
+                      <h3 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+                        Tipos · {MENU_CATEGORIES[activeIdx]?.name}
+                      </h3>
+                      <TiposLinks slug={activeSlug} onNavigate={() => closeNow(false)} />
+                    </div>
+                  )}
+                  {hasMaterial(activeSlug) && (
+                    <div>
+                      <h3 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+                        Por material de herramienta
+                      </h3>
+                      <MaterialChips slug={activeSlug} onNavigate={() => closeNow(false)} />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex h-full min-h-[7rem] flex-col justify-center gap-2">
+                  <p className="text-sm text-hc-gunmetal">
+                    Explora toda la línea de {MENU_CATEGORIES[activeIdx]?.name} en el catálogo.
+                  </p>
+                  <Link
+                    href={productosHref({ categoria: activeSlug })}
+                    onClick={() => closeNow(false)}
+                    className="inline-flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
+                  >
+                    Ver todo {MENU_CATEGORIES[activeIdx]?.name}
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Panel derecho: marca destacada + CTA */}
@@ -499,7 +556,7 @@ export function MegaMenu() {
           <div className="flex-1 overflow-y-auto overscroll-contain">
             {/* Acordeón de categorías */}
             <ul>
-              {CATEGORIES.map((c, i) => {
+              {MENU_CATEGORIES.map((c, i) => {
                 const expanded = mobileOpenIdx === i;
                 const sectionId = `${panelId}-cat-${i}`;
                 return (
@@ -521,22 +578,26 @@ export function MegaMenu() {
                     </button>
                     {expanded && (
                       <div id={sectionId} className="space-y-4 px-4 pb-4">
-                        <div>
-                          <h3 className="mb-1.5 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                            Tipos
-                          </h3>
-                          <TiposLinks slug={c.slug} onNavigate={() => closeNow(false)} />
-                        </div>
-                        <div>
-                          <h3 className="mb-1.5 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                            Por material a maquinar
-                          </h3>
-                          <MaterialChips
-                            slug={c.slug}
-                            onNavigate={() => closeNow(false)}
-                            className="grid grid-cols-2 gap-1"
-                          />
-                        </div>
+                        {hasTipos(c.slug) && (
+                          <div>
+                            <h3 className="mb-1.5 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+                              Tipos
+                            </h3>
+                            <TiposLinks slug={c.slug} onNavigate={() => closeNow(false)} />
+                          </div>
+                        )}
+                        {hasMaterial(c.slug) && (
+                          <div>
+                            <h3 className="mb-1.5 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+                              Por material de herramienta
+                            </h3>
+                            <MaterialChips
+                              slug={c.slug}
+                              onNavigate={() => closeNow(false)}
+                              className="flex flex-wrap gap-1.5"
+                            />
+                          </div>
+                        )}
                         <Link
                           href={productosHref({ categoria: c.slug })}
                           onClick={() => closeNow(false)}
