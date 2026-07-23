@@ -59,6 +59,12 @@ function parseQty(qty: string): number {
   const n = parseInt(qty.replace(/[^\d]/g, ""), 10);
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
+/** Solo dígitos: bloquea decimales, signos y separadores (cantidades enteras). */
+const onlyDigits = (v: string) => v.replace(/[^\d]/g, "");
+/** Evita teclear . , e E - + en inputs de enteros (refuerza el saneado del onChange). */
+function blockNonInteger(e: React.KeyboardEvent<HTMLInputElement>) {
+  if ([".", ",", "e", "E", "-", "+"].includes(e.key)) e.preventDefault();
+}
 /** Formato de dinero de la ficha (Intl en-US, moneda de site.currency). */
 function money(amount: number, currency: string): string {
   return formatMoney({ amount: String(amount), currencyCode: currency });
@@ -127,8 +133,9 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
     const clean = lines.filter(hasContent);
     if (clean.length === 0) return setError("Agrega al menos un producto.");
     for (const l of clean) {
-      const q = parseInt(l.qty.replace(/[^\d]/g, ""), 10);
-      if (!q || q < 1) return setError("La cantidad de cada producto debe ser al menos 1.");
+      const q = parseInt(onlyDigits(l.qty), 10);
+      if (!Number.isInteger(q) || q < 1)
+        return setError("La cantidad debe ser un número entero (mínimo 1).");
     }
     if (!f.consent) return setError("Acepta el aviso de privacidad para continuar.");
     setError(null);
@@ -234,9 +241,12 @@ function InlineForm({ product, onClose }: { product: SelectedProduct; onClose: (
                     <input
                       aria-label="Cantidad"
                       value={l.qty}
-                      onChange={(e) => patchLine(i, { qty: e.target.value })}
+                      onChange={(e) => patchLine(i, { qty: onlyDigits(e.target.value) })}
+                      onKeyDown={blockNonInteger}
                       className={inp}
                       inputMode="numeric"
+                      step={1}
+                      min={1}
                       placeholder="Cant."
                     />
                     <button

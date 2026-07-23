@@ -79,11 +79,17 @@ export function AddToCartButton({
         </button>
         <input
           type="number"
+          inputMode="numeric"
           min={1}
           max={maxQty}
+          step={1}
           value={qty}
+          onKeyDown={(e) => {
+            // Solo enteros: bloquea . , e E - + (los decimales no aplican a piezas).
+            if ([".", ",", "e", "E", "-", "+"].includes(e.key)) e.preventDefault();
+          }}
           onChange={(e) => {
-            const v = parseInt(e.target.value, 10);
+            const v = parseInt(e.target.value.replace(/[^\d]/g, ""), 10);
             setQty(Number.isFinite(v) ? clamp(v) : 1);
           }}
           aria-label="Cantidad"

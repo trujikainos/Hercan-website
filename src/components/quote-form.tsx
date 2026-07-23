@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Loader2, Check, Send, Plus, X, ExternalLink } from "lucide-react";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { ProductCombobox, type SelectedProduct } from "@/components/product-combobox";
@@ -40,6 +40,19 @@ function parseQty(qty: string): number {
   const n = parseInt(qty.replace(/[^\d]/g, ""), 10);
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
+/** Solo dígitos: bloquea decimales, signos y separadores (cantidades enteras). */
+const onlyDigits = (v: string) => v.replace(/[^\d]/g, "");
+/** Evita teclear . , e E - + en inputs de enteros (refuerza el saneado del onChange). */
+function blockNonInteger(e: React.KeyboardEvent<HTMLInputElement>) {
+  if ([".", ",", "e", "E", "-", "+"].includes(e.key)) e.preventDefault();
+}
+/** Fecha de hoy en formato YYYY-MM-DD (hora local, para el `min` del input date). */
+function todayStr(): string {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 /** Formato de dinero de la ficha (Intl en-US, moneda de site.currency). */
 function money(amount: number, currency: string): string {
   return formatMoney({ amount: String(amount), currencyCode: currency });
@@ -70,6 +83,12 @@ export function QuoteForm({
       ? { text: initialProduct.title, qty: "1", product: initialProduct }
       : emptyLine(initialSku ?? ""),
   ]);
+
+  // `min` de la fecha de inicio: se computa TRAS montar (no en render) para no
+  // romper la hidratación —  server y cliente podrían diferir de fecha/zona.
+  // Queda vacío en el primer render y se rellena en el cliente.
+  const [today, setToday] = useState("");
+  useEffect(() => setToday(todayStr()), []);
 
   // Frecuencia efectiva (preset o "cada N meses/semanas") + etiqueta de cantidad.
   const frecuencia =
@@ -148,12 +167,26 @@ export function QuoteForm({
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    // Cantidades obligatorias (≥ 1) y al menos un producto.
+    // Al menos un producto y cantidades enteras (≥ 1).
     const clean = lines.filter(hasContent);
     if (clean.length === 0) return setError("Agrega al menos un producto.");
     for (const l of clean) {
-      const q = parseInt(l.qty.replace(/[^\d]/g, ""), 10);
-      if (!q || q < 1) return setError("La cantidad de cada producto debe ser al menos 1.");
+      const q = parseInt(onlyDigits(l.qty), 10);
+      if (!Number.isInteger(q) || q < 1)
+        return setError("La cantidad debe ser un número entero (mínimo 1).");
+    }
+    // Términos del suministro recurrente: obligatorios SOLO si es recurrente.
+    if (recurring) {
+      if (!rec.freqPreset) return setError("Elige la frecuencia de entrega.");
+      if (rec.freqPreset === "Otra") {
+        const n = parseInt(onlyDigits(rec.freqN), 10);
+        if (!Number.isInteger(n) || n < 1)
+          return setError("Indica cada cuántas semanas o meses (número entero, mínimo 1).");
+      }
+      if (!rec.duracion) return setError("Elige la duración del acuerdo.");
+      if (!rec.fechaInicio) return setError("Elige la fecha de inicio del suministro.");
+      if (today && rec.fechaInicio < today)
+        return setError("La fecha de inicio no puede ser en el pasado.");
     }
     const payload: QuoteInput = {
       nombre: c.nombre,
@@ -296,9 +329,12 @@ export function QuoteForm({
                     <input
                       aria-label="Cada cuántas unidades"
                       value={rec.freqN}
-                      onChange={(e) => setRec((p) => ({ ...p, freqN: e.target.value }))}
+                      onChange={(e) => setRec((p) => ({ ...p, freqN: onlyDigits(e.target.value) }))}
+                      onKeyDown={blockNonInteger}
                       className={`${input} w-14`}
                       inputMode="numeric"
+                      step={1}
+                      min={1}
                       placeholder="2"
                     />
                     <select
@@ -332,9 +368,11 @@ export function QuoteForm({
                 <input
                   id="inicio"
                   type="date"
+                  min={today || undefined}
                   value={rec.fechaInicio}
                   onChange={(e) => setRec((p) => ({ ...p, fechaInicio: e.target.value }))}
                   className={input}
+                  aria-invalid={Boolean(recurring && today && rec.fechaInicio && rec.fechaInicio < today)}
                 />
               </div>
               <p className="text-xs text-hc-gunmetal sm:col-span-3">
@@ -366,9 +404,12 @@ export function QuoteForm({
                   <input
                     aria-label={recurring ? `Cantidad por entrega (${frecuencia})` : "Cantidad"}
                     value={l.qty}
-                    onChange={(e) => patchLine(i, { qty: e.target.value })}
+                    onChange={(e) => patchLine(i, { qty: onlyDigits(e.target.value) })}
+                    onKeyDown={blockNonInteger}
                     className={input}
                     inputMode="numeric"
+                    step={1}
+                    min={1}
                     placeholder={recurring ? qtyLabelShort : "Cant."}
                   />
                   <button
