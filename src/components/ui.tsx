@@ -63,17 +63,24 @@ export function StockBadge({ product }: { product: Product }) {
   );
 }
 
+// Formatea con Intl; si `currency` no es un código ISO válido (dato inesperado de
+// Shopify), Intl lanza RangeError → se cae a "<código> <monto>" en vez de romper
+// el render de la tarjeta/ficha.
+function money(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+  } catch {
+    return `${currency} ${amount.toFixed(2)}`;
+  }
+}
+
 export function formatPrice(product: Product): string {
   if (product.price == null) return "US$ —";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: product.currency,
-  }).format(product.price);
+  return money(product.price, product.currency);
 }
 
 export function formatMoney(m: Money): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: m.currencyCode,
-  }).format(parseFloat(m.amount));
+  const amount = parseFloat(m.amount);
+  if (!Number.isFinite(amount)) return "US$ —";
+  return money(amount, m.currencyCode);
 }

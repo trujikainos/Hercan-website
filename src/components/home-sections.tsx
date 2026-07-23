@@ -148,7 +148,7 @@ export function ValueProps() {
           <div
             key={it.title}
             className="reveal flex items-start gap-3"
-            style={{ transitionDelay: `${i * 80}ms` }}
+            style={{ animationDelay: `${i * 80}ms` }}
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-hc-steel ring-1 ring-hc-metal-light">
               <it.icon className="h-5 w-5" />
@@ -178,7 +178,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
               key={c.slug}
               href={`/categoria/${c.slug}`}
               className="reveal card-hover press group flex flex-col items-center gap-2 rounded-xl border border-hc-metal-light bg-white p-5 text-center hover:border-hc-steel"
-              style={{ transitionDelay: `${Math.min(i * 55, 300)}ms` }}
+              style={{ animationDelay: `${Math.min(i * 55, 300)}ms` }}
             >
               <Icon className="h-6 w-6 text-hc-steel transition-transform duration-300 group-hover:scale-110" />
               <span className="text-sm font-medium text-hc-navy">{c.name}</span>
@@ -213,7 +213,7 @@ export function BrandsSection() {
               key={b.name}
               href={`/marca/${brandSlug(b.name)}`}
               className="reveal card-hover group flex items-center justify-between gap-4 rounded-xl border border-hc-metal-light bg-hc-soft/40 p-5 hover:border-hc-steel"
-              style={{ transitionDelay: `${i * 60}ms` }}
+              style={{ animationDelay: `${i * 60}ms` }}
             >
               <div>
                 {b.logo ? (

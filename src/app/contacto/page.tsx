@@ -57,7 +57,7 @@ function BranchCard({
   return (
     <article
       className="reveal flex flex-col overflow-hidden rounded-xl border border-hc-metal-light bg-white shadow-sm"
-      style={{ transitionDelay: `${index * 0.08}s` }}
+      style={{ animationDelay: `${index * 0.08}s` }}
     >
       <div className="p-5 sm:p-6">
         {/* Dirección */}

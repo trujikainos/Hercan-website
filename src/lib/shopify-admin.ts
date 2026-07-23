@@ -1,3 +1,4 @@
+import "server-only";
 /**
  * Cliente del Admin API de Shopify (solo servidor) para crear un Borrador de
  * pedido (draft order) por cada cotización del sitio. Requiere SHOPIFY_ADMIN_TOKEN
@@ -39,7 +40,10 @@ async function resolveVariantIdsBySku(skus: string[]): Promise<Map<string, strin
   const map = new Map<string, string>();
   const uniq = [...new Set(skus.filter(Boolean))];
   if (uniq.length === 0) return map;
-  const q = uniq.map((s) => `sku:'${s.replace(/['"\\]/g, "")}'`).join(" OR ");
+  // Whitelist del charset: además de quitar comillas/backslash, neutraliza los
+  // operadores del mini-lenguaje de búsqueda de Shopify (espacios, OR/AND, `campo:`)
+  // para que un SKU tipo `x OR sku:y` no amplíe el match al armar el borrador.
+  const q = uniq.map((s) => `sku:'${s.replace(/[^A-Za-z0-9._/-]+/g, "")}'`).join(" OR ");
   const data = await adminGraphql<{ productVariants: { nodes: { id: string; sku: string | null }[] } }>(
     VARIANTS_BY_SKU,
     { q, n: Math.min(uniq.length + 5, 100) },

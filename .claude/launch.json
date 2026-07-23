@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "hercan-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--no-install", "next", "dev", "--port", "3009"],
+      "port": 3009,
+      "autoPort": false
+    }
+  ]
+}

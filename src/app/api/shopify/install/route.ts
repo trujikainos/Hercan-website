@@ -11,6 +11,12 @@ const SCOPES =
   "write_draft_orders,read_products,write_products,read_inventory,write_inventory,read_publications,write_publications";
 
 export async function GET(request: Request) {
+  // Setup de un solo uso: SOLO local/dev. En producción responde 404 aunque las
+  // credenciales estén presentes → un tercero nunca puede iniciar este flujo en
+  // el sitio en vivo (el token ya se obtuvo; esta ruta ya no se necesita en prod).
+  if (process.env.NODE_ENV === "production") {
+    return new Response("No disponible.", { status: 404 });
+  }
   if (!DOMAIN || !CLIENT_ID || !process.env.SHOPIFY_APP_SECRET) {
     return new Response(
       "Instalación OAuth deshabilitada. Configura SHOPIFY_APP_CLIENT_ID y SHOPIFY_APP_SECRET en el entorno.",

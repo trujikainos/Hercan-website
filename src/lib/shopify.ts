@@ -1,3 +1,4 @@
+import "server-only";
 import { cache } from "react";
 import type { Product, Category, Availability, Article } from "./types";
 import { MOCK_PRODUCTS, CATEGORIES } from "./mock-data";
@@ -31,7 +32,10 @@ export async function storefront<T>(
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ query, variables }),
-    signal: init?.signal,
+    // Timeout por defecto (10s): una lectura lenta de Shopify no debe colgar el
+    // render del RSC sin límite (caché fría). El error boundary lo captura y
+    // muestra la página de error con marca. Si el llamador pasa su signal, se respeta.
+    signal: init?.signal ?? AbortSignal.timeout(10_000),
     ...(init?.cache
       ? { cache: init.cache }
       : { next: { revalidate: init?.revalidate ?? 60 } }),

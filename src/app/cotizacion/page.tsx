@@ -58,7 +58,7 @@ export default async function CotizacionPage({
             <QuoteForm initialSku={sku} initialProduct={initialProduct} />
           </div>
 
-          <aside className="reveal space-y-4 text-sm" style={{ transitionDelay: "0.08s" }}>
+          <aside className="reveal space-y-4 text-sm" style={{ animationDelay: "0.08s" }}>
             <div className="flex items-start gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-hc-soft text-hc-steel ring-1 ring-hc-metal-light">
                 <FileText className="h-4 w-4" />

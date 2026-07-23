@@ -77,18 +77,23 @@
 
 @layer components {
   /* Reveal on-scroll — FOUC-safe: solo se oculta si hay JS (clase .js en <html>) */
-  .reveal {
-    transition:
-      opacity 0.7s var(--ease-out-brand),
-      transform 0.7s var(--ease-out-brand);
-  }
+  /* Reveal de entrada — SOLO CSS. Antes dependía de que el JS agregara .is-visible
+     (un observer): eso ocultaba el contenido hasta que React hidrataba → en páginas
+     pesadas tardaba o no aparecía; y modificar la clase antes de hidratar provocaba
+     un hydration mismatch. Ahora es una animación CSS pura (no toca el DOM): nunca
+     hay mismatch ni pantallas en blanco. FOUC-safe: sin JS el contenido queda visible. */
   .js .reveal {
-    opacity: 0;
-    transform: translateY(18px);
+    animation: revealIn 0.6s var(--ease-out-brand) both;
   }
-  .reveal.is-visible {
-    opacity: 1;
-    transform: none;
+  @keyframes revealIn {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 
   /* Entrada del hero al cargar (sin ocultar el H1 = LCP) */

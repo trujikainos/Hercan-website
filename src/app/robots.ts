@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { site } from "@/lib/site";
+import { site, INDEXABLE } from "@/lib/site";
 
 // Bots de IA permitidos explícitamente (GEO/citabilidad): si no te pueden leer,
 // no te pueden citar. Se listan aparte porque en robots.txt los grupos por
@@ -24,10 +24,11 @@ const AI_BOTS = [
 const DISALLOW = ["/carrito", "/api/", "/*?*ver="];
 
 export default function robots(): MetadataRoute.Robots {
-  // Staging (NEXT_PUBLIC_NOINDEX=1): bloquea TODO para que ni Google ni los bots
-  // de IA indexen el sitio con datos placeholder. Coherente con el <meta robots>
-  // noindex global del layout. NO referimos sitemap/host aquí a propósito.
-  if (process.env.NEXT_PUBLIC_NOINDEX === "1") {
+  // Fail-closed: mientras NO esté en vivo el dominio real (sin NEXT_PUBLIC_ALLOW_INDEX=1)
+  // bloquea TODO para que ni Google ni los bots de IA indexen datos placeholder.
+  // Coherente con el <meta robots> noindex global del layout. NO referimos
+  // sitemap/host aquí a propósito.
+  if (!INDEXABLE) {
     return { rules: [{ userAgent: "*", disallow: "/" }] };
   }
 

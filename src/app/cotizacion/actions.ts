@@ -95,7 +95,14 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
     return { ok: false, code: "INVALID", message: "Cuéntanos qué producto necesitas cotizar." };
 
   const h = await headers();
-  const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || "unknown";
+  // IP de confianza para el rate-limit: `x-real-ip` lo pone Vercel con la IP TCP
+  // real del cliente (no la puede falsificar enviando su propio header, a
+  // diferencia del primer valor de x-forwarded-for). Sin él (local/dev), cae al
+  // x-forwarded-for.
+  const ip =
+    h.get("x-real-ip")?.trim() ||
+    (h.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
+    "unknown";
   if (rateLimited(ip))
     return { ok: false, code: "RATE", message: "Demasiadas solicitudes. Intenta en unos minutos." };
 

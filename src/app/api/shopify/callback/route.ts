@@ -25,6 +25,11 @@ function page(title: string, bodyHtml: string, ok: boolean) {
 }
 
 export async function GET(request: Request) {
+  // Setup de un solo uso: SOLO local/dev. En producción responde 404 → el Admin
+  // token nunca se acuña ni se muestra en el sitio en vivo, con o sin credenciales.
+  if (process.env.NODE_ENV === "production") {
+    return new Response("No disponible.", { status: 404 });
+  }
   if (!DOMAIN || !CLIENT_ID || !SECRET) {
     return page(
       "Deshabilitado",
@@ -67,9 +72,10 @@ export async function GET(request: Request) {
     }
     // Cuando el setup corre en local (dev), guarda el token directo en .env.local
     // para no copiar/pegar a mano. Guarda de seguridad: NUNCA en producción/Vercel.
+    // Ya garantizamos arriba que NO es producción (guard al inicio del GET).
     let savedLocal = false;
     const host = new URL(request.url).host;
-    if (process.env.NODE_ENV !== "production" && /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) {
+    if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) {
       try {
         const fs = await import("node:fs");
         const p = ".env.local";

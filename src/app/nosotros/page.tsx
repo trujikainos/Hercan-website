@@ -168,7 +168,7 @@ export default function NosotrosPage() {
               </div>
             </div>
 
-            <aside className="reveal" style={{ transitionDelay: "0.08s" }}>
+            <aside className="reveal" style={{ animationDelay: "0.08s" }}>
               <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-hc-metal-light bg-hc-metal-light">
                 <Fact label="Fundada" value="2013" />
                 <Fact
@@ -212,7 +212,7 @@ export default function NosotrosPage() {
               <div
                 key={v.title}
                 className="reveal flex items-start gap-3"
-                style={{ transitionDelay: `${i * 80}ms` }}
+                style={{ animationDelay: `${i * 80}ms` }}
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-hc-soft text-hc-steel ring-1 ring-hc-metal-light">
                   <v.icon className="h-5 w-5" />

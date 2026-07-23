@@ -6,6 +6,17 @@
  * Los TODO son datos por confirmar con el cliente (Armando) antes de producción.
  */
 
+/**
+ * ¿El sitio es indexable por buscadores y bots de IA?
+ * FAIL-CLOSED a propósito: por default NADIE indexa (staging, preview, local, o si
+ * falta/está mal la variable). Sólo se indexa cuando el dominio real ya está en vivo
+ * y se activa EXPLÍCITAMENTE `NEXT_PUBLIC_ALLOW_INDEX=1` en Vercel Production.
+ * `NEXT_PUBLIC_NOINDEX=1` sigue como freno de emergencia (fuerza noindex aunque el
+ * flag esté activo). Lo consumen el layout (meta robots) y robots.ts (robots.txt).
+ */
+export const INDEXABLE =
+  process.env.NEXT_PUBLIC_ALLOW_INDEX === "1" && process.env.NEXT_PUBLIC_NOINDEX !== "1";
+
 export const site = {
   // Dominio final (se fija con NEXT_PUBLIC_SITE_URL en Vercel al elegir dominio)
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://hercan.com.mx", // TODO: confirmar dominio final

@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Oswald, Inter } from "next/font/google";
 import "./globals.css";
-import { site } from "@/lib/site";
+import { site, INDEXABLE } from "@/lib/site";
 import { getCart } from "@/lib/shopify-cart";
 import { isShopifyConnected } from "@/lib/shopify";
 import { CartProvider } from "@/components/cart/cart-provider";
-import { RevealController } from "@/components/reveal-controller";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 
 const oswald = Oswald({
@@ -34,21 +33,21 @@ export const metadata: Metadata = {
     siteName: site.name,
   },
   twitter: { card: "summary_large_image" },
-  // NEXT_PUBLIC_NOINDEX=1 (staging) → noindex; producción → indexable.
-  robots:
-    process.env.NEXT_PUBLIC_NOINDEX === "1"
-      ? { index: false, follow: false }
-      : {
+  // Fail-closed: indexable SÓLO con NEXT_PUBLIC_ALLOW_INDEX=1 (dominio real en vivo).
+  // Por default —staging, preview, local— noindex. Ver `INDEXABLE` en lib/site.
+  robots: INDEXABLE
+    ? {
+        index: true,
+        follow: true,
+        googleBot: {
           index: true,
           follow: true,
-          googleBot: {
-            index: true,
-            follow: true,
-            "max-snippet": -1,
-            "max-image-preview": "large",
-            "max-video-preview": -1,
-          },
+          "max-snippet": -1,
+          "max-image-preview": "large",
+          "max-video-preview": -1,
         },
+      }
+    : { index: false, follow: false },
   icons: { icon: "/brand/hercan-favicon.png" },
 };
 
@@ -74,9 +73,16 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${oswald.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-white">
+      {/* suppressHydrationWarning: extensiones del navegador (ColorZilla,
+          Grammarly…) inyectan atributos en <body> antes de hidratar (p. ej.
+          cz-shortcut-listen); sin esto React reporta un hydration mismatch. */}
+      <body className="min-h-full flex flex-col bg-white" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
+            // Marca que hay JS → activa el reveal por CSS (`.js .reveal`, ver
+            // globals.css). Es lo único necesario: el reveal es 100% CSS (animación
+            // de entrada), sin observers ni manipulación del DOM, así que no causa
+            // hydration mismatch ni pantallas en blanco.
             __html: "document.documentElement.classList.add('js')",
           }}
         />
@@ -86,7 +92,6 @@ export default async function RootLayout({
         >
           Saltar al contenido
         </a>
-        <RevealController />
         <CartProvider initialCart={initialCart} enabled={isShopifyConnected}>
           {children}
         </CartProvider>

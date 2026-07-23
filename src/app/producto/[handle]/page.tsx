@@ -72,8 +72,14 @@ export default async function ProductPage({
     Boolean(product.variantId) &&
     (product.variantAvailable ?? false) &&
     (product.stock == null || product.stock > 0);
-  const related = isBuyable ? await getRelatedProducts(product, 12) : [];
-  const alternatives = isBuyable ? [] : await getInStockAlternatives(product, 4);
+  // Secciones OPCIONALES (relacionados / alternativas): si su query falla por un
+  // blip de la API, no deben tumbar una ficha que ya cargó su dato principal.
+  const related = isBuyable
+    ? await getRelatedProducts(product, 12).catch(() => [])
+    : [];
+  const alternatives = isBuyable
+    ? []
+    : await getInStockAlternatives(product, 4).catch(() => []);
 
   // Identificadores: el N° de parte real es el mpn (por lo que busca/pide el
   // comprador); el SKU es el código interno de Hercan (menos relevante, pero se
@@ -160,7 +166,7 @@ export default async function ProductPage({
             </div>
           </div>
 
-          <div className="reveal" style={{ transitionDelay: "0.1s" }}>
+          <div className="reveal" style={{ animationDelay: "0.1s" }}>
             <StockBadge product={product} />
             <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
               <span className="font-semibold uppercase tracking-wide text-hc-steel">

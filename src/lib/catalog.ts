@@ -201,7 +201,10 @@ export function buildCatalog({
 
   // Paginación por URL: ?ver=N (acumulativo, preserva la UX de "Mostrar más").
   const verRaw = parseInt(paramList("ver")[0] ?? "", 10);
-  const ver = Number.isFinite(verRaw) && verRaw > 0 ? verRaw : pageSize;
+  // Acota ?ver al total disponible (mínimo `pageSize`): evita que ?ver=99999
+  // fuerce el render de miles de tarjetas en una sola página (payload/abuso).
+  const requested = Number.isFinite(verRaw) && verRaw > 0 ? verRaw : pageSize;
+  const ver = Math.min(requested, Math.max(filtered.length, pageSize));
   const shown = filtered.slice(0, ver);
   const hasMore = filtered.length > ver;
 
