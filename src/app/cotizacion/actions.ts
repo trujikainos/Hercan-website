@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { site, absoluteUrl } from "@/lib/site";
 import { customerEmail, leadEmail, type EmailLine } from "@/lib/quote-email";
 import { createQuoteDraftOrder, type DraftLine } from "@/lib/shopify-admin";
+import { limited } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 /** Producto elegido del catálogo real (via autocompletar). */
 export interface QuoteProduct {
@@ -32,10 +34,11 @@ export interface QuoteInput {
   source?: "whatsapp" | "cotizacion"; // canal de origen del lead
   consent: boolean;
   hp?: string; // honeypot (los bots lo llenan)
+  turnstileToken?: string; // token del CAPTCHA Cloudflare Turnstile (si está activo)
 }
 export interface QuoteResult {
   ok: boolean;
-  code?: "INVALID" | "PHONE" | "CONSENT" | "RATE" | "EMAIL_UNAVAILABLE" | "SEND_FAIL";
+  code?: "INVALID" | "PHONE" | "CONSENT" | "RATE" | "CAPTCHA" | "EMAIL_UNAVAILABLE" | "SEND_FAIL";
   message: string;
   folio?: string; // nombre del Borrador de pedido creado (ej. "#D9"), si aplica
 }
@@ -54,16 +57,6 @@ const LEADS_TO = (
 // Buzón monitoreado para el reply_to de la autorespuesta al cliente.
 const LEADS_REPLY_TO = LEADS_TO[0] || "leads@weevolveit.com";
 
-// Rate-limit simple en memoria (por IP). Suficiente para frenar abuso básico.
-const hits = new Map<string, number[]>();
-function rateLimited(ip: string, max = 3, windowMs = 10 * 60 * 1000): boolean {
-  const now = Date.now();
-  const arr = (hits.get(ip) ?? []).filter((t) => now - t < windowMs);
-  arr.push(now);
-  hits.set(ip, arr);
-  return arr.length > max;
-}
-
 const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 async function sendEmail(payload: Record<string, unknown>, key: string) {
@@ -77,6 +70,27 @@ async function sendEmail(payload: Record<string, unknown>, key: string) {
 export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> {
   // Honeypot: si el campo oculto trae texto, es bot → aceptamos en silencio y descartamos.
   if (data.hp && data.hp.trim()) return { ok: true, message: "Recibido." };
+
+  const h = await headers();
+  // IP de confianza: `x-real-ip` lo pone Vercel con la IP TCP real del cliente (no se
+  // puede falsificar con un header propio, a diferencia del primer valor de
+  // x-forwarded-for). Sin él (local/dev), cae al x-forwarded-for.
+  const ip =
+    h.get("x-real-ip")?.trim() ||
+    (h.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
+    "unknown";
+
+  // CAPTCHA invisible (Cloudflare Turnstile). Si no está configurado, se omite.
+  if (!(await verifyTurnstile(data.turnstileToken, ip)))
+    return {
+      ok: false,
+      code: "CAPTCHA",
+      message: "No pudimos verificar que no eres un robot. Recarga la página e intenta de nuevo.",
+    };
+
+  // Rate-limit DURABLE por IP (Upstash si está configurado; memoria si no).
+  if (await limited("ip", ip))
+    return { ok: false, code: "RATE", message: "Demasiadas solicitudes. Intenta en unos minutos." };
 
   const nombre = (data.nombre ?? "").trim();
   const email = (data.email ?? "").trim();
@@ -94,16 +108,8 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
   if (lines.length === 0 && !mensaje)
     return { ok: false, code: "INVALID", message: "Cuéntanos qué producto necesitas cotizar." };
 
-  const h = await headers();
-  // IP de confianza para el rate-limit: `x-real-ip` lo pone Vercel con la IP TCP
-  // real del cliente (no la puede falsificar enviando su propio header, a
-  // diferencia del primer valor de x-forwarded-for). Sin él (local/dev), cae al
-  // x-forwarded-for.
-  const ip =
-    h.get("x-real-ip")?.trim() ||
-    (h.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
-    "unknown";
-  if (rateLimited(ip))
+  // Rate-limit por email (además de por IP), ya con el correo validado.
+  if (await limited("email", email))
     return { ok: false, code: "RATE", message: "Demasiadas solicitudes. Intenta en unos minutos." };
 
   // Datos de producto listos para plantillas y borrador.

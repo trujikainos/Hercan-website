@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { Loader2, Check, Send, Plus, X, ExternalLink } from "lucide-react";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { ProductCombobox, type SelectedProduct } from "@/components/product-combobox";
@@ -89,6 +89,54 @@ export function QuoteForm({
   // Queda vacío en el primer render y se rellena en el cliente.
   const [today, setToday] = useState("");
   useEffect(() => setToday(todayStr()), []);
+
+  // ── CAPTCHA invisible (Cloudflare Turnstile) ──
+  // Solo se monta si hay site key (NEXT_PUBLIC_TURNSTILE_SITE_KEY). Sin ella, el
+  // formulario funciona igual y el servidor omite la verificación (fallback).
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!turnstileSiteKey || !turnstileRef.current) return;
+    type TurnstileApi = { render: (el: HTMLElement, opts: Record<string, unknown>) => string };
+    const w = window as unknown as { turnstile?: TurnstileApi };
+    function render() {
+      const el = turnstileRef.current;
+      if (!w.turnstile || !el) return;
+      el.replaceChildren();
+      turnstileWidgetId.current = w.turnstile.render(el, {
+        sitekey: turnstileSiteKey,
+        callback: (token: string) => setTurnstileToken(token),
+        "error-callback": () => setTurnstileToken(null),
+        "expired-callback": () => setTurnstileToken(null),
+      });
+    }
+    const SCRIPT_ID = "cf-turnstile";
+    if (w.turnstile) render();
+    else if (!document.getElementById(SCRIPT_ID)) {
+      const s = document.createElement("script");
+      s.id = SCRIPT_ID;
+      s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      s.async = true;
+      s.defer = true;
+      s.onload = render;
+      document.head.appendChild(s);
+    } else {
+      document.getElementById(SCRIPT_ID)?.addEventListener("load", render);
+    }
+  }, [turnstileSiteKey]);
+
+  // El token de Turnstile es de un solo uso: tras cada envío hay que pedir uno nuevo.
+  function resetTurnstile() {
+    setTurnstileToken(null);
+    const t = (window as unknown as { turnstile?: { reset: (id?: string) => void } }).turnstile;
+    try {
+      t?.reset(turnstileWidgetId.current);
+    } catch {
+      /* noop */
+    }
+  }
 
   // Frecuencia efectiva (preset o "cada N meses/semanas") + etiqueta de cantidad.
   const frecuencia =
@@ -188,6 +236,9 @@ export function QuoteForm({
       if (today && rec.fechaInicio < today)
         return setError("La fecha de inicio no puede ser en el pasado.");
     }
+    // CAPTCHA activo pero el token aún no llega (Turnstile managed resuelve en <1s).
+    if (turnstileSiteKey && !turnstileToken)
+      return setError("Verificando que no eres un robot… espera un segundo e inténtalo de nuevo.");
     const payload: QuoteInput = {
       nombre: c.nombre,
       empresa: c.empresa,
@@ -196,6 +247,7 @@ export function QuoteForm({
       mensaje: c.mensaje,
       consent: c.consent,
       hp: c.hp,
+      turnstileToken: turnstileToken ?? undefined,
       lines: buildLines(),
       recurring,
       source: "cotizacion",
@@ -213,6 +265,7 @@ export function QuoteForm({
         w.gtag?.("event", "generate_lead", { method: "form" });
       } else {
         setError(r.message);
+        resetTurnstile(); // token de un solo uso → pedir uno nuevo para el reintento
       }
     });
   }
@@ -512,6 +565,10 @@ export function QuoteForm({
             </>
           )}
         </p>
+      )}
+
+      {turnstileSiteKey && (
+        <div ref={turnstileRef} className="min-h-[65px]" aria-label="Verificación anti-robot" />
       )}
 
       <div className="flex flex-wrap gap-3 pt-1">
