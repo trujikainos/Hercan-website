@@ -191,6 +191,21 @@ export function faqNode(faqs: { question: string; answer: string }[]) {
   };
 }
 
+/**
+ * Nodo `Brand` para las páginas de marca (/marca/[slug]). Solo emite datos
+ * factuales pasados por el llamador (nombre + descripción verificable). Sin
+ * fabricar logos, ratings ni identificadores.
+ */
+export function brandNode(name: string, path: string, description?: string) {
+  return {
+    "@type": "Brand",
+    "@id": `${absoluteUrl(path)}#brand`,
+    name,
+    url: absoluteUrl(path),
+    ...(description ? { description } : {}),
+  };
+}
+
 export function collectionNode(name: string, path: string, products: Product[]) {
   return {
     "@type": "CollectionPage",

@@ -3,31 +3,37 @@
 import { useId, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
+import type { FacetGroup, FacetOption } from "@/lib/catalog";
 
-export type FacetOption = {
-  value: string; // valor que va en la URL (slug para categoría, valor para el resto)
-  label: string;
-  count: number;
-  selected: boolean;
-};
-export type FacetGroup = {
-  param: string;
-  label: string;
-  options: FacetOption[];
-};
+// Los tipos de faceta viven en la capa de datos (`@/lib/catalog`); se re-exportan
+// aquí por retrocompatibilidad con quienes ya los importaban desde el sidebar.
+export type { FacetGroup, FacetOption };
 
 /**
  * Sidebar de filtros dirigido por URL. El filtrado/paginado ocurre en el
  * servidor; este componente solo actualiza los search params y deja que la
  * página se vuelva a renderizar. No recibe la lista de productos.
+ *
+ * `hiddenFacets`: params de faceta que NO se muestran (ni cuentan en "Limpiar").
+ * Lo usan las páginas de taxonomía para ocultar la faceta fija (p. ej. "marca"
+ * en `/marca/iscar`), que ya viaja en la ruta y no debe togglearse desde aquí.
  */
-export function FilterSidebar({ facets }: { facets: FacetGroup[] }) {
+export function FilterSidebar({
+  facets,
+  hiddenFacets,
+}: {
+  facets: FacetGroup[];
+  hiddenFacets?: string[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const activeCount = facets.reduce(
+  const hidden = new Set(hiddenFacets ?? []);
+  const visibleFacets = facets.filter((f) => !hidden.has(f.param));
+
+  const activeCount = visibleFacets.reduce(
     (n, f) => n + f.options.filter((o) => o.selected).length,
     0,
   );
@@ -53,7 +59,7 @@ export function FilterSidebar({ facets }: { facets: FacetGroup[] }) {
 
   function clearAll() {
     const params = new URLSearchParams(searchParams.toString());
-    for (const f of facets) params.delete(f.param);
+    for (const f of visibleFacets) params.delete(f.param);
     navigate(params);
   }
 
@@ -75,7 +81,7 @@ export function FilterSidebar({ facets }: { facets: FacetGroup[] }) {
           </button>
         )}
       </div>
-      {facets.map((f) =>
+      {visibleFacets.map((f) =>
         f.options.length === 0 ? null : (
           <FilterGroup key={f.param} facet={f} onToggle={toggle} />
         ),
