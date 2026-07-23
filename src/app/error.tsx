@@ -3,8 +3,6 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { RotateCw } from "lucide-react";
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/home-sections";
 
 // Error boundary de página (dentro del layout): captura fallos de render/datos de
 // cualquier ruta —p. ej. un hipo de la Storefront API con caché fría— y muestra
@@ -24,8 +22,6 @@ export default function Error({
 
   return (
     <>
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="flex-1">
         <section className="mx-auto max-w-2xl px-4 py-20 text-center">
           <h1 className="font-heading text-3xl text-hc-navy sm:text-4xl">
@@ -53,7 +49,6 @@ export default function Error({
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   );
 }

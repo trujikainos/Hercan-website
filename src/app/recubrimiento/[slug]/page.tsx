@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/home-sections";
 import { CatalogSection } from "@/components/catalog-section";
 import { TaxonomyHero, SiblingStrip } from "@/components/taxonomy";
 import { JsonLd } from "@/components/json-ld";
@@ -77,8 +75,6 @@ export default async function RecubrimientoPage({
           ]),
         )}
       />
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="flex-1">
         <TaxonomyHero
           breadcrumb={[
@@ -102,7 +98,6 @@ export default async function RecubrimientoPage({
           allLabel="Ver todo el catálogo"
         />
       </main>
-      <SiteFooter />
     </>
   );
 }

@@ -1,5 +1,3 @@
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/home-sections";
 import { CatalogSection } from "@/components/catalog-section";
 import { buildCatalog } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
@@ -38,8 +36,6 @@ export default async function ProductosPage({
           ]),
         )}
       />
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="flex-1">
         <div className="border-b border-hc-metal-light bg-hc-soft">
           <div className="reveal mx-auto max-w-7xl px-4 py-7">
@@ -54,7 +50,6 @@ export default async function ProductosPage({
 
         <CatalogSection result={result} basePath="/productos" />
       </main>
-      <SiteFooter />
     </>
   );
 }

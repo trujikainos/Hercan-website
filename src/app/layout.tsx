@@ -6,6 +6,8 @@ import { getCart } from "@/lib/shopify-cart";
 import { isShopifyConnected } from "@/lib/shopify";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
+import { AnnouncementBar, SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/home-sections";
 
 const oswald = Oswald({
   variable: "--font-oswald",
@@ -93,7 +95,10 @@ export default async function RootLayout({
           Saltar al contenido
         </a>
         <CartProvider initialCart={initialCart} enabled={isShopifyConnected}>
+          <AnnouncementBar />
+          <SiteHeader />
           {children}
+          <SiteFooter />
         </CartProvider>
         <WhatsAppFloat />
       </body>

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/home-sections";
 import { CatalogSection } from "@/components/catalog-section";
 import { buildCatalog, searchProductsLocal } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
@@ -35,8 +33,6 @@ export default async function BuscarPage({
 
   return (
     <>
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="flex-1">
         <section className="border-b border-hc-metal-light bg-hc-soft">
           <div className="mx-auto max-w-7xl px-4 py-8">
@@ -72,7 +68,6 @@ export default async function BuscarPage({
           </div>
         ) : null}
       </main>
-      <SiteFooter />
     </>
   );
 }

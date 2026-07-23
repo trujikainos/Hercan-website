@@ -1,6 +1,4 @@
 import { FileText, Headset, Clock } from "lucide-react";
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/home-sections";
 import { QuoteForm } from "@/components/quote-form";
 import { getProductByHandle } from "@/lib/shopify";
 import { JsonLd } from "@/components/json-ld";
@@ -42,8 +40,6 @@ export default async function CotizacionPage({
           ]),
         )}
       />
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="mx-auto w-full max-w-5xl flex-1 px-4 py-12">
         <div className="reveal max-w-2xl">
           <h1 className="font-heading text-3xl text-hc-navy">Solicitar cotización</h1>
@@ -89,7 +85,6 @@ export default async function CotizacionPage({
           </aside>
         </div>
       </main>
-      <SiteFooter />
     </>
   );
 }

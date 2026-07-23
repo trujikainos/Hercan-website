@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { MapPin, Mail, Phone, FileText, ArrowRight } from "lucide-react";
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/home-sections";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, breadcrumbNode, localBusinessNode } from "@/lib/schema";
@@ -150,8 +148,6 @@ export default function ContactoPage() {
           ]),
         )}
       />
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="mx-auto w-full max-w-6xl flex-1 px-4 py-12">
         <header className="reveal max-w-2xl">
           <h1 className="font-heading text-3xl text-hc-navy">Contacto</h1>
@@ -204,7 +200,6 @@ export default function ContactoPage() {
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   );
 }

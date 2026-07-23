@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ImageIcon, Ruler, FileText, Download } from "lucide-react";
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/home-sections";
 import { StockBadge, stockInfo, formatPrice, displayTitle } from "@/components/ui";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { OutOfStockCTA } from "@/components/cart/out-of-stock-cta";
@@ -138,8 +136,6 @@ export default async function ProductPage({
           ...(faqs.length ? [faqNode(faqs)] : []),
         )}
       />
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
         <nav className="mb-4 text-sm text-hc-gunmetal">
           <Link href="/productos" className="hover:text-hc-blue">
@@ -318,7 +314,6 @@ export default async function ProductPage({
           </section>
         )}
       </main>
-      <SiteFooter />
     </>
   );
 }

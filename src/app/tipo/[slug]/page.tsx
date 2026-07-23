@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/home-sections";
 import { CatalogSection } from "@/components/catalog-section";
 import { TaxonomyHero, SiblingStrip } from "@/components/taxonomy";
 import { FaqAccordion } from "@/components/faq-accordion";
@@ -81,8 +79,6 @@ export default async function TipoPage({
           ...(faqs.length ? [faqNode(faqs)] : []),
         )}
       />
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="flex-1">
         <TaxonomyHero
           breadcrumb={[
@@ -112,7 +108,6 @@ export default async function TipoPage({
           allLabel="Ver todo el catálogo"
         />
       </main>
-      <SiteFooter />
     </>
   );
 }

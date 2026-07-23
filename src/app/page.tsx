@@ -1,4 +1,3 @@
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import {
   Hero,
   BrandBar,
@@ -7,7 +6,6 @@ import {
   BrandsSection,
   QuoteCTA,
   SeoBlock,
-  SiteFooter,
 } from "@/components/home-sections";
 import { ProductCard } from "@/components/product-card";
 import { FaqAccordion } from "@/components/faq-accordion";
@@ -33,8 +31,6 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={pageGraph(faqNode(HOME_FAQS))} />
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="flex-1">
         <Hero />
         <BrandBar />
@@ -76,7 +72,6 @@ export default async function HomePage() {
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   );
 }

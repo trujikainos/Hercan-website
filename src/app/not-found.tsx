@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/home-sections";
 
 const ATAJOS: [string, string][] = [
   ["Fresado", "/categoria/fresado"],
@@ -15,8 +13,6 @@ const ATAJOS: [string, string][] = [
 export default function NotFound() {
   return (
     <>
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="flex-1">
         <section className="mx-auto max-w-2xl px-4 py-20 text-center">
           <p className="font-heading text-sm font-semibold uppercase tracking-wide text-hc-steel">
@@ -56,7 +52,6 @@ export default function NotFound() {
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   );
 }

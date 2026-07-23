@@ -6,8 +6,7 @@ import {
   SlidersHorizontal,
   Headset,
 } from "lucide-react";
-import { AnnouncementBar, SiteHeader } from "@/components/site-header";
-import { SiteFooter, BrandsSection, QuoteCTA } from "@/components/home-sections";
+import { BrandsSection, QuoteCTA } from "@/components/home-sections";
 import { DistributionMap } from "@/components/distribution-map";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, breadcrumbNode } from "@/lib/schema";
@@ -65,8 +64,6 @@ export default function NosotrosPage() {
           ]),
         )}
       />
-      <AnnouncementBar />
-      <SiteHeader />
       <main id="contenido" className="flex-1">
         {/* Hero */}
         <section className="relative overflow-hidden bg-hc-navy text-white">
@@ -230,7 +227,6 @@ export default function NosotrosPage() {
 
         <QuoteCTA />
       </main>
-      <SiteFooter />
     </>
   );
 }
