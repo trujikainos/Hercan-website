@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ArrowRight, Boxes, ChevronDown, ChevronRight, FileText, X } from "lucide-react";
 import { site } from "@/lib/site";
+import { brandSlug } from "@/lib/catalog";
 
 /**
  * MEGA MENÚ "Catálogo" del nav superior.
@@ -21,7 +22,12 @@ import { site } from "@/lib/site";
  * (motion-safe/motion-reduce + el override global de globals.css).
  *
  * ---------------------------------------------------------------------------
- * ESQUEMA DE URLs (verificado contra src/app/productos/page.tsx):
+ * ESQUEMA DE URLs:
+ *   La categoría EN SÍ (riel de categorías + "Ver todo <categoría>") y la marca
+ *   EN SÍ (barra de marcas + marca destacada) enlazan a sus TAXONOMÍAS con página
+ *   propia — /categoria/<slug> y /marca/<brandSlug(name)> — para posicionarlas en
+ *   SEO. Los TIPOS y el MATERIAL siguen siendo FILTROS dentro de /productos:
+ *   (verificado contra src/app/productos/page.tsx):
  *   - categoria = SLUG (fresado, perforacion, …)             ← filtro REAL
  *   - marca     = valor exacto (Iscar, Toolmex, …)           ← filtro REAL
  *   - material  = material de la HERRAMIENTA (Carburo, HSS,   ← filtro REAL
@@ -128,12 +134,16 @@ const FEATURED_BRAND = "Iscar";
 function productosHref(params: Record<string, string>): string {
   return `/productos?${new URLSearchParams(params).toString()}`;
 }
+// Tipos y material son FILTROS del catálogo → se quedan en /productos (no son
+// taxonomías con página propia).
 const tipoHref = (slug: string, tipo: string) =>
   productosHref(tipo ? { categoria: slug, tipo } : { categoria: slug });
 const materialHref = (slug: string, value: string) =>
   productosHref({ categoria: slug, material: value });
-// Mismo formato exacto que el resto del sitio (home-sections BrandBar).
-const marcaHref = (name: string) => `/productos?marca=${encodeURIComponent(name)}`;
+// La categoría EN SÍ y la marca EN SÍ son taxonomías con página propia (SEO) →
+// enlazan a /categoria/<slug> y /marca/<brandSlug(name)>, no a filtros de /productos.
+const categoriaHref = (slug: string) => `/categoria/${slug}`;
+const marcaHref = (name: string) => `/marca/${brandSlug(name)}`;
 
 type Nav = () => void;
 
@@ -431,7 +441,7 @@ export function MegaMenu() {
                 return (
                   <li key={c.slug}>
                     <Link
-                      href={productosHref({ categoria: c.slug })}
+                      href={categoriaHref(c.slug)}
                       ref={(el) => {
                         catRefs.current[i] = el;
                       }}
@@ -492,7 +502,7 @@ export function MegaMenu() {
                     Explora toda la línea de {MENU_CATEGORIES[activeIdx]?.name} en el catálogo.
                   </p>
                   <Link
-                    href={productosHref({ categoria: activeSlug })}
+                    href={categoriaHref(activeSlug)}
                     onClick={() => closeNow(false)}
                     className="inline-flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
                   >
@@ -599,7 +609,7 @@ export function MegaMenu() {
                           </div>
                         )}
                         <Link
-                          href={productosHref({ categoria: c.slug })}
+                          href={categoriaHref(c.slug)}
                           onClick={() => closeNow(false)}
                           className="inline-flex items-center gap-1 text-sm font-medium text-hc-blue hover:text-hc-steel"
                         >

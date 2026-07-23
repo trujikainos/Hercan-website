@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { Category } from "@/lib/types";
 import { site } from "@/lib/site";
+import { brandSlug } from "@/lib/catalog";
 import { HeroCarousel } from "./hero-carousel";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -94,7 +95,7 @@ export function BrandBar() {
           {site.brands.map((b) => (
             <li key={b.name}>
               <Link
-                href={`/productos?marca=${encodeURIComponent(b.name)}`}
+                href={`/marca/${brandSlug(b.name)}`}
                 className="flex items-center font-heading text-lg font-semibold text-hc-steel transition-colors hover:text-hc-blue"
                 aria-label={b.name}
               >
@@ -175,7 +176,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
           return (
             <Link
               key={c.slug}
-              href={`/productos?categoria=${c.slug}`}
+              href={`/categoria/${c.slug}`}
               className="reveal card-hover press group flex flex-col items-center gap-2 rounded-xl border border-hc-metal-light bg-white p-5 text-center hover:border-hc-steel"
               style={{ transitionDelay: `${Math.min(i * 55, 300)}ms` }}
             >
@@ -210,7 +211,7 @@ export function BrandsSection() {
           {site.brands.map((b, i) => (
             <Link
               key={b.name}
-              href={`/productos?marca=${encodeURIComponent(b.name)}`}
+              href={`/marca/${brandSlug(b.name)}`}
               className="reveal card-hover group flex items-center justify-between gap-4 rounded-xl border border-hc-metal-light bg-hc-soft/40 p-5 hover:border-hc-steel"
               style={{ transitionDelay: `${i * 60}ms` }}
             >
@@ -270,27 +271,27 @@ export function SeoBlock() {
       </h2>
       <p>
           En <strong className="text-hc-ink">HERCAN</strong> encuentras{" "}
-          <Link href="/productos?categoria=fresado" className="text-hc-blue hover:underline">
+          <Link href="/categoria/fresado" className="text-hc-blue hover:underline">
             fresas de carburo
           </Link>
           ,{" "}
-          <Link href="/productos?categoria=torneado" className="text-hc-blue hover:underline">
+          <Link href="/categoria/torneado" className="text-hc-blue hover:underline">
             insertos de torneado
           </Link>
           ,{" "}
-          <Link href="/productos?categoria=perforacion" className="text-hc-blue hover:underline">
+          <Link href="/categoria/perforacion" className="text-hc-blue hover:underline">
             brocas para CNC
           </Link>
           ,{" "}
-          <Link href="/productos?categoria=roscado" className="text-hc-blue hover:underline">
+          <Link href="/categoria/roscado" className="text-hc-blue hover:underline">
             machuelos y herramienta de roscado
           </Link>{" "}
           y{" "}
-          <Link href="/productos?categoria=portaherramientas" className="text-hc-blue hover:underline">
+          <Link href="/categoria/portaherramientas" className="text-hc-blue hover:underline">
             portaherramientas
           </Link>{" "}
           de carburo de tungsteno de las marcas líderes. También manejamos{" "}
-          <Link href="/productos?categoria=medicion" className="text-hc-blue hover:underline">
+          <Link href="/categoria/medicion" className="text-hc-blue hover:underline">
             equipos de medición Mitutoyo
           </Link>{" "}
           (calibradores, micrómetros e indicadores) para control dimensional.
@@ -334,22 +335,22 @@ export function SiteFooter() {
           <p className="font-heading text-sm text-white">Catálogo</p>
           <ul className="mt-3 space-y-1.5 text-sm">
             <li>
-              <Link href="/productos?categoria=fresado" className="hover:text-hc-sky">
+              <Link href="/categoria/fresado" className="hover:text-hc-sky">
                 Fresado
               </Link>
             </li>
             <li>
-              <Link href="/productos?categoria=torneado" className="hover:text-hc-sky">
+              <Link href="/categoria/torneado" className="hover:text-hc-sky">
                 Torneado
               </Link>
             </li>
             <li>
-              <Link href="/productos?categoria=perforacion" className="hover:text-hc-sky">
+              <Link href="/categoria/perforacion" className="hover:text-hc-sky">
                 Perforación
               </Link>
             </li>
             <li>
-              <Link href="/productos?categoria=medicion" className="hover:text-hc-sky">
+              <Link href="/categoria/medicion" className="hover:text-hc-sky">
                 Medición
               </Link>
             </li>
@@ -412,8 +413,19 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto max-w-7xl px-4 py-5 text-xs text-hc-metal/80">
-          © {year} {site.legalName}. Todos los derechos reservados.
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-hc-metal/80 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {year} {site.legalName}. Todos los derechos reservados.</p>
+          <p>
+            Hecho por{" "}
+            <a
+              href="https://weevolveit.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-hc-metal transition-colors hover:text-hc-sky"
+            >
+              WeEvolveIT
+            </a>
+          </p>
         </div>
       </div>
     </footer>
