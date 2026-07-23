@@ -207,10 +207,13 @@ export function buildCatalog({
 
   // querystring de "Mostrar más": conserva filtros y sube `ver`. El scope NO
   // aparece aquí (va en la ruta), así que naturalmente queda fuera.
+  // Preserva TODOS los params actuales (facetas + `q` de búsqueda + otros) salvo
+  // `ver`, para que "Mostrar más" no pierda el término de búsqueda ni los filtros.
   const moreParams = new URLSearchParams();
-  for (const { param } of FACETS) {
-    const list = paramList(param);
-    if (list.length) moreParams.set(param, list.join(","));
+  for (const [k, v] of Object.entries(searchParams)) {
+    if (k === "ver" || v == null) continue;
+    const val = Array.isArray(v) ? v.join(",") : v;
+    if (val) moreParams.set(k, val);
   }
   moreParams.set("ver", String(ver + pageSize));
 
@@ -223,4 +226,32 @@ export function buildCatalog({
     total: filtered.length,
     remaining: filtered.length - ver,
   };
+}
+
+const normText = (s: string) =>
+  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+/**
+ * Búsqueda de texto libre sobre el catálogo (página `/buscar`). Multi-token AND:
+ * cada palabra debe aparecer en el "haystack" del producto, que reúne todos los
+ * campos consultables — título, SKU, N° de parte, marca, categoría, tipo,
+ * material, recubrimiento, ISO, familia y tags. Devuelve el subconjunto de
+ * productos que coinciden; luego `buildCatalog` aplica facetas y paginación
+ * sobre ese resultado (así los resultados de búsqueda se pueden filtrar).
+ */
+export function searchProductsLocal(products: Product[], query: string): Product[] {
+  const tokens = normText(query).split(/\s+/).filter(Boolean);
+  if (!tokens.length) return [];
+  return products.filter((p) => {
+    const haystack = normText(
+      [
+        p.title, p.sku, p.mpn, p.brand, p.category, p.type,
+        p.material, p.coating, p.iso, p.familia,
+        ...(p.tags ?? []),
+      ]
+        .filter(Boolean)
+        .join(" "),
+    );
+    return tokens.every((t) => haystack.includes(t));
+  });
 }

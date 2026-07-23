@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link, { useLinkStatus } from "next/link";
-import { usePathname } from "next/navigation";
-import { Search, Loader2, ImageIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Search, Loader2, ImageIcon, ArrowRight } from "lucide-react";
 import type { SearchResult } from "@/lib/shopify";
 
 /** Spinner inline en un resultado mientras Next navega a su ficha: feedback
@@ -66,17 +66,29 @@ export function SearchBar() {
 
   // Al completarse la navegación a un resultado (cambia la ruta) se cierra el
   // panel. No cerramos en el onClick del enlace para que su spinner sea visible.
+  const router = useRouter();
   const pathname = usePathname();
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  // Enter/submit → página de resultados completa (/buscar), filtrable.
+  function submitSearch() {
+    const term = q.trim();
+    if (term.length < 2) return;
+    setOpen(false);
+    router.push(`/buscar?q=${encodeURIComponent(term)}`);
+  }
 
   const showDropdown = open && q.trim().length >= 2;
 
   return (
     <div ref={boxRef} className="relative flex-1">
       <form
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={(e) => {
+          e.preventDefault();
+          submitSearch();
+        }}
         className="flex items-center gap-2 rounded-lg border border-hc-metal-light bg-hc-soft px-3 py-2 transition-colors focus-within:border-hc-steel"
       >
         <Search className="h-4 w-4 shrink-0 text-hc-gunmetal" aria-hidden />
@@ -99,6 +111,7 @@ export function SearchBar() {
       {showDropdown && (
         <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-hc-metal-light bg-white shadow-xl">
           {results.length > 0 ? (
+            <>
             <ul className="max-h-[65vh] overflow-y-auto py-1">
               {results.map((r) => (
                 <li key={r.handle}>
@@ -125,6 +138,15 @@ export function SearchBar() {
                 </li>
               ))}
             </ul>
+            <button
+              type="button"
+              onClick={submitSearch}
+              className="flex w-full items-center justify-center gap-1 border-t border-hc-metal-light bg-hc-soft/40 px-3 py-2.5 text-sm font-medium text-hc-blue transition-colors hover:bg-hc-soft"
+            >
+              Ver todos los resultados
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </button>
+            </>
           ) : loading ? (
             <p className="px-4 py-6 text-center text-sm text-hc-gunmetal">Buscando…</p>
           ) : (
