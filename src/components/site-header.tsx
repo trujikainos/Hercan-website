@@ -9,6 +9,7 @@ import { MegaMenu } from "@/components/mega-menu";
 import { MarcasMenu } from "@/components/marcas-menu";
 import { ParaMenu } from "@/components/para-menu";
 import { getMenuData } from "@/lib/menu-data";
+import { customerAccountsEnabled, getCustomer } from "@/lib/customer-account";
 
 // Portal de cuentas de cliente de Shopify (login sin contraseña + pedidos + rastreo).
 const ACCOUNT_URL =
@@ -23,7 +24,9 @@ export function AnnouncementBar() {
 }
 
 export async function SiteHeader() {
-  const menuData = await getMenuData();
+  const [menuData, customer] = await Promise.all([getMenuData(), getCustomer()]);
+  // Sin CAA configurada → "Ingresar" enlaza al portal de Shopify (fallback).
+  const loginUrl = customerAccountsEnabled ? "/account/login" : ACCOUNT_URL;
   return (
     <header className="sticky top-0 z-40 border-b border-hc-metal-light bg-white">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
@@ -50,9 +53,11 @@ export async function SiteHeader() {
           <FileText className="h-4 w-4" aria-hidden />
           Solicitar cotización
         </Link>
-        {/* Sin sesión conocida por ahora (el login vive en Shopify) → estado "Ingresar".
-            Listo para mostrar foto/inicial/nombre al conectar el Customer Account API. */}
-        <AccountButton user={null} accountUrl={ACCOUNT_URL} />
+        <AccountButton
+          user={customer ? { name: customer.name || customer.email } : null}
+          loginUrl={loginUrl}
+          accountUrl={ACCOUNT_URL}
+        />
         <CartButton />
       </div>
 
