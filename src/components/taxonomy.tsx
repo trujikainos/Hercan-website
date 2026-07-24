@@ -4,24 +4,40 @@ import { ArrowRight, ChevronRight } from "lucide-react";
 /** Item de breadcrumb: sin `href` → texto (página actual). */
 export type Crumb = { name: string; href?: string };
 
-/** Ruta de migas visible (el JSON-LD BreadcrumbList se emite aparte, en la página). */
-export function TaxonomyBreadcrumb({ items }: { items: Crumb[] }) {
+/** Ruta de migas visible (el JSON-LD BreadcrumbList se emite aparte, en la página).
+ *  `variant="dark"` para hero con imagen de fondo (texto claro sobre navy). */
+export function TaxonomyBreadcrumb({
+  items,
+  variant = "light",
+}: {
+  items: Crumb[];
+  variant?: "light" | "dark";
+}) {
+  const dark = variant === "dark";
   return (
     <nav
       aria-label="Ruta de navegación"
-      className="mb-3 flex flex-wrap items-center gap-1 text-sm text-hc-gunmetal"
+      className={`mb-3 flex flex-wrap items-center gap-1 text-sm ${
+        dark ? "text-white/70" : "text-hc-gunmetal"
+      }`}
     >
       {items.map((it, i) => (
         <span key={it.name} className="flex items-center gap-1">
           {i > 0 && (
-            <ChevronRight className="h-3.5 w-3.5 text-hc-metal" aria-hidden />
+            <ChevronRight
+              className={`h-3.5 w-3.5 ${dark ? "text-white/40" : "text-hc-metal"}`}
+              aria-hidden
+            />
           )}
           {it.href ? (
-            <Link href={it.href} className="transition-colors hover:text-hc-blue">
+            <Link
+              href={it.href}
+              className={`transition-colors ${dark ? "hover:text-white" : "hover:text-hc-blue"}`}
+            >
               {it.name}
             </Link>
           ) : (
-            <span className="text-hc-ink">{it.name}</span>
+            <span className={dark ? "text-white" : "text-hc-ink"}>{it.name}</span>
           )}
         </span>
       ))}
@@ -49,40 +65,69 @@ export function TaxonomyHero({
    *  y el intro pasa a una sola columna. Sin imagen → layout previo intacto. */
   image?: { src: string; alt: string };
 }) {
+  // CON imagen → hero inmersivo: foto de fondo + overlay navy + texto blanco (mismo
+  // lenguaje que el hero de la home). SIN imagen → banda clara `hc-soft` (fallback).
+  if (image) {
+    return (
+      <section className="relative overflow-hidden border-b border-hc-metal-light bg-hc-navy text-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={image.src}
+          alt={image.alt}
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="eager"
+        />
+        {/* Overlays de marca: aseguran contraste del texto sobre la foto. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-hc-navy via-hc-navy/85 to-hc-navy/40"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-hc-navy/80 via-transparent to-transparent"
+        />
+        <div className="reveal relative z-10 mx-auto max-w-7xl px-4 py-12 sm:py-14">
+          <TaxonomyBreadcrumb items={breadcrumb} variant="dark" />
+          <h1 className="max-w-3xl font-heading font-semibold text-[length:var(--step-h2)]">
+            {title}
+          </h1>
+          <div className="mt-4 max-w-2xl space-y-3 text-sm leading-relaxed text-hc-sky">
+            {intro.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
+          {bullets && bullets.length > 0 && (
+            <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:flex-wrap">
+              {bullets.map((b) => (
+                <div key={b.heading} className="sm:flex-1 sm:min-w-[220px]">
+                  <h2 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-white/60">
+                    {b.heading}
+                  </h2>
+                  <ul className="space-y-1 text-sm text-white/90">
+                    {b.items.map((it) => (
+                      <li key={it}>{it}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="border-b border-hc-metal-light bg-hc-soft">
       <div className="reveal mx-auto max-w-7xl px-4 py-8">
         <TaxonomyBreadcrumb items={breadcrumb} />
-        <div className={image ? "md:flex md:items-start md:gap-8" : undefined}>
-          <div className={image ? "md:min-w-0 md:flex-1" : undefined}>
-            <h1 className="font-heading text-[length:var(--step-h2)] text-hc-navy">
-              {title}
-            </h1>
-            {/* Sin imagen: intro a 2 columnas (más ancho, menos alto). Con imagen:
-                1 columna para que conviva con la portada lateral. */}
-            <div
-              className={`mt-4 text-sm leading-relaxed text-hc-gunmetal ${
-                image ? "" : "md:columns-2 md:gap-10"
-              }`}
-            >
-              {intro.map((p, i) => (
-                <p key={i} className="mb-3 break-inside-avoid last:mb-0">
-                  {p}
-                </p>
-              ))}
-            </div>
-          </div>
-          {image && (
-            <div className="mt-5 shrink-0 md:mt-0 md:w-72 lg:w-96">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={image.src}
-                alt={image.alt}
-                className="aspect-[4/3] w-full rounded-xl border border-hc-metal-light object-cover shadow-sm"
-                loading="eager"
-              />
-            </div>
-          )}
+        <h1 className="font-heading text-[length:var(--step-h2)] text-hc-navy">{title}</h1>
+        <div className="mt-4 text-sm leading-relaxed text-hc-gunmetal md:columns-2 md:gap-10">
+          {intro.map((p, i) => (
+            <p key={i} className="mb-3 break-inside-avoid last:mb-0">
+              {p}
+            </p>
+          ))}
         </div>
 
         {bullets && bullets.length > 0 && (

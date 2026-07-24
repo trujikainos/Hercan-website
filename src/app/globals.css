@@ -43,6 +43,31 @@
   }
 }
 
+/* Botón de copiar: la palomita + "¡Copiado!" entra (pop) y luego sale (out). */
+@keyframes copyPop {
+  0% {
+    opacity: 0;
+    transform: translateY(3px) scale(0.7);
+  }
+  60% {
+    transform: translateY(0) scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes copyOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.9);
+  }
+}
+
 /* Transición de página: solo transform (no opacity) → no retrasa el LCP */
 @keyframes pageEnter {
   from {

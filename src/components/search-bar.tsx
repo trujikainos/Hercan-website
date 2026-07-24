@@ -219,7 +219,7 @@ export function SearchBar() {
                           <span className="mt-0.5 flex flex-wrap items-center gap-x-2 font-mono text-[11px] text-hc-gunmetal">
                             {r.sku && <span className="truncate">SKU: {r.sku}</span>}
                             {r.mpn && r.mpn !== r.sku && (
-                              <span className="truncate">MPN: {r.mpn}</span>
+                              <span className="truncate">N° parte: {r.mpn}</span>
                             )}
                           </span>
                         )}

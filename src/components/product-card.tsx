@@ -59,7 +59,7 @@ export function ProductCard({ product }: { product: Product }) {
           {product.mpn && product.mpn !== product.sku && (
             <div className="flex items-center justify-between gap-2">
               <span className="min-w-0 truncate font-mono text-[11px] tracking-tight text-hc-gunmetal">
-                MPN: {product.mpn}
+                N° parte: {product.mpn}
               </span>
               <CopyButton value={product.mpn} label={`N° de parte ${product.mpn}`} small />
             </div>
