@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, LogOut, MapPin, Package, User } from "lucide-react";
 import { getCustomerAccount, type CustomerOrder } from "@/lib/customer-account";
+import { ProductImage } from "@/components/product-image";
+import { ReorderButton } from "@/components/reorder-button";
 
 // Página privada de cuenta: SIEMPRE dinámica (lee la sesión), NUNCA indexable.
 export const dynamic = "force-dynamic";
@@ -56,40 +58,50 @@ function StatusBadge({ status }: { status: string | null }) {
 
 function OrderCard({ order }: { order: CustomerOrder }) {
   const items = order.lineItems;
-  const shownItems = items.slice(0, 3);
-  const extra = items.length - shownItems.length;
+  const thumbs = items.slice(0, 5);
+  const extra = items.length - thumbs.length;
+  const detailHref = `/cuenta/pedido/${encodeURIComponent(order.id)}`;
   return (
     <div className="rounded-xl border border-hc-metal-light bg-white p-4 transition hover:border-hc-steel">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <span className="font-heading text-base text-hc-navy">{order.name}</span>
+          <Link href={detailHref} className="font-heading text-base text-hc-navy hover:text-hc-blue">
+            {order.name}
+          </Link>
           <StatusBadge status={order.financialStatus} />
         </div>
         <span className="font-heading text-lg text-hc-navy">{money(order.total)}</span>
       </div>
       <p className="mt-0.5 text-xs text-hc-gunmetal">{fmtDate(order.processedAt)}</p>
-      {shownItems.length > 0 && (
-        <ul className="mt-3 space-y-1 text-sm text-hc-ink">
-          {shownItems.map((li, i) => (
-            <li key={i} className="flex items-center justify-between gap-3">
-              <span className="min-w-0 truncate">{li.title}</span>
-              <span className="shrink-0 text-hc-gunmetal">×{li.quantity}</span>
-            </li>
+
+      {/* Miniaturas de los productos */}
+      {thumbs.length > 0 && (
+        <Link href={detailHref} className="mt-3 flex items-center gap-2" aria-label={`Ver pedido ${order.name}`}>
+          {thumbs.map((li, i) => (
+            <span
+              key={i}
+              className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md border border-hc-metal-light"
+              title={`${li.title} ×${li.quantity}`}
+            >
+              <ProductImage src={li.image} alt={li.title} imgClassName="h-full w-full object-contain" iconClassName="h-5 w-auto" />
+            </span>
           ))}
-          {extra > 0 && <li className="text-xs text-hc-gunmetal">+{extra} más</li>}
-        </ul>
+          {extra > 0 && (
+            <span className="text-xs text-hc-gunmetal">+{extra}</span>
+          )}
+        </Link>
       )}
-      {order.statusUrl && (
-        <a
-          href={order.statusUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-hc-blue hover:text-hc-steel"
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Link
+          href={detailHref}
+          className="inline-flex items-center gap-1 text-sm font-medium text-hc-blue hover:text-hc-steel"
         >
-          Ver detalle y rastreo
+          Ver detalle
           <ArrowRight className="h-4 w-4" aria-hidden />
-        </a>
-      )}
+        </Link>
+        <ReorderButton items={items} currency={order.total?.currencyCode} small />
+      </div>
     </div>
   );
 }
@@ -129,6 +141,15 @@ export default async function CuentaPage() {
 
   const { profile, orders, addresses } = acc;
 
+  // Resumen de compras (mismo supuesto de moneda que el resto del catálogo).
+  const currency = orders.find((o) => o.total)?.total?.currencyCode ?? "MXN";
+  const totalSpent = orders.reduce((s, o) => s + (o.total ? Number(o.total.amount) || 0 : 0), 0);
+  const stats = [
+    { label: "Pedidos", value: String(orders.length) },
+    { label: "Total comprado", value: money({ amount: String(totalSpent), currencyCode: currency }) },
+    { label: "Último pedido", value: orders[0] ? fmtDate(orders[0].processedAt) : "—" },
+  ];
+
   return (
     <main id="contenido" className="flex-1">
       {/* Encabezado */}
@@ -155,7 +176,21 @@ export default async function CuentaPage() {
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-5xl gap-8 px-4 py-10 lg:grid-cols-[1fr_320px]">
+      {/* Resumen de compras */}
+      <section className="mx-auto max-w-5xl px-4 pt-8">
+        <div className="grid grid-cols-3 gap-3">
+          {stats.map((s) => (
+            <div key={s.label} className="rounded-xl border border-hc-metal-light bg-white p-4 text-center">
+              <p className="font-heading text-xl text-hc-navy sm:text-2xl">{s.value}</p>
+              <p className="mt-0.5 text-[11px] uppercase tracking-wide text-hc-gunmetal sm:text-xs">
+                {s.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 lg:grid-cols-[1fr_320px]">
         {/* Pedidos */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 font-heading text-xl text-hc-navy">

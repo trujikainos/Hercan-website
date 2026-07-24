@@ -177,6 +177,12 @@ export const getCustomer = cache(async (): Promise<CustomerInfo | null> => {
 });
 
 // ── Datos completos de la cuenta (página /cuenta) ───────────────────────────
+export type OrderItem = {
+  title: string;
+  quantity: number;
+  variantId: string | null;
+  image: string | null;
+};
 export type CustomerOrder = {
   id: string;
   name: string;
@@ -184,7 +190,7 @@ export type CustomerOrder = {
   financialStatus: string | null;
   total: { amount: string; currencyCode: string } | null;
   statusUrl: string | null;
-  lineItems: { title: string; quantity: number }[];
+  lineItems: OrderItem[];
 };
 export type CustomerAccountData = {
   profile: { name: string; email: string; phone: string | null };
@@ -211,7 +217,9 @@ const ACCOUNT_QUERY = `query CustomerAccount {
         financialStatus
         totalPrice { amount currencyCode }
         statusPageUrl
-        lineItems(first: 5) { edges { node { title quantity } } }
+        lineItems(first: 6) {
+          edges { node { title quantity variantId image { url } } }
+        }
       } }
     }
   }
@@ -226,7 +234,16 @@ type GqlOrderNode = {
   financialStatus: string | null;
   totalPrice: GqlMoney;
   statusPageUrl: string | null;
-  lineItems?: { edges?: { node: { title: string; quantity: number } }[] };
+  lineItems?: {
+    edges?: {
+      node: {
+        title: string;
+        quantity: number;
+        variantId?: string | null;
+        image?: { url?: string } | null;
+      };
+    }[];
+  };
 };
 type GqlCustomer = {
   firstName?: string | null;
@@ -288,6 +305,8 @@ export const getCustomerAccount = cache(async (): Promise<AccountResult | null> 
           lineItems: (o.lineItems?.edges ?? []).map((le) => ({
             title: le.node.title,
             quantity: le.node.quantity,
+            variantId: le.node.variantId ?? null,
+            image: le.node.image?.url ?? null,
           })),
         };
       }),
@@ -295,5 +314,149 @@ export const getCustomerAccount = cache(async (): Promise<AccountResult | null> 
   } catch (e) {
     console.error("[getCustomerAccount] threw:", e);
     return { error: true };
+  }
+});
+
+// ── Detalle de un pedido (página /cuenta/pedido/[id]) ────────────────────────
+export type OrderDetailItem = {
+  title: string;
+  quantity: number;
+  variantId: string | null;
+  image: string | null;
+  lineTotal: { amount: string; currencyCode: string } | null;
+};
+export type OrderTracking = { number: string | null; url: string | null; company: string | null };
+export type OrderDetail = {
+  id: string;
+  name: string;
+  processedAt: string;
+  financialStatus: string | null;
+  statusUrl: string | null;
+  total: { amount: string; currencyCode: string } | null;
+  subtotal: { amount: string; currencyCode: string } | null;
+  shipping: { amount: string; currencyCode: string } | null;
+  tax: { amount: string; currencyCode: string } | null;
+  shippingAddress: string[] | null;
+  fulfillmentStatus: string | null;
+  tracking: OrderTracking[];
+  items: OrderDetailItem[];
+};
+/** null = no sesión / pedido no encontrado. {error} = query falló (TEMP: raw para debug). */
+export type OrderDetailResult = OrderDetail | { error: string } | null;
+
+const ORDER_QUERY = `query OrderDetail($id: ID!) {
+  order(id: $id) {
+    id
+    name
+    processedAt
+    financialStatus
+    statusPageUrl
+    totalPrice { amount currencyCode }
+    subtotal { amount currencyCode }
+    totalShipping { amount currencyCode }
+    totalTax { amount currencyCode }
+    shippingAddress { formatted }
+    fulfillments(first: 5) {
+      edges { node {
+        status
+        latestShipmentStatus
+        trackingInformation { number url company }
+      } }
+    }
+    lineItems(first: 50) {
+      edges { node {
+        title
+        quantity
+        variantId
+        image { url }
+        currentTotalPrice { amount currencyCode }
+      } }
+    }
+  }
+}`;
+
+export const getOrderDetail = cache(async (id: string): Promise<OrderDetailResult> => {
+  if (!customerAccountsEnabled) return null;
+  const jar = await cookies();
+  const token = jar.get(CA_COOKIES.at)?.value;
+  const exp = Number(jar.get(CA_COOKIES.exp)?.value ?? "0");
+  if (!token || (exp && exp < Date.now())) return null;
+  try {
+    const { graphqlApi } = await discover();
+    const res = await fetch(graphqlApi, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: token },
+      body: JSON.stringify({ query: ORDER_QUERY, variables: { id } }),
+      cache: "no-store",
+    });
+    const json = (await res.json()) as { data?: { order?: Record<string, unknown> }; errors?: unknown };
+    if (json.errors) return { error: JSON.stringify(json.errors).slice(0, 800) }; // TEMP debug
+    const o = json.data?.order as
+      | {
+          id: string;
+          name: string;
+          processedAt: string;
+          financialStatus: string | null;
+          statusPageUrl: string | null;
+          totalPrice: { amount: string; currencyCode: string } | null;
+          subtotal: { amount: string; currencyCode: string } | null;
+          totalShipping: { amount: string; currencyCode: string } | null;
+          totalTax: { amount: string; currencyCode: string } | null;
+          shippingAddress: { formatted?: string[] } | null;
+          fulfillments?: {
+            edges?: {
+              node: {
+                status?: string | null;
+                latestShipmentStatus?: string | null;
+                trackingInformation?: { number?: string; url?: string; company?: string }[];
+              };
+            }[];
+          };
+          lineItems?: {
+            edges?: {
+              node: {
+                title: string;
+                quantity: number;
+                variantId?: string | null;
+                image?: { url?: string } | null;
+                currentTotalPrice?: { amount: string; currencyCode: string } | null;
+              };
+            }[];
+          };
+        }
+      | null
+      | undefined;
+    if (!o) return null;
+    const ful = (o.fulfillments?.edges ?? []).map((e) => e.node);
+    const tracking: OrderTracking[] = ful.flatMap((f) =>
+      (f.trackingInformation ?? []).map((t) => ({
+        number: t.number ?? null,
+        url: t.url ?? null,
+        company: t.company ?? null,
+      })),
+    );
+    return {
+      id: o.id,
+      name: o.name,
+      processedAt: o.processedAt,
+      financialStatus: o.financialStatus ?? null,
+      statusUrl: o.statusPageUrl ?? null,
+      total: o.totalPrice ?? null,
+      subtotal: o.subtotal ?? null,
+      shipping: o.totalShipping ?? null,
+      tax: o.totalTax ?? null,
+      shippingAddress: o.shippingAddress?.formatted ?? null,
+      fulfillmentStatus: ful[0]?.status ?? ful[0]?.latestShipmentStatus ?? null,
+      tracking,
+      items: (o.lineItems?.edges ?? []).map((e) => ({
+        title: e.node.title,
+        quantity: e.node.quantity,
+        variantId: e.node.variantId ?? null,
+        image: e.node.image?.url ?? null,
+        lineTotal: e.node.currentTotalPrice ?? null,
+      })),
+    };
+  } catch (e) {
+    return { error: `threw: ${e instanceof Error ? e.message : String(e)}` };
   }
 });
