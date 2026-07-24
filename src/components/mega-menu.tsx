@@ -140,6 +140,18 @@ const COATINGS: { label: string; slug: string }[] = [
   { label: "AlCrN", slug: "alcrn" },
 ];
 
+// Material a maquinar (ISO 513) → taxonomía /para/[slug] (la "mina de oro"). Eje por
+// APLICACIÓN (para qué material sirve la herramienta), muy usado en la búsqueda B2B
+// ("brocas para acero inoxidable"). Ya con datos reales en el catálogo.
+const PARA: { label: string; slug: string }[] = [
+  { label: "Acero", slug: "acero" },
+  { label: "Inoxidable", slug: "acero-inoxidable" },
+  { label: "Aluminio", slug: "aluminio" },
+  { label: "Fundición", slug: "fundicion" },
+  { label: "Superaleaciones", slug: "superaleaciones" },
+  { label: "Endurecidos", slug: "endurecidos" },
+];
+
 const FEATURED_BRAND = "Iscar";
 
 // ── Constructores de URL ───────────────────────────────────────────────────
@@ -280,6 +292,14 @@ function GlobalAxes({ onNavigate }: { onNavigate: Nav }) {
     "font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal";
   return (
     <div className="space-y-1.5">
+      <div className={row}>
+        <span className={label}>Material a maquinar</span>
+        {PARA.map((p) => (
+          <Link key={p.slug} href={`/para/${p.slug}`} onClick={onNavigate} className={chip}>
+            {p.label}
+          </Link>
+        ))}
+      </div>
       <div className={row}>
         <span className={label}>Recubrimiento</span>
         {COATINGS.map((c) => (
@@ -578,17 +598,33 @@ export function MegaMenu() {
             <GlobalAxes onNavigate={() => closeNow(false)} />
           </div>
 
-          {/* Barra inferior: marcas + ver todo */}
+          {/* Barra inferior: marcas + accesos a los hubs de taxonomía */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hc-metal-light bg-hc-soft px-5 py-3">
             <BrandLinks onNavigate={() => closeNow(false)} />
-            <Link
-              href="/productos"
-              onClick={() => closeNow(false)}
-              className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
-            >
-              Ver todo el catálogo
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/categorias"
+                onClick={() => closeNow(false)}
+                className="font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
+              >
+                Categorías
+              </Link>
+              <Link
+                href="/marcas"
+                onClick={() => closeNow(false)}
+                className="font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
+              >
+                Marcas
+              </Link>
+              <Link
+                href="/productos"
+                onClick={() => closeNow(false)}
+                className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
+              >
+                Ver todo
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
           </div>
         </div>
       )}
@@ -693,15 +729,33 @@ export function MegaMenu() {
                   Marcas
                 </p>
                 <BrandLinks onNavigate={() => closeNow(false)} />
+                <Link
+                  href="/marcas"
+                  onClick={() => closeNow(false)}
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-hc-blue hover:text-hc-steel"
+                >
+                  Ver todas las marcas
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
               </div>
-              <Link
-                href="/productos"
-                onClick={() => closeNow(false)}
-                className="flex items-center gap-1 pt-1 font-heading text-sm font-semibold text-hc-navy hover:text-hc-blue"
-              >
-                Ver todo el catálogo
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
+              <div className="flex flex-col gap-2 pt-1">
+                <Link
+                  href="/categorias"
+                  onClick={() => closeNow(false)}
+                  className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy hover:text-hc-blue"
+                >
+                  Todas las categorías
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+                <Link
+                  href="/productos"
+                  onClick={() => closeNow(false)}
+                  className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy hover:text-hc-blue"
+                >
+                  Ver todo el catálogo
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+              </div>
             </div>
           </div>
           </div>,
