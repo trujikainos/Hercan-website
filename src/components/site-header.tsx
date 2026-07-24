@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { FileText, User } from "lucide-react";
+import { FileText } from "lucide-react";
 import { CartButton } from "@/components/cart/cart-button";
+import { AccountButton } from "@/components/account-button";
 import { SearchBar } from "@/components/search-bar";
 import { NavMenu } from "@/components/nav-menu";
 import { MegaMenu } from "@/components/mega-menu";
@@ -49,13 +50,9 @@ export async function SiteHeader() {
           <FileText className="h-4 w-4" aria-hidden />
           Solicitar cotización
         </Link>
-        <a
-          href={ACCOUNT_URL}
-          aria-label="Mi cuenta"
-          className="text-hc-navy transition hover:text-hc-blue"
-        >
-          <User className="h-6 w-6" />
-        </a>
+        {/* Sin sesión conocida por ahora (el login vive en Shopify) → estado "Ingresar".
+            Listo para mostrar foto/inicial/nombre al conectar el Customer Account API. */}
+        <AccountButton user={null} accountUrl={ACCOUNT_URL} />
         <CartButton />
       </div>
 
