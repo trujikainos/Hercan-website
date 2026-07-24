@@ -100,7 +100,7 @@ function OrderCard({ order }: { order: CustomerOrder }) {
           Ver detalle
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
-        <ReorderButton items={items} currency={order.total?.currencyCode} small />
+        <ReorderButton items={items} small />
       </div>
     </div>
   );

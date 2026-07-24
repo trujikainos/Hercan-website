@@ -4,29 +4,21 @@ import { RotateCcw } from "lucide-react";
 import { useCart } from "./cart/cart-provider";
 
 /**
- * "Volver a pedir": relanza al carrito todos los productos (con variante válida) de un
- * pedido y abre el carrito. Oro para B2B que recompra lo mismo. Se oculta si el carrito
- * no está habilitado o ningún renglón tiene variante disponible.
+ * "Volver a pedir": relanza al carrito los productos DISPONIBLES de un pedido y abre el
+ * carrito. El servidor verifica stock y avisa si algún producto está agotado (no lo
+ * agrega). Oro para B2B que recompra lo mismo. Se oculta si el carrito no está habilitado
+ * o ningún renglón tiene variante.
  */
-type ReorderItem = {
-  variantId: string | null;
-  quantity: number;
-  title: string;
-  image: string | null;
-};
-
 export function ReorderButton({
   items,
-  currency = "MXN",
   small = false,
 }: {
-  items: ReorderItem[];
-  currency?: string;
+  items: { variantId: string | null; quantity: number }[];
   small?: boolean;
 }) {
-  const { add, openCart, enabled } = useCart();
-  const valid = items.filter((i): i is ReorderItem & { variantId: string } =>
-    Boolean(i.variantId),
+  const { reorder, enabled } = useCart();
+  const valid = items.filter(
+    (i): i is { variantId: string; quantity: number } => Boolean(i.variantId),
   );
   if (!enabled || valid.length === 0) return null;
 
@@ -36,20 +28,7 @@ export function ReorderButton({
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        for (const i of valid)
-          add({
-            variantId: i.variantId,
-            quantity: i.quantity || 1,
-            // El precio real lo trae el servidor al confirmar; el optimista solo llena
-            // la línea del carrito un instante (título + imagen del pedido).
-            optimistic: {
-              productTitle: i.title,
-              handle: "",
-              image: i.image,
-              unitPrice: { amount: "0", currencyCode: currency },
-            },
-          });
-        openCart();
+        reorder(valid.map((i) => ({ variantId: i.variantId, quantity: i.quantity })));
       }}
       className={`press inline-flex items-center gap-1.5 rounded-lg border border-hc-metal-light bg-white font-medium text-hc-navy transition-colors hover:border-hc-steel hover:text-hc-blue ${
         small ? "px-2.5 py-1 text-xs" : "px-3.5 py-2 text-sm"

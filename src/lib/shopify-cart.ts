@@ -150,6 +150,67 @@ export async function addToCart(variantId: string, quantity: number): Promise<Ca
   return finalize(cart, c.cartCreate.userErrors, Boolean(id));
 }
 
+// Disponibilidad de variantes (para "Volver a pedir": no agregar productos agotados).
+const Q_VARIANTS = `query($ids:[ID!]!){ nodes(ids:$ids){ ... on ProductVariant {
+  id availableForSale title product { title }
+} } }`;
+
+/**
+ * "Volver a pedir": verifica el stock de las variantes del pedido, agrega SOLO las
+ * disponibles (en un batch) y reporta las agotadas en `skipped` para avisar al cliente.
+ * Así una recompra con 1 producto agotado no falla ni mete al carrito algo no comprable.
+ */
+export async function reorderToCart(
+  items: { variantId: string; quantity: number }[],
+): Promise<CartMutationResult & { skipped: string[]; added: number }> {
+  if (!isShopifyConnected || items.length === 0)
+    return { cart: await getCart(), notices: [], recovered: false, skipped: [], added: 0 };
+
+  // 1) Consulta disponibilidad. Si el check falla, se intenta agregar todo (no bloquear).
+  const ids = [...new Set(items.map((i) => i.variantId))];
+  const avail = new Map<string, { available: boolean; title: string }>();
+  try {
+    const d = await call<{
+      nodes: ({ id: string; availableForSale: boolean; title?: string; product?: { title?: string } } | null)[];
+    }>(Q_VARIANTS, { ids });
+    for (const n of d.nodes ?? [])
+      if (n?.id) avail.set(n.id, { available: n.availableForSale, title: n.product?.title ?? n.title ?? "Producto" });
+  } catch {
+    /* sin check → intentamos agregar todo */
+  }
+
+  const toAdd = items.filter((i) => avail.get(i.variantId)?.available !== false);
+  const skipped = items
+    .filter((i) => avail.get(i.variantId)?.available === false)
+    .map((i) => avail.get(i.variantId)?.title ?? "Producto");
+
+  if (toAdd.length === 0)
+    return { cart: await getCart(), notices: [], recovered: false, skipped, added: 0 };
+
+  // 2) Agrega las disponibles en un solo cartLinesAdd (crea el carrito si hace falta).
+  const lines = toAdd.map((i) => ({ merchandiseId: i.variantId, quantity: i.quantity }));
+  let raw: any = null;
+  let userErrors: any[] = [];
+  let recovered = false;
+  const id = await readCartId();
+  if (id) {
+    const d = await call<{ cartLinesAdd: { cart: any; userErrors: any[] } }>(M_ADD, { cartId: id, lines });
+    raw = d.cartLinesAdd.cart;
+    userErrors = d.cartLinesAdd.userErrors;
+    if (!raw) {
+      await clearCartId();
+      recovered = true;
+    }
+  }
+  if (!raw) {
+    const c = await call<{ cartCreate: { cart: any; userErrors: any[] } }>(M_CREATE, { lines });
+    raw = c.cartCreate.cart;
+    userErrors = c.cartCreate.userErrors;
+    if (raw) await writeCartId(raw.id);
+  }
+  return { cart: mapCart(raw), notices: noticesFromUserErrors(userErrors), recovered, skipped, added: toAdd.length };
+}
+
 export async function updateLine(lineId: string, quantity: number): Promise<CartMutationResult> {
   if (!isShopifyConnected) return { cart: null, notices: [], recovered: false };
   if (quantity <= 0) return removeLine(lineId);

@@ -38,7 +38,9 @@ const FIN: Record<string, { label: string; cls: string }> = {
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const order = await getOrderDetail(id);
+  // El GID viaja URL-encoded en la ruta (contiene "://" y "/"); hay que decodificarlo
+  // antes de pasarlo al Customer Account API (si no, "Invalid global id").
+  const order = await getOrderDetail(decodeURIComponent(id));
 
   if (!order) redirect("/cuenta");
 
@@ -79,7 +81,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <p className="mt-0.5 text-sm text-hc-gunmetal">{fmtDate(order.processedAt)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <ReorderButton items={order.items} currency={order.total?.currencyCode} />
+          <ReorderButton items={order.items} />
           {order.statusUrl && (
             <a
               href={order.statusUrl}

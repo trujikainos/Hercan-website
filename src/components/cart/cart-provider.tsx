@@ -8,7 +8,12 @@ import {
   useCallback,
 } from "react";
 import type { Cart, CartLine, CartNotice, Money } from "@/lib/cart-types";
-import { addToCartAction, updateLineAction, removeLineAction } from "@/app/cart/actions";
+import {
+  addToCartAction,
+  updateLineAction,
+  removeLineAction,
+  reorderAction,
+} from "@/app/cart/actions";
 import { CartDrawer } from "./cart-drawer";
 
 export interface AddInput {
@@ -29,6 +34,7 @@ interface CartCtx {
   dismissNotices: () => void;
   notify: (message: string) => void;
   add: (i: AddInput) => void;
+  reorder: (items: { variantId: string; quantity: number }[]) => void;
   updateQty: (lineId: string, qty: number) => void;
   remove: (lineId: string) => void;
 }
@@ -149,6 +155,21 @@ export function CartProvider({
     },
     [enabled, run],
   );
+  // "Volver a pedir": sin optimista (puede saltar agotados en el servidor); abre el
+  // carrito y reconcilia con lo que el servidor sí agregó + avisa lo omitido.
+  const reorder = useCallback(
+    (items: { variantId: string; quantity: number }[]) => {
+      if (!enabled) return;
+      setOpen(true);
+      start(async () => {
+        const r = await reorderAction(items);
+        if (r.cart) setBase(r.cart);
+        else if (r.recovered) setBase(null);
+        setNotices(r.notices);
+      });
+    },
+    [enabled],
+  );
   const updateQty = useCallback(
     (lineId: string, qty: number) => run({ kind: "update", lineId, qty }, () => updateLineAction(lineId, qty)),
     [run],
@@ -176,6 +197,7 @@ export function CartProvider({
         dismissNotices: () => setNotices([]),
         notify,
         add,
+        reorder,
         updateQty,
         remove,
       }}

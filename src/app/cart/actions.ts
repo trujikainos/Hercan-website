@@ -38,6 +38,41 @@ export async function addToCartAction(variantId: string, quantity = 1): Promise<
   }
 }
 
+export async function reorderAction(
+  items: { variantId: string; quantity: number }[],
+): Promise<CartActionResult> {
+  if (!isShopifyConnected) return DISABLED;
+  const clean = (items ?? [])
+    .filter((i) => VARIANT_RE.test(i.variantId))
+    .map((i) => ({ variantId: i.variantId, quantity: clampQty(i.quantity) }))
+    .slice(0, 50);
+  if (clean.length === 0)
+    return { ok: false, cart: null, notices: [{ code: "INVALID_INPUT", message: "No hay productos válidos para reordenar." }] };
+  try {
+    const r = await api.reorderToCart(clean);
+    const notices = [...r.notices];
+    if (r.skipped.length) {
+      const names = r.skipped.slice(0, 3).join(", ");
+      notices.push({
+        code: "OUT_OF_STOCK",
+        message:
+          r.added > 0
+            ? `Agregamos ${r.added} producto(s). ${r.skipped.length} sin stock no se agregaron: ${names}${r.skipped.length > 3 ? "…" : ""}.`
+            : `Los productos de este pedido no están disponibles por ahora: ${names}${r.skipped.length > 3 ? "…" : ""}.`,
+      });
+    }
+    return {
+      ok: notices.every((n) => n.code !== "MERCHANDISE_UNAVAILABLE"),
+      cart: r.cart,
+      notices,
+      recovered: r.recovered,
+    };
+  } catch (e) {
+    console.error("[cart] reorder", e);
+    return netFail();
+  }
+}
+
 export async function updateLineAction(lineId: string, quantity: number): Promise<CartActionResult> {
   if (!isShopifyConnected) return DISABLED;
   if (!LINE_RE.test(lineId))
