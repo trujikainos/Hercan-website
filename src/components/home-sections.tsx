@@ -85,33 +85,39 @@ export function Hero() {
 }
 
 export function BrandBar() {
+  // Duplicamos las marcas para un carrusel (marquee) infinito sin salto: la 2ª
+  // mitad ocupa la posición de la 1ª cuando el track llega a -50%.
+  const loop = [...site.brands, ...site.brands];
   return (
-    <section className="border-b border-hc-metal-light bg-white">
-      <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-6 sm:flex-row sm:justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wide text-hc-gunmetal">
-          Marcas que distribuimos
-        </p>
-        <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-          {site.brands.map((b) => (
-            <li key={b.name}>
-              <Link
-                href={`/marca/${brandSlug(b.name)}`}
-                className="flex items-center font-heading text-lg font-semibold text-hc-steel transition-colors hover:text-hc-blue"
-                aria-label={b.name}
-              >
-                {b.logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={b.logo}
-                    alt={b.name}
-                    className="h-8 w-auto object-contain opacity-80 grayscale transition hover:opacity-100 hover:grayscale-0"
-                  />
-                ) : (
-                  b.name
-                )}
-              </Link>
-            </li>
-          ))}
+    <section className="border-b border-hc-metal-light bg-white py-6">
+      <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wide text-hc-gunmetal">
+        Marcas que distribuimos
+      </p>
+      <div className="group relative overflow-hidden">
+        {/* Fades a los lados para que los logos aparezcan/desaparezcan suave. */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-white to-transparent sm:w-20" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white to-transparent sm:w-20" />
+        <ul className="marquee-track flex w-max items-center gap-10 sm:gap-14 group-hover:[animation-play-state:paused]">
+          {loop.map((b, i) => {
+            const dup = i >= site.brands.length;
+            return (
+              <li key={i} className="shrink-0" aria-hidden={dup || undefined}>
+                <Link
+                  href={`/marca/${brandSlug(b.name)}`}
+                  className="flex items-center font-heading text-lg font-semibold text-hc-steel transition-colors hover:text-hc-blue"
+                  aria-label={b.name}
+                  tabIndex={dup ? -1 : undefined}
+                >
+                  {b.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={b.logo} alt={b.name} className="h-9 w-auto object-contain" />
+                  ) : (
+                    b.name
+                  )}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </section>

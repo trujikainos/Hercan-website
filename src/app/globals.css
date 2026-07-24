@@ -193,10 +193,25 @@
   }
 }
 
+/* Carrusel de marcas (BrandBar): marquee horizontal infinito. Las marcas se
+   duplican en el track; -50% deja la 2ª mitad donde estaba la 1ª → loop sin salto. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: marquee 32s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
+  .marquee-track,
   .js .reveal,
   .js .hero-in,
   .js .page-enter,
