@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CatalogSection } from "@/components/catalog-section";
 import { TaxonomyHero, SiblingStrip } from "@/components/taxonomy";
+import { HUB_IMAGES } from "@/lib/hub-images";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, collectionNode, breadcrumbNode } from "@/lib/schema";
 import { buildCatalog } from "@/lib/catalog";
@@ -79,6 +80,11 @@ export default async function ParaPage({
           ]}
           title={content.title}
           intro={content.intro}
+          image={
+            HUB_IMAGES.para[slug]
+              ? { src: HUB_IMAGES.para[slug]!, alt: content.title }
+              : undefined
+          }
         />
         <CatalogSection result={result} basePath={basePath} />
         <SiblingStrip
