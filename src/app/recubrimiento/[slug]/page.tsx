@@ -70,7 +70,7 @@ export default async function RecubrimientoPage({
           collectionNode(content.title, basePath, result.filtered),
           breadcrumbNode([
             { name: "Inicio", path: "/" },
-            { name: "Recubrimientos", path: "/productos" },
+            { name: "Recubrimientos", path: "/recubrimientos" },
             { name: content.title },
           ]),
         )}
@@ -79,7 +79,7 @@ export default async function RecubrimientoPage({
         <TaxonomyHero
           breadcrumb={[
             { name: "Inicio", href: "/" },
-            { name: "Recubrimientos", href: "/productos" },
+            { name: "Recubrimientos", href: "/recubrimientos" },
             { name: content.title },
           ]}
           title={content.title}

@@ -70,7 +70,7 @@ export default async function IsoPage({
           collectionNode(content.title, basePath, result.filtered),
           breadcrumbNode([
             { name: "Inicio", path: "/" },
-            { name: "Designación ISO", path: "/productos" },
+            { name: "Designación ISO", path: "/iso" },
             { name: content.code },
           ]),
         )}
@@ -79,7 +79,7 @@ export default async function IsoPage({
         <TaxonomyHero
           breadcrumb={[
             { name: "Inicio", href: "/" },
-            { name: "Designación ISO", href: "/productos" },
+            { name: "Designación ISO", href: "/iso" },
             { name: content.code },
           ]}
           title={content.title}

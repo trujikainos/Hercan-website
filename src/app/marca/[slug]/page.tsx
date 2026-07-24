@@ -70,7 +70,7 @@ export default async function BrandPage({
           collectionNode(content.title, basePath, result.filtered),
           breadcrumbNode([
             { name: "Inicio", path: "/" },
-            { name: "Marcas", path: "/productos" },
+            { name: "Marcas", path: "/marcas" },
             { name: content.name },
           ]),
         )}
@@ -79,7 +79,7 @@ export default async function BrandPage({
         <TaxonomyHero
           breadcrumb={[
             { name: "Inicio", href: "/" },
-            { name: "Marcas", href: "/productos" },
+            { name: "Marcas", href: "/marcas" },
             { name: content.name },
           ]}
           title={content.title}

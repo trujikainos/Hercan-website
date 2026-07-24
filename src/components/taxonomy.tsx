@@ -39,27 +39,50 @@ export function TaxonomyHero({
   title,
   intro,
   bullets,
+  image,
 }: {
   breadcrumb: Crumb[];
   title: string;
   intro: string[];
   bullets?: { heading: string; items: string[] }[];
+  /** Portada opcional (Higgsfield). Cuando existe, flota a la derecha en desktop
+   *  y el intro pasa a una sola columna. Sin imagen → layout previo intacto. */
+  image?: { src: string; alt: string };
 }) {
   return (
     <section className="border-b border-hc-metal-light bg-hc-soft">
       <div className="reveal mx-auto max-w-7xl px-4 py-8">
         <TaxonomyBreadcrumb items={breadcrumb} />
-        <h1 className="font-heading text-[length:var(--step-h2)] text-hc-navy">
-          {title}
-        </h1>
-        {/* Info a ancho completo (columna del layout, sin max-w interno): el intro
-            fluye en 2 columnas en escritorio para ser más ancho y menos alto. */}
-        <div className="mt-4 text-sm leading-relaxed text-hc-gunmetal md:columns-2 md:gap-10">
-          {intro.map((p, i) => (
-            <p key={i} className="mb-3 break-inside-avoid last:mb-0">
-              {p}
-            </p>
-          ))}
+        <div className={image ? "md:flex md:items-start md:gap-8" : undefined}>
+          <div className={image ? "md:min-w-0 md:flex-1" : undefined}>
+            <h1 className="font-heading text-[length:var(--step-h2)] text-hc-navy">
+              {title}
+            </h1>
+            {/* Sin imagen: intro a 2 columnas (más ancho, menos alto). Con imagen:
+                1 columna para que conviva con la portada lateral. */}
+            <div
+              className={`mt-4 text-sm leading-relaxed text-hc-gunmetal ${
+                image ? "" : "md:columns-2 md:gap-10"
+              }`}
+            >
+              {intro.map((p, i) => (
+                <p key={i} className="mb-3 break-inside-avoid last:mb-0">
+                  {p}
+                </p>
+              ))}
+            </div>
+          </div>
+          {image && (
+            <div className="mt-5 shrink-0 md:mt-0 md:w-72 lg:w-96">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.src}
+                alt={image.alt}
+                className="aspect-[4/3] w-full rounded-xl border border-hc-metal-light object-cover shadow-sm"
+                loading="eager"
+              />
+            </div>
+          )}
         </div>
 
         {bullets && bullets.length > 0 && (
@@ -78,6 +101,56 @@ export function TaxonomyHero({
             ))}
           </div>
         )}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Grid de tarjetas para los HUBS de taxonomía (Categorías, Tipos, Materiales,
+ * Recubrimientos, Por material, ISO). Cada tarjeta enlaza a su página individual
+ * `{hrefBase}/{slug}`. Soporta portada opcional (Higgsfield): si el item trae
+ * `image`, la tarjeta muestra la foto arriba; si no, queda el layout de texto.
+ * Fuente única para no repetir el grid en cada hub → todos quedan image-ready.
+ */
+export function TaxonomyHubGrid({
+  items,
+  hrefBase,
+  cta = "Ver catálogo",
+}: {
+  items: { slug: string; title: string; blurb: string; image?: string }[];
+  hrefBase: string;
+  cta?: string;
+}) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-10">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((it) => (
+          <Link
+            key={it.slug}
+            href={`${hrefBase}/${it.slug}`}
+            className="group flex flex-col overflow-hidden rounded-xl border border-hc-metal-light bg-white transition hover:border-hc-blue hover:shadow-sm"
+          >
+            {it.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={it.image}
+                alt=""
+                className="aspect-[16/9] w-full object-cover"
+                loading="lazy"
+              />
+            )}
+            <div className="flex flex-1 flex-col gap-2 p-6">
+              <span className="font-heading text-lg text-hc-navy group-hover:text-hc-blue">
+                {it.title}
+              </span>
+              <span className="line-clamp-2 text-sm text-hc-gunmetal">{it.blurb}</span>
+              <span className="mt-auto pt-1 text-sm font-medium text-hc-blue group-hover:text-hc-steel">
+                {cta} →
+              </span>
+            </div>
+          </Link>
+        ))}
       </div>
     </section>
   );

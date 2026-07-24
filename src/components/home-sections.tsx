@@ -418,6 +418,31 @@ export function SiteFooter() {
         </div>
       </div>
 
+      {/* Interlink sitewide a todos los hubs de taxonomía (silos SEO): garantiza que
+          cada archivo reciba enlaces internos desde toda página del sitio. */}
+      <div className="border-t border-white/10">
+        <div className="mx-auto max-w-7xl px-4 py-6">
+          <p className="font-heading text-xs uppercase tracking-wide text-white/70">
+            Explora por
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            {[
+              { href: "/categorias", label: "Categorías" },
+              { href: "/marcas", label: "Marcas" },
+              { href: "/tipos", label: "Tipos de herramienta" },
+              { href: "/para", label: "Por material a maquinar" },
+              { href: "/materiales", label: "Material de la herramienta" },
+              { href: "/recubrimientos", label: "Recubrimientos" },
+              { href: "/iso", label: "Insertos ISO" },
+            ].map((h) => (
+              <Link key={h.href} href={h.href} className="hover:text-hc-sky">
+                {h.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-hc-metal/80 sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} {site.legalName}. Todos los derechos reservados.</p>

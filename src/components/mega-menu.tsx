@@ -288,12 +288,15 @@ function GlobalAxes({ onNavigate }: { onNavigate: Nav }) {
   const row = "flex flex-wrap items-center gap-x-3 gap-y-1";
   const chip =
     "text-sm text-hc-steel transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none";
-  const label =
-    "font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal";
+  // Título de eje = enlace al hub de esa taxonomía (archivo con todas sus páginas).
+  const hubLabel =
+    "font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none";
   return (
     <div className="space-y-1.5">
       <div className={row}>
-        <span className={label}>Material a maquinar</span>
+        <Link href="/para" onClick={onNavigate} className={hubLabel}>
+          Material a maquinar →
+        </Link>
         {PARA.map((p) => (
           <Link key={p.slug} href={`/para/${p.slug}`} onClick={onNavigate} className={chip}>
             {p.label}
@@ -301,7 +304,9 @@ function GlobalAxes({ onNavigate }: { onNavigate: Nav }) {
         ))}
       </div>
       <div className={row}>
-        <span className={label}>Recubrimiento</span>
+        <Link href="/recubrimientos" onClick={onNavigate} className={hubLabel}>
+          Recubrimiento →
+        </Link>
         {COATINGS.map((c) => (
           <Link key={c.slug} href={coatingTaxHref(c.slug)} onClick={onNavigate} className={chip}>
             {c.label}
@@ -309,7 +314,9 @@ function GlobalAxes({ onNavigate }: { onNavigate: Nav }) {
         ))}
       </div>
       <div className={row}>
-        <span className={label}>Material</span>
+        <Link href="/materiales" onClick={onNavigate} className={hubLabel}>
+          Material →
+        </Link>
         {MATERIALS.map((m) => (
           <Link key={m.value} href={materialTaxHref(m.value)} onClick={onNavigate} className={chip}>
             {m.label}
@@ -601,21 +608,22 @@ export function MegaMenu() {
           {/* Barra inferior: marcas + accesos a los hubs de taxonomía */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hc-metal-light bg-hc-soft px-5 py-3">
             <BrandLinks onNavigate={() => closeNow(false)} />
-            <div className="flex items-center gap-4">
-              <Link
-                href="/categorias"
-                onClick={() => closeNow(false)}
-                className="font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
-              >
-                Categorías
-              </Link>
-              <Link
-                href="/marcas"
-                onClick={() => closeNow(false)}
-                className="font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
-              >
-                Marcas
-              </Link>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              {[
+                { href: "/categorias", label: "Categorías" },
+                { href: "/tipos", label: "Tipos" },
+                { href: "/iso", label: "ISO" },
+                { href: "/marcas", label: "Marcas" },
+              ].map((h) => (
+                <Link
+                  key={h.href}
+                  href={h.href}
+                  onClick={() => closeNow(false)}
+                  className="font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
+                >
+                  {h.label}
+                </Link>
+              ))}
               <Link
                 href="/productos"
                 onClick={() => closeNow(false)}
@@ -739,14 +747,21 @@ export function MegaMenu() {
                 </Link>
               </div>
               <div className="flex flex-col gap-2 pt-1">
-                <Link
-                  href="/categorias"
-                  onClick={() => closeNow(false)}
-                  className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy hover:text-hc-blue"
-                >
-                  Todas las categorías
-                  <ArrowRight className="h-4 w-4" aria-hidden />
-                </Link>
+                {[
+                  { href: "/categorias", label: "Todas las categorías" },
+                  { href: "/tipos", label: "Tipos de herramienta" },
+                  { href: "/iso", label: "Insertos por ISO" },
+                ].map((h) => (
+                  <Link
+                    key={h.href}
+                    href={h.href}
+                    onClick={() => closeNow(false)}
+                    className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy hover:text-hc-blue"
+                  >
+                    {h.label}
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                ))}
                 <Link
                   href="/productos"
                   onClick={() => closeNow(false)}

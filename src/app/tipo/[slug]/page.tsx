@@ -73,7 +73,7 @@ export default async function TipoPage({
           collectionNode(content.title, basePath, result.filtered),
           breadcrumbNode([
             { name: "Inicio", path: "/" },
-            { name: "Tipos", path: "/productos" },
+            { name: "Tipos", path: "/tipos" },
             { name: content.title },
           ]),
           ...(faqs.length ? [faqNode(faqs)] : []),
@@ -83,7 +83,7 @@ export default async function TipoPage({
         <TaxonomyHero
           breadcrumb={[
             { name: "Inicio", href: "/" },
-            { name: "Tipos", href: "/productos" },
+            { name: "Tipos", href: "/tipos" },
             { name: content.title },
           ]}
           title={content.title}

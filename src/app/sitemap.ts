@@ -36,6 +36,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: site.url, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${site.url}/productos`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    // Hubs/archivos de taxonomía (índices): puerta de entrada a cada silo. Peso alto
+    // (0.9) porque distribuyen autoridad y rastreo hacia las páginas individuales.
+    { url: `${site.url}/categorias`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${site.url}/marcas`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${site.url}/tipos`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${site.url}/para`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${site.url}/materiales`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${site.url}/recubrimientos`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${site.url}/iso`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${site.url}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${site.url}/cotizacion`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${site.url}/contacto`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },

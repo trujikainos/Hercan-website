@@ -70,7 +70,7 @@ export default async function MaterialPage({
           collectionNode(content.title, basePath, result.filtered),
           breadcrumbNode([
             { name: "Inicio", path: "/" },
-            { name: "Materiales", path: "/productos" },
+            { name: "Materiales", path: "/materiales" },
             { name: content.title },
           ]),
         )}
@@ -79,7 +79,7 @@ export default async function MaterialPage({
         <TaxonomyHero
           breadcrumb={[
             { name: "Inicio", href: "/" },
-            { name: "Materiales", href: "/productos" },
+            { name: "Materiales", href: "/materiales" },
             { name: content.title },
           ]}
           title={content.title}

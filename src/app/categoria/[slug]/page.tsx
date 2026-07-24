@@ -76,7 +76,7 @@ export default async function CategoryPage({
           collectionNode(content.title, basePath, result.filtered),
           breadcrumbNode([
             { name: "Inicio", path: "/" },
-            { name: "Categorías", path: "/productos" },
+            { name: "Categorías", path: "/categorias" },
             { name: content.title },
           ]),
           ...(faqs.length ? [faqNode(faqs)] : []),
@@ -86,7 +86,7 @@ export default async function CategoryPage({
         <TaxonomyHero
           breadcrumb={[
             { name: "Inicio", href: "/" },
-            { name: "Categorías", href: "/productos" },
+            { name: "Categorías", href: "/categorias" },
             { name: content.title },
           ]}
           title={content.title}

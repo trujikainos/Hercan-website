@@ -65,7 +65,7 @@ export default async function ParaPage({
           collectionNode(content.title, basePath, result.filtered),
           breadcrumbNode([
             { name: "Inicio", path: "/" },
-            { name: "Por material", path: "/productos" },
+            { name: "Por material", path: "/para" },
             { name: content.name },
           ]),
         )}
@@ -74,7 +74,7 @@ export default async function ParaPage({
         <TaxonomyHero
           breadcrumb={[
             { name: "Inicio", href: "/" },
-            { name: "Por material", href: "/productos" },
+            { name: "Por material", href: "/para" },
             { name: content.name },
           ]}
           title={content.title}
