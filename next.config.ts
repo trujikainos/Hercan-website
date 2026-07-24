@@ -22,6 +22,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // `isomorphic-dompurify`/`jsdom` NO deben bundlearse en las funciones serverless:
+  // jsdom lee archivos relativos a su ruta en node_modules (entities, etc.) al
+  // inicializar, y al empaquetarlo esas rutas se rompen → la función crashea al
+  // arrancar (FUNCTION_INVOCATION_FAILED). Como sanitize.ts se importa vía shopify.ts
+  // en el layout, rompía TODAS las páginas en Vercel. Externalizarlas lo resuelve.
+  serverExternalPackages: ["isomorphic-dompurify", "jsdom"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
