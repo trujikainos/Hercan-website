@@ -86,7 +86,7 @@ export default async function ParaPage({
               : undefined
           }
         />
-        <CatalogSection result={result} basePath={basePath} />
+        <CatalogSection result={result} basePath={basePath} hiddenFacets={["para"]} />
         <SiblingStrip
           heading="Herramientas por otro material"
           items={siblings}

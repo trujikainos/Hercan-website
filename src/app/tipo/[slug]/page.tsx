@@ -96,7 +96,7 @@ export default async function TipoPage({
               : undefined
           }
         />
-        <CatalogSection result={result} basePath={basePath} />
+        <CatalogSection result={result} basePath={basePath} hiddenFacets={["tipo"]} />
         {faqs.length > 0 && (
           <section className="border-t border-hc-metal-light bg-hc-soft/30">
             <div className="reveal mx-auto max-w-3xl px-4 py-12">

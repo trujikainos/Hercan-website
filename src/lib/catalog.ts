@@ -65,6 +65,37 @@ export const FACETS: { key: FacetKey; param: string; label: string }[] = [
 
 export const CATALOG_PAGE_SIZE = 48;
 
+// Grupos ISO 513 para la faceta "Para maquinar" (material a maquinar): código →
+// etiqueta corta, en orden canónico. El valor de URL es el CÓDIGO (P/M/K/N/S/H).
+const ISO513: { code: string; label: string }[] = [
+  { code: "P", label: "Acero" },
+  { code: "M", label: "Inoxidable" },
+  { code: "K", label: "Fundición" },
+  { code: "N", label: "Aluminio" },
+  { code: "S", label: "Superaleaciones" },
+  { code: "H", label: "Endurecidos" },
+];
+
+// Valores basura en `tipo_herramienta` (relleno "Otro" o el tag del lote de
+// importación que se coló) → se excluyen de la faceta Tipo. Defensa del ~1% de SKUs
+// sin el metafield (hoy p.type es autoritativo). Ver menu-data.ts.
+const isJunkTipo = (t: string): boolean =>
+  !t ||
+  t.toLowerCase() === "otro" ||
+  /carga[- ]?cat[aá]logo/i.test(t) ||
+  /\d{4}-\d{2}-\d{2}/.test(t);
+
+// Orden de los grupos de faceta en el sidebar, por utilidad para el ingeniero B2B.
+const FACET_ORDER = [
+  "categoria",
+  "tipo",
+  "marca",
+  "para",
+  "material",
+  "recubrimiento",
+  "disponibilidad",
+];
+
 export const slugify = (s: string) =>
   s
     .toLowerCase()
@@ -188,32 +219,32 @@ export function buildCatalog({
     return true;
   };
 
-  // Predicados EXTRA desde la URL (no facetas del sidebar): `tipo` (valor exacto de
-  // tipo_herramienta) y `para` (prefijos ISO 513 del material a maquinar, multi-valor).
-  // Sirven para la INTERSECCIÓN contextual del mega menú — p. ej.
-  // /productos?categoria=fresado&tipo=Inserto&para=M — sin volverlos facetas visibles.
-  // Se aplican igual que el scope (a la lista y a los conteos de facetas).
+  // Facetas `tipo` (valor exacto de tipo_herramienta) y `para` (prefijos ISO 513 del
+  // material a maquinar, MULTI-VALOR). No caben en el modelo estándar `matches` (uno
+  // es multi-valor; ambos se aplican como predicado), así que se manejan aparte pero
+  // SÍ son facetas visibles del sidebar. Cada una cuenta sobre TODO menos su propio
+  // filtro (tipoOk excluido del grupo tipo; paraOk excluido del grupo para).
   const tipoSel = paramList("tipo");
   const paraSel = paramList("para").map((s) => s.charAt(0).toUpperCase());
-  const urlOk = (p: Product): boolean => {
-    if (tipoSel.length && !(p.type && tipoSel.includes(p.type))) return false;
-    if (
-      paraSel.length &&
-      !(p.materialesAMaquinar ?? []).some((m) =>
-        paraSel.includes(m.trim().charAt(0).toUpperCase()),
-      )
-    )
-      return false;
-    return true;
-  };
+  const tipoOk = (p: Product): boolean =>
+    !tipoSel.length || (!!p.type && tipoSel.includes(p.type));
+  const paraOk = (p: Product): boolean =>
+    !paraSel.length ||
+    (p.materialesAMaquinar ?? []).some((m) =>
+      paraSel.includes(m.trim().charAt(0).toUpperCase()),
+    );
 
-  const passExtra = (p: Product): boolean => scopeOk(p) && urlOk(p);
+  const passExtra = (p: Product): boolean => scopeOk(p) && tipoOk(p) && paraOk(p);
 
   const filtered = products.filter((p) => matches(p, selected) && passExtra(p));
 
   // Opciones + conteos facetados (cada facet cuenta sobre los OTROS filtros activos,
-  // siempre dentro del scope de tipo/iso).
-  const facetGroups: FacetGroup[] = FACETS.map(({ key, param, label }) => {
+  // siempre dentro del scope). Se arman en un mapa por `param` y luego se ordenan.
+  const groupByParam = new Map<string, FacetGroup>();
+
+  // Facetas estándar (un campo simple del producto): categoría, marca, disponibilidad,
+  // material, recubrimiento.
+  for (const { key, param, label } of FACETS) {
     const base = products.filter((p) => matches(p, selected, key) && passExtra(p));
     const counts = new Map<string, number>();
     for (const p of base) {
@@ -230,8 +261,48 @@ export function buildCatalog({
             : selected[key].includes(optLabel);
         return { value, label: optLabel, count, selected: isSel };
       });
-    return { param, label, options };
-  });
+    groupByParam.set(param, { param, label, options });
+  }
+
+  // Faceta TIPO de herramienta: cuenta sobre TODO menos el propio filtro `tipo`.
+  {
+    const base = products.filter((p) => matches(p, selected) && scopeOk(p) && paraOk(p));
+    const counts = new Map<string, number>();
+    for (const p of base) {
+      const t = (p.type ?? "").trim();
+      if (!isJunkTipo(t)) counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    const options = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "es"))
+      .map(([t, count]) => ({ value: t, label: t, count, selected: tipoSel.includes(t) }));
+    groupByParam.set("tipo", { param: "tipo", label: "Tipo de herramienta", options });
+  }
+
+  // Faceta PARA maquinar (ISO 513, multi-valor por prefijo): cuenta sobre TODO menos
+  // el propio filtro `para`. Un producto cuenta una vez por cada grupo presente.
+  {
+    const base = products.filter((p) => matches(p, selected) && scopeOk(p) && tipoOk(p));
+    const counts = new Map<string, number>();
+    for (const p of base) {
+      const codes = new Set(
+        (p.materialesAMaquinar ?? [])
+          .map((m) => m.trim().charAt(0).toUpperCase())
+          .filter(Boolean),
+      );
+      for (const c of codes) counts.set(c, (counts.get(c) ?? 0) + 1);
+    }
+    const options = ISO513.filter(({ code }) => counts.has(code)).map(({ code, label }) => ({
+      value: code,
+      label,
+      count: counts.get(code) ?? 0,
+      selected: paraSel.includes(code),
+    }));
+    groupByParam.set("para", { param: "para", label: "Para maquinar", options });
+  }
+
+  const facetGroups: FacetGroup[] = FACET_ORDER.map((p) => groupByParam.get(p)).filter(
+    (g): g is FacetGroup => Boolean(g),
+  );
 
   // Paginación por URL: ?ver=N (acumulativo, preserva la UX de "Mostrar más").
   const verRaw = parseInt(paramList("ver")[0] ?? "", 10);
