@@ -5,8 +5,8 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ArrowRight, Boxes, ChevronDown, ChevronRight, FileText, X } from "lucide-react";
 import { site } from "@/lib/site";
-import { brandSlug, slugify } from "@/lib/catalog";
-import { TIPO_CONTENT } from "@/lib/taxonomy-content";
+import { brandSlug } from "@/lib/catalog";
+import type { MenuData, MenuChip, MenuCategory } from "@/lib/menu-data";
 
 /**
  * MEGA MENÚ "Catálogo" del nav superior.
@@ -44,187 +44,64 @@ import { TIPO_CONTENT } from "@/lib/taxonomy-content";
  * ---------------------------------------------------------------------------
  */
 
-// ── Categorías del mega menú (orden por VOLUMEN del catálogo real, 3,266 SKUs) ──
-// Lista LOCAL a propósito: muestra las 9 categorías reales en orden de volumen sin
-// alterar `CATEGORIES` de mock-data (que alimenta el grid del home y llms.txt con
-// solo 6). El `slug` coincide con las claves de TIPOS_BY_CATEGORY y con el param
-// `categoria` real. Accesorios/Ranurado/Abrasivos aún no están en `CATEGORIES`, así
-// que hoy sus links aterrizan en el catálogo completo (forward-compatible); cuando
-// el catálogo real exponga las 9 categorías, el filtro por slug funciona solo.
-type MenuCategory = { name: string; slug: string };
-const MENU_CATEGORIES: MenuCategory[] = [
-  { name: "Fresado", slug: "fresado" },
-  { name: "Perforación", slug: "perforacion" },
-  { name: "Roscado", slug: "roscado" },
-  { name: "Torneado", slug: "torneado" },
-  { name: "Portaherramientas", slug: "portaherramientas" },
-  { name: "Accesorios", slug: "accesorios" },
-  { name: "Ranurado/Tronzado", slug: "ranurado" },
-  { name: "Abrasivos", slug: "abrasivos" },
-  { name: "Medición", slug: "medicion" },
-];
-
-// ── Mapeo categoría (slug) → tipos REALES (tipo_herramienta / tipo_instrumento) ──
-// `tipo` es el string REAL de la data (Inserto, Fresa/Endmill, Broca, …). Los tipos
-// de herramienta de corte con página propia (TIPO_CONTENT) enlazan a /tipo/<slug>;
-// los de INSTRUMENTO de medición siguen como filtro forward-compatible en la
-// `categoria` (ver tipoHref). Accesorios y Abrasivos solo tienen tipo "Otro" → no se
-// listan (ver hasTipos).
-type Tipo = { label: string; tipo: string };
-
-const TIPOS_BY_CATEGORY: Record<string, Tipo[]> = {
-  fresado: [
-    { label: "Fresas integrales / endmills", tipo: "Fresa/Endmill" },
-    { label: "Cortadores y portainsertos", tipo: "Cortador" },
-    { label: "Insertos de fresado", tipo: "Inserto" },
-  ],
-  perforacion: [
-    { label: "Brocas", tipo: "Broca" },
-    { label: "Escariadores", tipo: "Escariador" },
-    { label: "Cortadores", tipo: "Cortador" },
-  ],
-  roscado: [
-    { label: "Machuelos", tipo: "Machuelo" },
-    { label: "Cortadores", tipo: "Cortador" },
-    { label: "Insertos de roscado", tipo: "Inserto" },
-  ],
-  torneado: [
-    { label: "Insertos de torneado", tipo: "Inserto" },
-    { label: "Barras de mandrinar", tipo: "Barra mandrinar" },
-    { label: "Cortadores", tipo: "Cortador" },
-  ],
-  portaherramientas: [
-    { label: "Portaherramientas", tipo: "Portaherramientas" },
-  ],
-  ranurado: [
-    { label: "Insertos de ranurado / tronzado", tipo: "Inserto" },
-    { label: "Cortadores", tipo: "Cortador" },
-  ],
-  medicion: [
-    { label: "Calibradores vernier", tipo: "Calibrador vernier" },
-    { label: "Micrómetros", tipo: "Micrómetro" },
-    { label: "Indicadores de carátula", tipo: "Indicador de carátula" },
-  ],
-};
-
-// Categorías de herramienta de corte donde aplica el "material de herramienta"
-// (Carburo/HSS/Cobalto → faceta `material`, filtro REAL). Medición (instrumentos) y
-// Accesorios/Abrasivos no tienen material de herramienta → sin columna de material.
-const TOOL_MATERIAL_CATEGORIES = new Set<string>([
-  "fresado",
-  "perforacion",
-  "roscado",
-  "torneado",
-  "portaherramientas",
-  "ranurado",
-]);
-
-const hasTipos = (slug: string) => (TIPOS_BY_CATEGORY[slug]?.length ?? 0) > 0;
-const hasMaterial = (slug: string) => TOOL_MATERIAL_CATEGORIES.has(slug);
-
-// Materiales de la HERRAMIENTA con datos reales en el catálogo. Enlazan a la faceta
-// `material` (REAL, filtra hoy). Reemplaza al débil "material a maquinar" (P/M/K…),
-// cuyo dominante era P-Acero y cuyo param ni siquiera se expone.
-const MATERIALS: { label: string; value: string }[] = [
-  { label: "Carburo", value: "Carburo" },
-  { label: "HSS", value: "HSS" },
-  { label: "Cobalto", value: "Cobalto" },
-];
-
-// Recubrimientos con página de taxonomía propia (SEO/AEO). Enlazan a la taxonomía
-// GLOBAL /recubrimiento/<slug> (eje técnico transversal, no contextual a categoría).
-const COATINGS: { label: string; slug: string }[] = [
-  { label: "TiAlN", slug: "tialn" },
-  { label: "TiN", slug: "tin" },
-  { label: "TiCN", slug: "ticn" },
-  { label: "AlCrN", slug: "alcrn" },
-];
-
-// Material a maquinar (ISO 513) → taxonomía /para/[slug] (la "mina de oro"). Eje por
-// APLICACIÓN (para qué material sirve la herramienta), muy usado en la búsqueda B2B
-// ("brocas para acero inoxidable"). Ya con datos reales en el catálogo.
-const PARA: { label: string; slug: string }[] = [
-  { label: "Acero", slug: "acero" },
-  { label: "Inoxidable", slug: "acero-inoxidable" },
-  { label: "Aluminio", slug: "aluminio" },
-  { label: "Fundición", slug: "fundicion" },
-  { label: "Superaleaciones", slug: "superaleaciones" },
-  { label: "Endurecidos", slug: "endurecidos" },
-];
+// Las categorías, tipos, materiales, recubrimientos y "material a maquinar" del mega
+// menú ya NO son estáticos: vienen del CATÁLOGO REAL vía getMenuData (lib/menu-data),
+// que calcula por categoría qué EXISTE en cada eje CON conteos y el href a la
+// intersección filtrada. El componente solo recibe `data: MenuData` y la dibuja.
 
 const FEATURED_BRAND = "Iscar";
 
-// ── Constructores de URL ───────────────────────────────────────────────────
-function productosHref(params: Record<string, string>): string {
-  return `/productos?${new URLSearchParams(params).toString()}`;
-}
-// Los tipos de HERRAMIENTA DE CORTE con página de taxonomía propia (TIPO_CONTENT)
-// enlazan a /tipo/<slug> (SEO). Los tipos de INSTRUMENTO de medición (y cualquiera
-// sin página propia) siguen como FILTRO dentro de /productos, forward-compatible:
-// hoy el catálogo no expone la faceta `tipo`, así que el param se ignora y el link
-// aterriza en la `categoria` (nunca cero resultados). El material sigue como filtro.
-const tipoHref = (slug: string, tipo: string) => {
-  const tSlug = tipo ? slugify(tipo) : "";
-  if (tSlug && TIPO_CONTENT[tSlug]) return `/tipo/${tSlug}`;
-  return productosHref(tipo ? { categoria: slug, tipo } : { categoria: slug });
-};
-const materialHref = (slug: string, value: string) =>
-  productosHref({ categoria: slug, material: value });
-// Ejes técnicos GLOBALES como taxonomía con página propia (SEO): material y
-// recubrimiento transversales a toda categoría. Los chips del centro siguen
-// siendo el filtro CONTEXTUAL (categoría+material); estos son la vista global.
-const materialTaxHref = (value: string) => `/material/${slugify(value)}`;
-const coatingTaxHref = (slug: string) => `/recubrimiento/${slug}`;
-// La categoría EN SÍ y la marca EN SÍ son taxonomías con página propia (SEO) →
-// enlazan a /categoria/<slug> y /marca/<brandSlug(name)>, no a filtros de /productos.
+// La categoría y la marca tienen página propia (SEO) → /categoria/<slug> y
+// /marca/<brandSlug(name)>. Los chips CONTEXTUALES del panel ya traen su href a la
+// intersección filtrada en /productos (precomputado en getMenuData).
 const categoriaHref = (slug: string) => `/categoria/${slug}`;
 const marcaHref = (name: string) => `/marca/${brandSlug(name)}`;
+
+// Los 4 ejes contextuales, en orden de utilidad para el ingeniero. Cada uno se
+// auto-oculta si la categoría activa no tiene datos en él.
+const AXES: { key: "tipos" | "para" | "recubrimiento" | "material"; heading: string }[] = [
+  { key: "tipos", heading: "Tipo de herramienta" },
+  { key: "para", heading: "Para maquinar" },
+  { key: "recubrimiento", heading: "Recubrimiento" },
+  { key: "material", heading: "Material de herramienta" },
+];
+const hasAxes = (c: MenuCategory) => AXES.some((a) => c[a.key].length > 0);
 
 type Nav = () => void;
 
 // ── Piezas reutilizables (idénticas en desktop y móvil) ─────────────────────
-function TiposLinks({ slug, onNavigate }: { slug: string; onNavigate: Nav }) {
-  const tipos = TIPOS_BY_CATEGORY[slug] ?? [];
-  return (
-    <ul className="space-y-0.5">
-      {tipos.map((t) => (
-        <li key={t.label}>
-          <Link
-            href={tipoHref(slug, t.tipo)}
-            onClick={onNavigate}
-            className="block rounded-md px-2 py-1.5 text-sm text-hc-ink transition-colors hover:bg-hc-soft hover:text-hc-navy focus-visible:bg-hc-soft focus-visible:text-hc-navy focus-visible:outline-none"
-          >
-            {t.label}
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function MaterialChips({
-  slug,
+// Grupo de un eje: encabezado + chips con CONTEO. Cada chip enlaza a la intersección
+// categoría+eje ya filtrada en /productos. No se dibuja si el eje está vacío.
+function ChipGroup({
+  heading,
+  chips,
   onNavigate,
-  className,
 }: {
-  slug: string;
+  heading: string;
+  chips: MenuChip[];
   onNavigate: Nav;
-  className?: string;
 }) {
+  if (chips.length === 0) return null;
   return (
-    <ul className={className ?? "flex flex-wrap gap-1.5"}>
-      {MATERIALS.map((m) => (
-        <li key={m.value}>
-          <Link
-            href={materialHref(slug, m.value)}
-            onClick={onNavigate}
-            className="inline-flex items-center rounded-md border border-hc-metal-light bg-white px-2.5 py-1 text-sm text-hc-ink transition-colors hover:border-hc-steel hover:bg-hc-soft hover:text-hc-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-steel"
-          >
-            {m.label}
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <div>
+      <h3 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+        {heading}
+      </h3>
+      <ul className="flex flex-wrap gap-1.5">
+        {chips.map((c) => (
+          <li key={c.href}>
+            <Link
+              href={c.href}
+              onClick={onNavigate}
+              className="inline-flex items-center gap-1.5 rounded-md border border-hc-metal-light bg-white px-2.5 py-1 text-sm text-hc-ink transition-colors hover:border-hc-steel hover:bg-hc-soft hover:text-hc-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-steel"
+            >
+              {c.label}
+              <span className="text-xs text-hc-gunmetal">{c.count}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -282,53 +159,8 @@ function BrandLinks({ onNavigate }: { onNavigate: Nav }) {
   );
 }
 
-/** Ejes técnicos globales (recubrimiento + material) como taxonomías con página
- *  propia. Se muestran en la zona inferior del panel (desktop y móvil). */
-function GlobalAxes({ onNavigate }: { onNavigate: Nav }) {
-  const row = "flex flex-wrap items-center gap-x-3 gap-y-1";
-  const chip =
-    "text-sm text-hc-steel transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none";
-  // Título de eje = enlace al hub de esa taxonomía (archivo con todas sus páginas).
-  const hubLabel =
-    "font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none";
-  return (
-    <div className="space-y-1.5">
-      <div className={row}>
-        <Link href="/para" onClick={onNavigate} className={hubLabel}>
-          Material a maquinar →
-        </Link>
-        {PARA.map((p) => (
-          <Link key={p.slug} href={`/para/${p.slug}`} onClick={onNavigate} className={chip}>
-            {p.label}
-          </Link>
-        ))}
-      </div>
-      <div className={row}>
-        <Link href="/recubrimientos" onClick={onNavigate} className={hubLabel}>
-          Recubrimiento →
-        </Link>
-        {COATINGS.map((c) => (
-          <Link key={c.slug} href={coatingTaxHref(c.slug)} onClick={onNavigate} className={chip}>
-            {c.label}
-          </Link>
-        ))}
-      </div>
-      <div className={row}>
-        <Link href="/materiales" onClick={onNavigate} className={hubLabel}>
-          Material →
-        </Link>
-        {MATERIALS.map((m) => (
-          <Link key={m.value} href={materialTaxHref(m.value)} onClick={onNavigate} className={chip}>
-            {m.label}
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ── Componente principal ────────────────────────────────────────────────────
-export function MegaMenu() {
+export function MegaMenu({ data }: { data: MenuData }) {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0); // categoría activa del centro (desktop)
@@ -343,7 +175,9 @@ export function MegaMenu() {
   const pendingFocusRail = useRef(false);
 
   const panelId = useId();
-  const activeSlug = MENU_CATEGORIES[activeIdx]?.slug ?? MENU_CATEGORIES[0].slug;
+  // Categoría activa del panel (data ya viene ordenada por volumen). `active` puede
+  // ser undefined si el catálogo no devolvió nada (Shopify caído) → el panel degrada.
+  const active = data[activeIdx] ?? data[0];
 
   const clearTimers = useCallback(() => {
     if (openTimer.current) clearTimeout(openTimer.current);
@@ -461,7 +295,7 @@ export function MegaMenu() {
   };
 
   const onRailKeyDown = (e: React.KeyboardEvent<HTMLAnchorElement>, i: number) => {
-    const n = MENU_CATEGORIES.length;
+    const n = data.length;
     let next = -1;
     if (e.key === "ArrowDown") next = (i + 1) % n;
     else if (e.key === "ArrowUp") next = (i - 1 + n) % n;
@@ -516,7 +350,7 @@ export function MegaMenu() {
           <div className="flex">
             {/* Riel de categorías */}
             <ul className="w-56 shrink-0 border-r border-hc-metal-light bg-hc-soft py-2">
-              {MENU_CATEGORIES.map((c, i) => {
+              {data.map((c, i) => {
                 const isActive = i === activeIdx;
                 return (
                   <li key={c.slug}>
@@ -537,7 +371,10 @@ export function MegaMenu() {
                           : "text-hc-ink hover:bg-white hover:text-hc-navy"
                       }`}
                     >
-                      {c.name}
+                      <span className="flex items-baseline gap-1.5">
+                        {c.name}
+                        <span className="text-xs text-hc-gunmetal">{c.total}</span>
+                      </span>
                       <ChevronRight
                         className={`h-4 w-4 transition-opacity ${isActive ? "opacity-90" : "opacity-40"}`}
                         aria-hidden
@@ -548,45 +385,42 @@ export function MegaMenu() {
               })}
             </ul>
 
-            {/* Centro: Tipos + Material de herramienta de la categoría activa.
-                Accesorios/Abrasivos (sin tipos ni material) → solo "Ver todo". */}
+            {/* Centro: ejes CONTEXTUALES de la categoría activa (solo los que tienen
+                datos), cada chip → intersección filtrada. Sin ejes → solo "Ver todo". */}
             <div className="flex-1 p-5">
-              {hasTipos(activeSlug) || hasMaterial(activeSlug) ? (
-                <div
-                  className={`grid gap-x-6 gap-y-2 ${
-                    hasTipos(activeSlug) && hasMaterial(activeSlug)
-                      ? "grid-cols-2"
-                      : "grid-cols-1"
-                  }`}
-                >
-                  {hasTipos(activeSlug) && (
-                    <div>
-                      <h3 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                        Tipos · {MENU_CATEGORIES[activeIdx]?.name}
-                      </h3>
-                      <TiposLinks slug={activeSlug} onNavigate={() => closeNow(false)} />
-                    </div>
-                  )}
-                  {hasMaterial(activeSlug) && (
-                    <div>
-                      <h3 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                        Por material de herramienta
-                      </h3>
-                      <MaterialChips slug={activeSlug} onNavigate={() => closeNow(false)} />
-                    </div>
-                  )}
-                </div>
+              {active && hasAxes(active) ? (
+                <>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                    {AXES.map((a) => (
+                      <ChipGroup
+                        key={a.key}
+                        heading={a.heading}
+                        chips={active[a.key]}
+                        onNavigate={() => closeNow(false)}
+                      />
+                    ))}
+                  </div>
+                  <Link
+                    href={categoriaHref(active.slug)}
+                    onClick={() => closeNow(false)}
+                    className="mt-5 inline-flex items-center gap-1.5 font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
+                  >
+                    Ver todo {active.name}
+                    <span className="text-hc-gunmetal">({active.total})</span>
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                </>
               ) : (
                 <div className="flex h-full min-h-[7rem] flex-col justify-center gap-2">
                   <p className="text-sm text-hc-gunmetal">
-                    Explora toda la línea de {MENU_CATEGORIES[activeIdx]?.name} en el catálogo.
+                    Explora toda la línea de {active?.name ?? "productos"} en el catálogo.
                   </p>
                   <Link
-                    href={categoriaHref(activeSlug)}
+                    href={active ? categoriaHref(active.slug) : "/productos"}
                     onClick={() => closeNow(false)}
                     className="inline-flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
                   >
-                    Ver todo {MENU_CATEGORIES[activeIdx]?.name}
+                    Ver todo {active?.name ?? "el catálogo"}
                     <ArrowRight className="h-4 w-4" aria-hidden />
                   </Link>
                 </div>
@@ -598,11 +432,6 @@ export function MegaMenu() {
               <FeaturedBrandCard onNavigate={() => closeNow(false)} />
               <QuoteCta onNavigate={() => closeNow(false)} />
             </div>
-          </div>
-
-          {/* Ejes globales: recubrimiento + material (taxonomías con página propia) */}
-          <div className="border-t border-hc-metal-light px-5 py-3">
-            <GlobalAxes onNavigate={() => closeNow(false)} />
           </div>
 
           {/* Barra inferior: marcas + accesos a los hubs de taxonomía */}
@@ -668,7 +497,7 @@ export function MegaMenu() {
           <div className="flex-1 overflow-y-auto overscroll-contain">
             {/* Acordeón de categorías */}
             <ul>
-              {MENU_CATEGORIES.map((c, i) => {
+              {data.map((c, i) => {
                 const expanded = mobileOpenIdx === i;
                 const sectionId = `${panelId}-cat-${i}`;
                 return (
@@ -680,7 +509,10 @@ export function MegaMenu() {
                       onClick={() => setMobileOpenIdx(expanded ? null : i)}
                       className="flex w-full items-center justify-between px-4 py-3.5 text-left font-heading text-hc-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-hc-steel"
                     >
-                      {c.name}
+                      <span className="flex items-baseline gap-1.5">
+                        {c.name}
+                        <span className="text-xs font-normal text-hc-gunmetal">{c.total}</span>
+                      </span>
                       <ChevronDown
                         className={`h-5 w-5 transition-transform duration-200 motion-reduce:transition-none ${
                           expanded ? "rotate-180" : ""
@@ -690,32 +522,21 @@ export function MegaMenu() {
                     </button>
                     {expanded && (
                       <div id={sectionId} className="space-y-4 px-4 pb-4">
-                        {hasTipos(c.slug) && (
-                          <div>
-                            <h3 className="mb-1.5 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                              Tipos
-                            </h3>
-                            <TiposLinks slug={c.slug} onNavigate={() => closeNow(false)} />
-                          </div>
-                        )}
-                        {hasMaterial(c.slug) && (
-                          <div>
-                            <h3 className="mb-1.5 font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                              Por material de herramienta
-                            </h3>
-                            <MaterialChips
-                              slug={c.slug}
-                              onNavigate={() => closeNow(false)}
-                              className="flex flex-wrap gap-1.5"
-                            />
-                          </div>
-                        )}
+                        {AXES.map((a) => (
+                          <ChipGroup
+                            key={a.key}
+                            heading={a.heading}
+                            chips={c[a.key]}
+                            onNavigate={() => closeNow(false)}
+                          />
+                        ))}
                         <Link
                           href={categoriaHref(c.slug)}
                           onClick={() => closeNow(false)}
                           className="inline-flex items-center gap-1 text-sm font-medium text-hc-blue hover:text-hc-steel"
                         >
                           Ver todo {c.name}
+                          <span className="text-hc-gunmetal">({c.total})</span>
                           <ArrowRight className="h-4 w-4" aria-hidden />
                         </Link>
                       </div>
@@ -729,9 +550,6 @@ export function MegaMenu() {
             <div className="space-y-3 p-4">
               <FeaturedBrandCard onNavigate={() => closeNow(false)} />
               <QuoteCta onNavigate={() => closeNow(false)} />
-              <div className="pt-2">
-                <GlobalAxes onNavigate={() => closeNow(false)} />
-              </div>
               <div className="pt-2">
                 <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
                   Marcas

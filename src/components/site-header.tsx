@@ -6,6 +6,7 @@ import { SearchBar } from "@/components/search-bar";
 import { NavMenu } from "@/components/nav-menu";
 import { MegaMenu } from "@/components/mega-menu";
 import { MarcasMenu } from "@/components/marcas-menu";
+import { getMenuData } from "@/lib/menu-data";
 
 // Portal de cuentas de cliente de Shopify (login sin contraseña + pedidos + rastreo).
 const ACCOUNT_URL =
@@ -19,7 +20,8 @@ export function AnnouncementBar() {
   );
 }
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const menuData = await getMenuData();
   return (
     <header className="sticky top-0 z-40 border-b border-hc-metal-light bg-white">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
@@ -57,7 +59,7 @@ export function SiteHeader() {
         <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 font-heading text-base text-white">
           {/* Trigger del mega menú: las categorías viven ahora en el riel del panel.
               Fuera de cualquier overflow para que el panel ancho no se recorte. */}
-          <MegaMenu />
+          <MegaMenu data={menuData} />
           <MarcasMenu />
           {/* Accesos fijos a la derecha: "Ver todo" + dropdown "Más" (páginas de empresa) */}
           <div className="ml-auto flex shrink-0 items-center gap-5 py-2.5">

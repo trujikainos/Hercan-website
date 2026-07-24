@@ -188,12 +188,33 @@ export function buildCatalog({
     return true;
   };
 
-  const filtered = products.filter((p) => matches(p, selected) && scopeOk(p));
+  // Predicados EXTRA desde la URL (no facetas del sidebar): `tipo` (valor exacto de
+  // tipo_herramienta) y `para` (prefijos ISO 513 del material a maquinar, multi-valor).
+  // Sirven para la INTERSECCIÓN contextual del mega menú — p. ej.
+  // /productos?categoria=fresado&tipo=Inserto&para=M — sin volverlos facetas visibles.
+  // Se aplican igual que el scope (a la lista y a los conteos de facetas).
+  const tipoSel = paramList("tipo");
+  const paraSel = paramList("para").map((s) => s.charAt(0).toUpperCase());
+  const urlOk = (p: Product): boolean => {
+    if (tipoSel.length && !(p.type && tipoSel.includes(p.type))) return false;
+    if (
+      paraSel.length &&
+      !(p.materialesAMaquinar ?? []).some((m) =>
+        paraSel.includes(m.trim().charAt(0).toUpperCase()),
+      )
+    )
+      return false;
+    return true;
+  };
+
+  const passExtra = (p: Product): boolean => scopeOk(p) && urlOk(p);
+
+  const filtered = products.filter((p) => matches(p, selected) && passExtra(p));
 
   // Opciones + conteos facetados (cada facet cuenta sobre los OTROS filtros activos,
   // siempre dentro del scope de tipo/iso).
   const facetGroups: FacetGroup[] = FACETS.map(({ key, param, label }) => {
-    const base = products.filter((p) => matches(p, selected, key) && scopeOk(p));
+    const base = products.filter((p) => matches(p, selected, key) && passExtra(p));
     const counts = new Map<string, number>();
     for (const p of base) {
       const v = p[key];
