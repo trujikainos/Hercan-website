@@ -40,15 +40,15 @@ export const site = {
   // como marca ancla SEO en el mega menú (FEATURED_BRAND), sin distribuidor mexicano
   // posicionado. `logo`: archivo en /public/brand/logos/ (vacío = se muestra el nombre).
   brands: [
-    { name: "Toolmex", logo: "" },
-    { name: "YG", logo: "" },
-    { name: "Iscar", logo: "" },
-    { name: "Palbit", logo: "" },
-    { name: "Hercan", logo: "" },
+    { name: "Toolmex", logo: "/brand/logos/toolmex.png" },
+    { name: "YG", logo: "/brand/logos/yg1.png" },
+    { name: "Iscar", logo: "/brand/logos/iscar.svg" },
+    { name: "Palbit", logo: "/brand/logos/palbit.svg" },
+    { name: "Hercan", logo: "/brand/logos/hercan.png" },
     { name: "Titanium", logo: "" },
     { name: "KTA", logo: "" },
-    { name: "Insize", logo: "" },
-    { name: "Mitutoyo", logo: "" },
+    { name: "Insize", logo: "/brand/logos/insize.png" },
+    { name: "Mitutoyo", logo: "/brand/logos/mitutoyo.png" },
   ] as { name: string; logo: string }[],
 
   // Contacto / NAP — debe coincidir con el Google Business Profile
