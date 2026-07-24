@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ArrowRight, Boxes, ChevronDown, ChevronRight, FileText, X } from "lucide-react";
-import { site } from "@/lib/site";
-import { brandSlug } from "@/lib/catalog";
+import { useRouter } from "next/navigation";
+import { ArrowRight, ChevronDown, ChevronRight, FileText, Wrench, X } from "lucide-react";
 import type { MenuData, MenuChip, MenuCategory } from "@/lib/menu-data";
 
 /**
@@ -49,13 +48,10 @@ import type { MenuData, MenuChip, MenuCategory } from "@/lib/menu-data";
 // que calcula por categoría qué EXISTE en cada eje CON conteos y el href a la
 // intersección filtrada. El componente solo recibe `data: MenuData` y la dibuja.
 
-const FEATURED_BRAND = "Iscar";
-
-// La categoría y la marca tienen página propia (SEO) → /categoria/<slug> y
-// /marca/<brandSlug(name)>. Los chips CONTEXTUALES del panel ya traen su href a la
-// intersección filtrada en /productos (precomputado en getMenuData).
+// La categoría tiene página propia (SEO) → /categoria/<slug>. Los chips CONTEXTUALES
+// del panel ya traen su href a la intersección filtrada en /productos (getMenuData).
+// Las MARCAS ya no viven en el mega menú: tienen su propio ítem de nav ("Marcas").
 const categoriaHref = (slug: string) => `/categoria/${slug}`;
-const marcaHref = (name: string) => `/marca/${brandSlug(name)}`;
 
 // Los 4 ejes contextuales, en orden de utilidad para el ingeniero. Cada uno se
 // auto-oculta si la categoría activa no tiene datos en él.
@@ -117,25 +113,6 @@ function ChipGroup({
   );
 }
 
-function FeaturedBrandCard({ onNavigate }: { onNavigate: Nav }) {
-  return (
-    <Link
-      href={marcaHref(FEATURED_BRAND)}
-      onClick={onNavigate}
-      className="card-hover block rounded-lg border border-hc-metal-light bg-hc-soft p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-steel"
-    >
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-        Marca destacada
-      </span>
-      <span className="mt-0.5 block font-heading text-xl text-hc-navy">{FEATURED_BRAND}</span>
-      <span className="mt-1 flex items-center gap-1 text-xs text-hc-steel">
-        Líder mundial en corte de metal
-        <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-      </span>
-    </Link>
-  );
-}
-
 function QuoteCta({ onNavigate }: { onNavigate: Nav }) {
   return (
     <Link
@@ -153,24 +130,6 @@ function QuoteCta({ onNavigate }: { onNavigate: Nav }) {
   );
 }
 
-function BrandLinks({ onNavigate }: { onNavigate: Nav }) {
-  return (
-    <ul className="flex flex-wrap items-center gap-x-6 gap-y-1.5">
-      {site.brands.map((b) => (
-        <li key={b.name}>
-          <Link
-            href={marcaHref(b.name)}
-            onClick={onNavigate}
-            className="font-heading text-sm font-semibold text-hc-steel transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
-          >
-            {b.name}
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 // ── Componente principal ────────────────────────────────────────────────────
 export function MegaMenu({ data }: { data: MenuData }) {
   const [open, setOpen] = useState(false);
@@ -185,6 +144,7 @@ export function MegaMenu({ data }: { data: MenuData }) {
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingFocusRail = useRef(false);
+  const router = useRouter();
 
   const panelId = useId();
   // Categoría activa del panel (data ya viene ordenada por volumen). `active` puede
@@ -335,12 +295,18 @@ export function MegaMenu({ data }: { data: MenuData }) {
         aria-controls={open ? panelId : undefined}
         onClick={() => {
           clearTimers();
-          setOpen((o) => !o);
+          // Desktop: el panel se abre con HOVER, así que el clic navega a "ver todo".
+          // Móvil: no hay hover → el clic abre/cierra el overlay.
+          if (isMobile) setOpen((o) => !o);
+          else {
+            setOpen(false);
+            router.push("/productos");
+          }
         }}
         onKeyDown={onTriggerKeyDown}
         className="flex items-center gap-1.5 whitespace-nowrap rounded py-2.5 font-heading text-base text-white transition-colors hover:text-hc-sky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-sky"
       >
-        <Boxes className="h-5 w-5" aria-hidden />
+        <Wrench className="h-5 w-5" aria-hidden />
         Catálogo
         <ChevronDown
           className={`h-5 w-5 transition-transform duration-200 motion-reduce:transition-none ${
@@ -439,22 +405,15 @@ export function MegaMenu({ data }: { data: MenuData }) {
               )}
             </div>
 
-            {/* Panel derecho: marca destacada + CTA */}
+            {/* Panel derecho: CTA de cotización (las marcas viven en su propio menú). */}
             <div className="w-64 shrink-0 space-y-3 border-l border-hc-metal-light p-5">
-              <FeaturedBrandCard onNavigate={() => closeNow(false)} />
               <QuoteCta onNavigate={() => closeNow(false)} />
             </div>
           </div>
 
-          {/* Barra inferior en 2 filas: (1) Marcas, (2) Explora todo → hubs. Los chips
-              de arriba filtran DENTRO de la categoría; estos hubs navegan la taxonomía. */}
-          <div className="space-y-2 border-t border-hc-metal-light bg-hc-soft px-5 py-3">
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-              <span className="font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                Marcas
-              </span>
-              <BrandLinks onNavigate={() => closeNow(false)} />
-            </div>
+          {/* Barra inferior: "Explora todo" → hubs. Los chips de arriba filtran DENTRO
+              de la categoría; estos hubs navegan la taxonomía completa. */}
+          <div className="border-t border-hc-metal-light bg-hc-soft px-5 py-3">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <span className="font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
                 Explora todo
@@ -562,30 +521,15 @@ export function MegaMenu({ data }: { data: MenuData }) {
               })}
             </ul>
 
-            {/* Marca destacada + CTA + marcas + ver todo */}
+            {/* CTA de cotización + Explora todo (las marcas viven en su propio menú). */}
             <div className="space-y-3 p-4">
-              <FeaturedBrandCard onNavigate={() => closeNow(false)} />
               <QuoteCta onNavigate={() => closeNow(false)} />
-              <div className="pt-2">
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                  Marcas
-                </p>
-                <BrandLinks onNavigate={() => closeNow(false)} />
-                <Link
-                  href="/marcas"
-                  onClick={() => closeNow(false)}
-                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-hc-blue hover:text-hc-steel"
-                >
-                  Ver todas las marcas
-                  <ArrowRight className="h-4 w-4" aria-hidden />
-                </Link>
-              </div>
               <div className="pt-1">
                 <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
                   Explora todo
                 </p>
                 <div className="flex flex-col gap-2">
-                  {HUBS.filter((h) => h.href !== "/marcas").map((h) => (
+                  {HUBS.map((h) => (
                     <Link
                       key={h.href}
                       href={h.href}

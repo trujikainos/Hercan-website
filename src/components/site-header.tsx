@@ -39,6 +39,9 @@ export async function SiteHeader() {
 
         <SearchBar />
 
+        {/* "Más" (páginas de empresa) vive ahora en el top header, no en la barra navy. */}
+        <NavMenu />
+
         <Link
           href="/cotizacion"
           className="press hidden items-center gap-2 rounded-lg bg-hc-steel px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-hc-blue sm:flex"
@@ -63,12 +66,14 @@ export async function SiteHeader() {
           <MegaMenu data={menuData} />
           <ParaMenu />
           <MarcasMenu />
-          {/* Accesos fijos a la derecha: "Ver todo" + dropdown "Más" (páginas de empresa) */}
-          <div className="ml-auto flex shrink-0 items-center gap-5 py-2.5">
-            <Link href="/productos" className="whitespace-nowrap text-hc-sky">
+          {/* Acceso fijo a la derecha: "Ver todo" el catálogo. */}
+          <div className="ml-auto flex shrink-0 items-center py-2.5">
+            <Link
+              href="/productos"
+              className="whitespace-nowrap text-white transition-colors hover:text-hc-sky"
+            >
               Ver todo
             </Link>
-            <NavMenu />
           </div>
         </div>
       </nav>

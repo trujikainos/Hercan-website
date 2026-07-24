@@ -42,13 +42,38 @@ export function SearchBar() {
   const [loading, setLoading] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  // Placeholder rotativo: cicla ejemplos mientras el input está vacío, para dar
-  // ideas de cómo buscar. Se detiene en cuanto el usuario escribe.
-  const [phIdx, setPhIdx] = useState(0);
+  // Placeholder con efecto MÁQUINA DE ESCRIBIR: escribe un ejemplo letra por letra,
+  // lo mantiene, lo borra y pasa al siguiente. Da ideas de cómo buscar. Se detiene
+  // en cuanto el usuario escribe algo (q no vacío).
+  const [typed, setTyped] = useState("");
   useEffect(() => {
     if (q) return;
-    const t = setInterval(() => setPhIdx((i) => (i + 1) % EXAMPLES.length), 2800);
-    return () => clearInterval(t);
+    let i = 0; // índice del ejemplo
+    let pos = 0; // posición del cursor dentro del ejemplo
+    let deleting = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const full = EXAMPLES[i];
+      if (!deleting) {
+        pos++;
+        setTyped(full.slice(0, pos));
+        if (pos === full.length) {
+          deleting = true;
+          timer = setTimeout(tick, 1500); // pausa al completar
+          return;
+        }
+      } else {
+        pos--;
+        setTyped(full.slice(0, pos));
+        if (pos === 0) {
+          deleting = false;
+          i = (i + 1) % EXAMPLES.length;
+        }
+      }
+      timer = setTimeout(tick, deleting ? 35 : 70);
+    };
+    timer = setTimeout(tick, 400);
+    return () => clearTimeout(timer);
   }, [q]);
 
   // Búsqueda debounced con cancelación de peticiones en vuelo
@@ -127,7 +152,7 @@ export function SearchBar() {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-          placeholder={`Prueba: ${EXAMPLES[phIdx]}…`}
+          placeholder={`Prueba: ${typed}▌`}
           aria-label="Buscar productos"
           className="w-full bg-transparent text-sm outline-none placeholder:text-hc-gunmetal"
         />
@@ -145,11 +170,13 @@ export function SearchBar() {
           {!hasQuery ? (
             <div className="p-3">
               <p className="px-1 pb-2 text-xs leading-relaxed text-hc-gunmetal">
-                Escribe SKU, marca, tipo o cualquier atributo y presiona{" "}
+                Escribe <span className="font-medium text-hc-ink">lo que quieras</span> —SKU,
+                marca, tipo, medida o cualquier atributo—: mientras escribes te sugerimos
+                productos, y con{" "}
                 <kbd className="rounded border border-hc-metal-light bg-hc-soft px-1 py-0.5 text-[10px] font-medium text-hc-ink">
                   ↵ Enter
                 </kbd>{" "}
-                para explorar todo el catálogo.
+                buscas en todo el catálogo.
               </p>
               <p className="px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
                 Prueba tu suerte

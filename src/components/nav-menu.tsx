@@ -125,7 +125,7 @@ export function NavMenu() {
           else openMenu(-1);
         }}
         onKeyDown={onButtonKeyDown}
-        className="flex items-center gap-1 whitespace-nowrap rounded font-heading text-base text-white transition-colors hover:text-hc-sky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-sky"
+        className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded font-heading text-sm text-hc-navy transition-colors hover:text-hc-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-steel sm:text-base"
       >
         Más
         <ChevronDown
