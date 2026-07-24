@@ -86,18 +86,18 @@ export function TaxonomyHero({
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-gradient-to-t from-hc-navy/80 via-transparent to-transparent"
         />
-        <div className="reveal relative z-10 mx-auto max-w-7xl px-4 py-12 sm:py-14">
+        <div className="reveal relative z-10 mx-auto max-w-7xl px-4 py-6 sm:py-8">
           <TaxonomyBreadcrumb items={breadcrumb} variant="dark" />
-          <h1 className="max-w-3xl font-heading font-semibold text-[length:var(--step-h2)]">
+          <h1 className="max-w-3xl font-heading font-semibold leading-tight text-[length:var(--step-h2)]">
             {title}
           </h1>
-          <div className="mt-4 max-w-2xl space-y-3 text-sm leading-relaxed text-hc-sky">
+          <div className="mt-2 max-w-3xl space-y-1.5 text-sm leading-snug text-hc-sky">
             {intro.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
           </div>
           {bullets && bullets.length > 0 && (
-            <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:flex-wrap">
+            <div className="mt-4 flex flex-col gap-x-6 gap-y-2 sm:flex-row sm:flex-wrap">
               {bullets.map((b) => (
                 <div key={b.heading} className="sm:flex-1 sm:min-w-[220px]">
                   <h2 className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-white/60">
