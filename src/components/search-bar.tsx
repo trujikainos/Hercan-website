@@ -2,8 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Loader2, ImageIcon, ArrowRight } from "lucide-react";
+import { Search, Loader2, ArrowRight } from "lucide-react";
 import type { SearchResult } from "@/lib/shopify";
+import { ProductImage } from "./product-image";
 
 /** Spinner inline en un resultado mientras Next navega a su ficha: feedback
  *  inmediato antes de que aparezca el skeleton de la página. Tamaño fijo →
@@ -203,16 +204,25 @@ export function SearchBar() {
                       href={`/producto/${r.handle}`}
                       className="flex items-center gap-3 px-3 py-2 transition-colors hover:bg-hc-soft"
                     >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-hc-soft text-hc-metal">
-                        {r.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={r.image} alt="" className="h-full w-full object-contain" />
-                        ) : (
-                          <ImageIcon className="h-5 w-5" aria-hidden />
-                        )}
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-hc-metal-light">
+                        <ProductImage
+                          src={r.image}
+                          alt={r.title}
+                          imgClassName="h-full w-full object-contain"
+                          iconClassName="h-5 w-auto"
+                        />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm text-hc-ink">{r.title}</span>
+                        {/* SKU / N° de parte (MPN) — claves para identificar el producto B2B. */}
+                        {(r.sku || r.mpn) && (
+                          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 font-mono text-[11px] text-hc-gunmetal">
+                            {r.sku && <span className="truncate">SKU: {r.sku}</span>}
+                            {r.mpn && r.mpn !== r.sku && (
+                              <span className="truncate">MPN: {r.mpn}</span>
+                            )}
+                          </span>
+                        )}
                         <span className={`text-xs ${r.available ? "text-[#2e7d46]" : "text-hc-gunmetal"}`}>
                           {r.available ? "Disponible" : "Sobre pedido"}
                         </span>

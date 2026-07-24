@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronDown, ChevronRight, FileText, Wrench, X } from "lucide-react";
 import type { MenuData, MenuChip, MenuCategory } from "@/lib/menu-data";
+import { HUB_IMAGES } from "@/lib/hub-images";
 
 /**
  * MEGA MENÚ "Catálogo" del nav superior.
@@ -405,8 +406,17 @@ export function MegaMenu({ data }: { data: MenuData }) {
               )}
             </div>
 
-            {/* Panel derecho: CTA de cotización (las marcas viven en su propio menú). */}
+            {/* Panel derecho: portada de la categoría activa (hover) + CTA de cotización.
+                La imagen llena el espacio y da contexto visual de la categoría. */}
             <div className="w-64 shrink-0 space-y-3 border-l border-hc-metal-light p-5">
+              {active && HUB_IMAGES.categoria[active.slug] && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={HUB_IMAGES.categoria[active.slug]}
+                  alt={active.name}
+                  className="aspect-[4/3] w-full rounded-lg border border-hc-metal-light object-cover"
+                />
+              )}
               <QuoteCta onNavigate={() => closeNow(false)} />
             </div>
           </div>

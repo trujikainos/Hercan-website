@@ -18,7 +18,10 @@ export function CopyButton({
   useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current); }, []);
   const size = small ? "h-3 w-3" : "h-3.5 w-3.5";
 
-  async function copy() {
+  async function copy(e: React.MouseEvent) {
+    // Si el botón vive dentro de (o junto a) un Link, evita navegar al copiar.
+    e.preventDefault();
+    e.stopPropagation();
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);

@@ -15,6 +15,7 @@ import {
 import type { Category } from "@/lib/types";
 import { site } from "@/lib/site";
 import { brandSlug } from "@/lib/catalog";
+import { HUB_IMAGES } from "@/lib/hub-images";
 import { HeroCarousel } from "./hero-carousel";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -90,14 +91,15 @@ export function BrandBar() {
   const loop = [...site.brands, ...site.brands];
   return (
     <section className="border-b border-hc-metal-light bg-white py-6">
-      <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wide text-hc-gunmetal">
-        Marcas que distribuimos
-      </p>
-      <div className="group relative overflow-hidden">
-        {/* Fades a los lados para que los logos aparezcan/desaparezcan suave. */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-white to-transparent sm:w-20" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white to-transparent sm:w-20" />
-        <ul className="marquee-track flex w-max items-center gap-10 sm:gap-14 group-hover:[animation-play-state:paused]">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 sm:flex-row sm:items-center sm:gap-8">
+        <p className="shrink-0 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal sm:max-w-[9rem] sm:leading-snug">
+          Marcas que distribuimos
+        </p>
+        <div className="group relative min-w-0 flex-1 overflow-hidden">
+          {/* Fades a los lados para que los logos aparezcan/desaparezcan suave. */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-white to-transparent sm:w-16" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white to-transparent sm:w-16" />
+          <ul className="marquee-track flex w-max items-center gap-10 sm:gap-14 group-hover:[animation-play-state:paused]">
           {loop.map((b, i) => {
             const dup = i >= site.brands.length;
             return (
@@ -118,7 +120,8 @@ export function BrandBar() {
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </div>
       </div>
     </section>
   );
@@ -179,18 +182,33 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {categories.map((c, i) => {
           const Icon = ICONS[c.icon] ?? Drill;
+          const img = HUB_IMAGES.categoria[c.slug];
           return (
             <Link
               key={c.slug}
               href={`/categoria/${c.slug}`}
-              className="reveal card-hover press group flex flex-col items-center gap-2 rounded-xl border border-hc-metal-light bg-white p-5 text-center hover:border-hc-steel"
+              className="reveal card-hover press group flex flex-col overflow-hidden rounded-xl border border-hc-metal-light bg-white text-center hover:border-hc-steel"
               style={{ animationDelay: `${Math.min(i * 55, 300)}ms` }}
             >
-              <Icon className="h-6 w-6 text-hc-steel transition-transform duration-300 group-hover:scale-110" />
-              <span className="text-sm font-medium text-hc-navy">{c.name}</span>
-              {c.count != null && (
-                <span className="text-xs text-hc-gunmetal">{c.count} productos</span>
+              {img ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={img}
+                  alt=""
+                  className="aspect-[16/10] w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex aspect-[16/10] items-center justify-center bg-hc-soft">
+                  <Icon className="h-6 w-6 text-hc-steel transition-transform duration-300 group-hover:scale-110" />
+                </div>
               )}
+              <div className="flex flex-1 flex-col items-center justify-center gap-0.5 p-3">
+                <span className="text-sm font-medium text-hc-navy">{c.name}</span>
+                {c.count != null && (
+                  <span className="text-xs text-hc-gunmetal">{c.count} productos</span>
+                )}
+              </div>
             </Link>
           );
         })}
