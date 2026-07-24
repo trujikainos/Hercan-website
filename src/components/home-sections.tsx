@@ -342,11 +342,11 @@ export function SiteFooter() {
         <div>
           <Link href="/" className="inline-flex rounded-lg bg-white p-2.5" aria-label="HERCAN — inicio">
             <Image
-              src="/brand/hercan-logo.jpg"
+              src="/brand/hercan-logo.png"
               alt="HERCAN — Herramientas de Carburo de Tungsteno del Norte"
-              width={200}
-              height={92}
-              className="h-11 w-auto"
+              width={1300}
+              height={400}
+              className="h-9 w-auto"
             />
           </Link>
           <p className="mt-3 text-sm leading-relaxed">

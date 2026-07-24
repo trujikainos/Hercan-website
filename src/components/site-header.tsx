@@ -33,12 +33,12 @@ export async function SiteHeader() {
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
         <Link href="/" className="flex shrink-0 items-center" aria-label="HERCAN — inicio">
           <Image
-            src="/brand/hercan-logo.jpg"
+            src="/brand/hercan-logo.png"
             alt="HERCAN — Herramientas de Carburo de Tungsteno del Norte"
-            width={220}
-            height={102}
+            width={1300}
+            height={400}
             priority
-            className="h-14 w-auto sm:h-16"
+            className="h-12 w-auto sm:h-14"
           />
         </Link>
 
