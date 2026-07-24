@@ -1,30 +1,17 @@
 import "server-only";
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtmlLib from "sanitize-html";
 
 /**
  * Sanitizador de HTML semi-confiable de Shopify (descripciones de producto y
- * contenido de blog), apto para RSC/Node (isomorphic-dompurify usa jsdom en el
- * servidor). Sustituye al sanitizador regex casero por una librería probada
- * (defensa en profundidad frente a la mutación-XSS que sortea las regex).
+ * contenido de blog), apto para RSC/Node y **serverless**. Usa `sanitize-html`
+ * (parser puro JS, htmlparser2) en vez de DOMPurify/jsdom: jsdom rompe al
+ * empaquetarse en las funciones serverless de Vercel (ERR_REQUIRE_ESM en su cadena
+ * de dependencias). Misma política de allowlist que antes.
  *
- * El contenido lo escribe el admin de la tienda; el catálogo real vendrá de
- * exports de proveedores (Iscar/Toolmex), así que lo tratamos como semi-confiable
- * y lo limpiamos antes de renderizar con dangerouslySetInnerHTML.
+ * El contenido lo escribe el admin de la tienda; el catálogo real vendrá de exports
+ * de proveedores (Iscar/Toolmex), así que lo tratamos como semi-confiable y lo
+ * limpiamos antes de renderizar con dangerouslySetInnerHTML.
  */
-
-// Fuerza atributos seguros en <a> e <img> DESPUÉS de sanear (el hook es global a
-// DOMPurify; sólo <a>/<img> se ven afectados y sólo aparecen en el HTML de blog).
-DOMPurify.addHook("afterSanitizeAttributes", (node) => {
-  if (node.nodeName === "A") {
-    node.setAttribute("rel", "noopener nofollow");
-    node.setAttribute("target", "_blank");
-  }
-  if (node.nodeName === "IMG") {
-    const src = node.getAttribute("src") || "";
-    if (!/^https?:\/\//i.test(src)) node.removeAttribute("src"); // sólo imágenes https
-    else node.setAttribute("loading", "lazy");
-  }
-});
 
 // Descripción de producto: sólo formato, CERO atributos (máxima superficie cerrada).
 const PRODUCT_TAGS = [
@@ -42,20 +29,36 @@ const RICH_TAGS = [
   "table", "thead", "tbody", "tr", "td", "th", "span",
 ];
 
-// Esquemas permitidos en href/src: http(s), mailto, tel y rutas relativas.
-// (Para <img> el hook de arriba exige además https://). Bloquea javascript:/data:.
-const SAFE_URI = /^(?:https?:|mailto:|tel:|\/)/i;
-
 export function sanitizeHtml(html: string | null | undefined): string {
   if (!html) return "";
-  return DOMPurify.sanitize(html, { ALLOWED_TAGS: PRODUCT_TAGS, ALLOWED_ATTR: [] }).trim();
+  return sanitizeHtmlLib(html, {
+    allowedTags: PRODUCT_TAGS,
+    allowedAttributes: {}, // cero atributos
+  }).trim();
 }
 
 export function sanitizeRichHtml(html: string | null | undefined): string {
   if (!html) return "";
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: RICH_TAGS,
-    ALLOWED_ATTR: ["href", "src", "alt"],
-    ALLOWED_URI_REGEXP: SAFE_URI,
+  return sanitizeHtmlLib(html, {
+    allowedTags: RICH_TAGS,
+    allowedAttributes: { a: ["href"], img: ["src", "alt"] },
+    // Esquemas permitidos (bloquea javascript:/data:). Las rutas relativas se
+    // permiten por defecto. <img> además SÓLO https (allowedSchemesByTag).
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    allowedSchemesByTag: { img: ["https"] },
+    allowProtocolRelative: false,
+    // Fuerza atributos seguros DESPUÉS de sanear: <a> abre en pestaña nueva sin
+    // pasar referrer ni "juice" SEO; <img> con carga diferida. Si el src del <img>
+    // no era https, `allowedSchemesByTag` ya lo quitó.
+    transformTags: {
+      a: (tagName, attribs) => ({
+        tagName,
+        attribs: { ...attribs, rel: "noopener nofollow", target: "_blank" },
+      }),
+      img: (tagName, attribs) => ({
+        tagName,
+        attribs: { ...attribs, loading: "lazy" },
+      }),
+    },
   }).trim();
 }
