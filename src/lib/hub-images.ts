@@ -37,8 +37,17 @@ export const HUB_IMAGES: {
     "barra-mandrinar": "/brand/taxonomia/tipo/barra-mandrinar.webp",
     portaherramientas: "/brand/taxonomia/tipo/portaherramientas.webp",
   },
-  material: {},
-  recubrimiento: {},
+  material: {
+    carburo: "/brand/taxonomia/material/carburo.webp",
+    hss: "/brand/taxonomia/material/hss.webp",
+    cobalto: "/brand/taxonomia/material/cobalto.webp",
+  },
+  recubrimiento: {
+    tialn: "/brand/taxonomia/recubrimiento/tialn.webp",
+    tin: "/brand/taxonomia/recubrimiento/tin.webp",
+    ticn: "/brand/taxonomia/recubrimiento/ticn.webp",
+    alcrn: "/brand/taxonomia/recubrimiento/alcrn.webp",
+  },
   para: {
     acero: "/brand/taxonomia/para/acero.webp",
     "acero-inoxidable": "/brand/taxonomia/para/acero-inoxidable.webp",
