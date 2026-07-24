@@ -23,12 +23,33 @@ function ResultSpinner() {
 // Sugerencias para invitar a explorar ("prueba tu suerte"): términos reales del catálogo.
 const SUGGESTIONS = ["Iscar", "broca", "inserto", "TiAlN", "fresa carburo", "machuelo"];
 
+// Ejemplos que ROTAN en el placeholder para dar ideas de CÓMO buscar: por marca,
+// tipo + medida, ISO, recubrimiento, rosca, instrumento, o por aplicación/material.
+const EXAMPLES = [
+  "broca de carburo 5/16",
+  "inserto CNMG",
+  "fresa TiAlN 4 filos",
+  "Iscar",
+  "machuelo M8",
+  "calibrador Mitutoyo",
+  "herramienta para acero inoxidable",
+];
+
 export function SearchBar() {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+
+  // Placeholder rotativo: cicla ejemplos mientras el input está vacío, para dar
+  // ideas de cómo buscar. Se detiene en cuanto el usuario escribe.
+  const [phIdx, setPhIdx] = useState(0);
+  useEffect(() => {
+    if (q) return;
+    const t = setInterval(() => setPhIdx((i) => (i + 1) % EXAMPLES.length), 2800);
+    return () => clearInterval(t);
+  }, [q]);
 
   // Búsqueda debounced con cancelación de peticiones en vuelo
   useEffect(() => {
@@ -106,7 +127,7 @@ export function SearchBar() {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-          placeholder="Buscar SKU, N° de parte, marca u otro atributo…"
+          placeholder={`Prueba: ${EXAMPLES[phIdx]}…`}
           aria-label="Buscar productos"
           className="w-full bg-transparent text-sm outline-none placeholder:text-hc-gunmetal"
         />
