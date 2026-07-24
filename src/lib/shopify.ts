@@ -232,11 +232,16 @@ const PRODUCT_FIELDS = `
   priceRange { minVariantPrice { amount currencyCode } }
   variants(first: 1) { nodes { id sku availableForSale quantityAvailable } }`;
 
-// Listado: PRODUCT_FIELDS + SOLO el metafield `material_a_maquinar` (para la
-// taxonomía "/para/[material]"). Es 1 metafield por producto → payload mínimo; el
-// resto de specs se derivan de tags en el listado y llegan completas en la ficha.
+// Listado: PRODUCT_FIELDS + los metafields `specs` que el catálogo/menú necesitan de
+// forma AUTORITATIVA (no derivados de tags): `material_a_maquinar` (taxonomía /para) y
+// `tipo_herramienta` (fill 99% en el catálogo; sin él, p.type caía a deriveFromTags y
+// agarraba el tag de lote de importación como "tipo"). 2 metafields → payload mínimo;
+// el resto de specs se derivan de tags en el listado y llegan completas en la ficha.
 const PRODUCT_LIST_FIELDS = `${PRODUCT_FIELDS}
-  metafields(identifiers: [{ namespace: "specs", key: "material_a_maquinar" }]) { key value }`;
+  metafields(identifiers: [
+    { namespace: "specs", key: "material_a_maquinar" },
+    { namespace: "specs", key: "tipo_herramienta" }
+  ]) { key value }`;
 
 // La ficha de producto además trae la descripción (HTML del admin) y los
 // metafields técnicos del namespace "specs".
