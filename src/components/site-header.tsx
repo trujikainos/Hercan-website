@@ -54,11 +54,7 @@ export async function SiteHeader() {
           <FileText className="h-4 w-4" aria-hidden />
           Solicitar cotización
         </Link>
-        <AccountButton
-          enabled={customerAccountsEnabled}
-          loginUrl={loginUrl}
-          accountUrl={ACCOUNT_URL}
-        />
+        <AccountButton enabled={customerAccountsEnabled} loginUrl={loginUrl} />
         <CartButton />
       </div>
 

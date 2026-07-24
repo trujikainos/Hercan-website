@@ -175,3 +175,122 @@ export const getCustomer = cache(async (): Promise<CustomerInfo | null> => {
     return null;
   }
 });
+
+// ── Datos completos de la cuenta (página /cuenta) ───────────────────────────
+export type CustomerOrder = {
+  id: string;
+  name: string;
+  processedAt: string;
+  financialStatus: string | null;
+  total: { amount: string; currencyCode: string } | null;
+  statusUrl: string | null;
+  lineItems: { title: string; quantity: number }[];
+};
+export type CustomerAccountData = {
+  profile: { name: string; email: string; phone: string | null };
+  addresses: string[][]; // cada dirección = líneas ya formateadas
+  orders: CustomerOrder[];
+};
+/** null = no hay sesión (→ login). {error} = sesión OK pero la query falló (debug). */
+export type AccountResult = CustomerAccountData | { error: string };
+
+const ACCOUNT_QUERY = `query CustomerAccount {
+  customer {
+    firstName
+    lastName
+    displayName
+    emailAddress { emailAddress }
+    phoneNumber { phoneNumber }
+    defaultAddress { formatted }
+    addresses(first: 6) { edges { node { formatted } } }
+    orders(first: 15, sortKey: PROCESSED_AT, reverse: true) {
+      edges { node {
+        id
+        name
+        processedAt
+        financialStatus
+        totalPrice { amount currencyCode }
+        statusPageUrl
+        lineItems(first: 5) { edges { node { title quantity } } }
+      } }
+    }
+  }
+}`;
+
+type GqlMoney = { amount: string; currencyCode: string } | null;
+type GqlAddr = { formatted?: string[] } | null;
+type GqlOrderNode = {
+  id: string;
+  name: string;
+  processedAt: string;
+  financialStatus: string | null;
+  totalPrice: GqlMoney;
+  statusPageUrl: string | null;
+  lineItems?: { edges?: { node: { title: string; quantity: number } }[] };
+};
+type GqlCustomer = {
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName?: string | null;
+  emailAddress?: { emailAddress?: string } | null;
+  phoneNumber?: { phoneNumber?: string } | null;
+  defaultAddress?: GqlAddr;
+  addresses?: { edges?: { node: GqlAddr }[] };
+  orders?: { edges?: { node: GqlOrderNode }[] };
+};
+
+export const getCustomerAccount = cache(async (): Promise<AccountResult | null> => {
+  if (!customerAccountsEnabled) return null;
+  const jar = await cookies();
+  const token = jar.get(CA_COOKIES.at)?.value;
+  const exp = Number(jar.get(CA_COOKIES.exp)?.value ?? "0");
+  if (!token || (exp && exp < Date.now())) return null;
+  try {
+    const { graphqlApi } = await discover();
+    const res = await fetch(graphqlApi, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: token },
+      body: JSON.stringify({ query: ACCOUNT_QUERY }),
+      cache: "no-store",
+    });
+    const json = (await res.json()) as {
+      data?: { customer?: GqlCustomer };
+      errors?: unknown;
+    };
+    // TEMP DEBUG: devolver el error de la query para verlo en la primera carga.
+    if (json.errors) return { error: JSON.stringify(json.errors).slice(0, 800) };
+    const c = json.data?.customer;
+    if (!c) return null;
+    const name =
+      c.displayName || [c.firstName, c.lastName].filter(Boolean).join(" ").trim();
+    const addrNodes = [c.defaultAddress, ...(c.addresses?.edges ?? []).map((e) => e.node)];
+    return {
+      profile: {
+        name: name || "",
+        email: c.emailAddress?.emailAddress ?? "",
+        phone: c.phoneNumber?.phoneNumber ?? null,
+      },
+      addresses: addrNodes
+        .filter((a): a is { formatted?: string[] } => Boolean(a))
+        .map((a) => a.formatted ?? [])
+        .filter((lines) => lines.length > 0),
+      orders: (c.orders?.edges ?? []).map((e) => {
+        const o = e.node;
+        return {
+          id: o.id,
+          name: o.name,
+          processedAt: o.processedAt,
+          financialStatus: o.financialStatus ?? null,
+          total: o.totalPrice ?? null,
+          statusUrl: o.statusPageUrl ?? null,
+          lineItems: (o.lineItems?.edges ?? []).map((le) => ({
+            title: le.node.title,
+            quantity: le.node.quantity,
+          })),
+        };
+      }),
+    };
+  } catch (e) {
+    return { error: `threw: ${e instanceof Error ? e.message : String(e)}` };
+  }
+});

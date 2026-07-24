@@ -14,15 +14,15 @@ export type AccountUser = { name?: string | null; image?: string | null };
 export function AccountButton({
   enabled,
   loginUrl,
-  accountUrl,
+  accountUrl = "/cuenta",
   logoutUrl = "/account/logout",
 }: {
   /** true si el Customer Account API está configurado → consultamos la sesión. */
   enabled: boolean;
   /** Destino al NO haber sesión (login propio o portal de Shopify). */
   loginUrl: string;
-  /** Portal de cuenta de Shopify cuando hay sesión. */
-  accountUrl: string;
+  /** Página de cuenta al haber sesión (nuestra `/cuenta`). */
+  accountUrl?: string;
   logoutUrl?: string;
 }) {
   const [user, setUser] = useState<AccountUser | null>(null);
