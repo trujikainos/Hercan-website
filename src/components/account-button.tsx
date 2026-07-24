@@ -1,26 +1,46 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { UserRound, LogOut } from "lucide-react";
 
 /**
- * Botón de cuenta del header. Con el Customer Account API conectado, `user` llega con
- * el cliente logeado → muestra su inicial/foto + nombre + "Salir". Sin sesión →
- * "Ingresar" (arranca el login). Sin CAA configurada, `loginUrl` apunta al portal de
- * Shopify (fallback). Ver [[hercan-mejoras-pendientes]] / lib/customer-account.ts.
+ * Botón de cuenta del header (client). La sesión se consulta a `/api/account/me`
+ * (client-side) → el header NO lee cookies en el render del layout, así el resto del
+ * sitio se mantiene estático/ISR. Con sesión muestra inicial/foto + nombre + "Salir";
+ * sin sesión, "Ingresar" (arranca el login propio o el portal de Shopify según config).
  */
 export type AccountUser = { name?: string | null; image?: string | null };
 
 export function AccountButton({
-  user,
+  enabled,
   loginUrl,
   accountUrl,
   logoutUrl = "/account/logout",
 }: {
-  user?: AccountUser | null;
+  /** true si el Customer Account API está configurado → consultamos la sesión. */
+  enabled: boolean;
   /** Destino al NO haber sesión (login propio o portal de Shopify). */
   loginUrl: string;
-  /** Portal de cuenta de Shopify (pedidos, direcciones) cuando hay sesión. */
+  /** Portal de cuenta de Shopify cuando hay sesión. */
   accountUrl: string;
   logoutUrl?: string;
 }) {
+  const [user, setUser] = useState<AccountUser | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let alive = true;
+    fetch("/api/account/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (alive && d?.user) setUser(d.user as AccountUser);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [enabled]);
+
   const name = user?.name?.trim() || "";
   const initial = name.charAt(0).toUpperCase();
 
