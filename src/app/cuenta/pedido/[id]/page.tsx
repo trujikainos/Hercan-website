@@ -36,6 +36,37 @@ const FIN: Record<string, { label: string; cls: string }> = {
   EXPIRED: { label: "Expirado", cls: "bg-hc-soft text-hc-gunmetal" },
 };
 
+// Estado de entrega (latestShipmentStatus del envío) → etiqueta en español.
+const SHIP: Record<string, string> = {
+  LABEL_PRINTED: "Etiqueta impresa",
+  LABEL_PURCHASED: "Etiqueta generada",
+  ATTEMPTED_DELIVERY: "Intento de entrega",
+  READY_FOR_PICKUP: "Listo para recoger",
+  PICKED_UP: "Recogido",
+  CONFIRMED: "Envío confirmado",
+  IN_TRANSIT: "En tránsito",
+  OUT_FOR_DELIVERY: "En reparto",
+  DELIVERED: "Entregado",
+  FAILURE: "Problema con el envío",
+};
+// Estado de preparación del pedido (fulfillment status) → etiqueta en español.
+const FUL: Record<string, string> = {
+  FULFILLED: "Preparado y enviado",
+  SUCCESS: "Preparado y enviado",
+  UNFULFILLED: "Por preparar",
+  PARTIALLY_FULFILLED: "Preparado parcialmente",
+  IN_PROGRESS: "En preparación",
+  OPEN: "En preparación",
+  PENDING: "Pendiente",
+  SCHEDULED: "Programado",
+  ON_HOLD: "En espera",
+  CANCELLED: "Cancelado",
+  ERROR: "Error",
+  RESTOCKED: "Reingresado a stock",
+};
+const shipLabel = (s: string | null) => (s ? SHIP[s] ?? s : null);
+const fulLabel = (s: string | null) => (s ? FUL[s] ?? s : null);
+
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   // El GID viaja URL-encoded en la ruta (contiene "://" y "/"); hay que decodificarlo
@@ -100,18 +131,35 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         {/* Productos */}
         <section className="rounded-xl border border-hc-metal-light bg-white p-4">
           <ul className="divide-y divide-hc-metal-light">
-            {order.items.map((it, i) => (
-              <li key={i} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+            {order.items.map((it, i) => {
+              const thumb = (
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-hc-metal-light">
                   <ProductImage src={it.image} alt={it.title} imgClassName="h-full w-full object-contain" iconClassName="h-6 w-auto" />
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm text-hc-ink">{it.title}</span>
-                  <span className="text-xs text-hc-gunmetal">Cantidad: {it.quantity}</span>
-                </span>
-                <span className="shrink-0 font-heading text-sm text-hc-navy">{money(it.lineTotal)}</span>
-              </li>
-            ))}
+              );
+              return (
+                <li key={i} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                  {it.handle ? (
+                    <Link href={`/producto/${it.handle}`} className="group flex min-w-0 flex-1 items-center gap-3">
+                      {thumb}
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm text-hc-ink group-hover:text-hc-blue">{it.title}</span>
+                        <span className="text-xs text-hc-gunmetal">Cantidad: {it.quantity}</span>
+                      </span>
+                    </Link>
+                  ) : (
+                    <>
+                      {thumb}
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm text-hc-ink">{it.title}</span>
+                        <span className="text-xs text-hc-gunmetal">Cantidad: {it.quantity}</span>
+                      </span>
+                    </>
+                  )}
+                  <span className="shrink-0 font-heading text-sm text-hc-navy">{money(it.lineTotal)}</span>
+                </li>
+              );
+            })}
           </ul>
         </section>
 
@@ -162,27 +210,53 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             </div>
           )}
 
-          {order.tracking.length > 0 && (
-            <div className="rounded-xl border border-hc-metal-light bg-white p-5">
-              <h2 className="mb-2 flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
-                <Truck className="h-4 w-4" aria-hidden /> Rastreo
-              </h2>
-              <ul className="space-y-2 text-sm">
-                {order.tracking.map((t, j) => (
-                  <li key={j}>
-                    {t.company && <span className="text-hc-gunmetal">{t.company}: </span>}
-                    {t.url ? (
-                      <a href={t.url} target="_blank" rel="noopener noreferrer" className="text-hc-blue hover:text-hc-steel">
-                        {t.number || "Rastrear envío"}
-                      </a>
-                    ) : (
-                      <span className="text-hc-ink">{t.number}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {(() => {
+            const ship = shipLabel(order.shipmentStatus);
+            const ful = fulLabel(order.fulfillmentStatus);
+            const estado = ship ?? ful; // el estado de envío es más específico que el de preparación
+            const delivered = order.shipmentStatus === "DELIVERED";
+            const hasTracking = order.tracking.length > 0;
+            if (!estado && !hasTracking) return null;
+            return (
+              <div className="rounded-xl border border-hc-metal-light bg-white p-5">
+                <h2 className="mb-3 flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
+                  <Truck className="h-4 w-4" aria-hidden /> Envío
+                </h2>
+                {estado && (
+                  <span
+                    className={`mb-3 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                      delivered ? "bg-[#e6f4ea] text-[#2e7d46]" : "bg-hc-soft text-hc-steel"
+                    }`}
+                  >
+                    {estado}
+                  </span>
+                )}
+                {ship && ful && ship !== ful && (
+                  <p className="mb-3 text-xs text-hc-gunmetal">Preparación: {ful}</p>
+                )}
+                {hasTracking && (
+                  <>
+                    <p className="mb-1 text-xs uppercase tracking-wide text-hc-gunmetal">Guía</p>
+                    <ul className="space-y-2 text-sm">
+                      {order.tracking.map((t, j) => (
+                        <li key={j} className="flex items-baseline gap-1.5">
+                          {t.company && <span className="text-hc-gunmetal">{t.company}:</span>}
+                          {t.url ? (
+                            <a href={t.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-hc-blue hover:text-hc-steel">
+                              {t.number || "Rastrear envío"}
+                              <ExternalLink className="h-3 w-3" aria-hidden />
+                            </a>
+                          ) : (
+                            <span className="text-hc-ink">{t.number}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </aside>
       </div>
     </main>

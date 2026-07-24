@@ -51,7 +51,31 @@ export function CartLineItem({ line }: { line: CartLine }) {
             >
               <Minus className="h-3.5 w-3.5" />
             </button>
-            <span className="min-w-[2ch] text-center text-sm">{line.quantity}</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={max ?? undefined}
+              step={1}
+              defaultValue={line.quantity}
+              key={line.quantity}
+              disabled={isPending}
+              aria-label="Cantidad"
+              onKeyDown={(e) => {
+                if ([".", ",", "e", "E", "-", "+"].includes(e.key)) e.preventDefault();
+              }}
+              onBlur={(e) => {
+                const v = parseInt(e.target.value.replace(/[^\d]/g, ""), 10);
+                let next = Number.isFinite(v) ? Math.max(1, v) : 1;
+                if (max != null && next > max) {
+                  next = max;
+                  notify(`Solo hay ${max} disponibles de "${line.productTitle}".`);
+                }
+                e.target.value = String(next);
+                if (next !== line.quantity) updateQty(line.id, next);
+              }}
+              className="w-11 border-x border-hc-metal-light bg-transparent py-1 text-center text-sm outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none disabled:opacity-50"
+            />
             <button
               onClick={onIncrease}
               disabled={isPending}

@@ -464,14 +464,21 @@ export function SiteFooter() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-hc-metal/80 sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} {site.legalName}. Todos los derechos reservados.</p>
-          <p>
-            Hecho por{" "}
+          <p className="flex items-center gap-1.5">
+            Hecho por
             <a
               href="https://weevolveit.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-hc-metal transition-colors hover:text-hc-sky"
+              className="inline-flex items-center gap-1.5 font-medium text-hc-metal transition-colors hover:text-hc-sky"
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/weevolveit-symbol.png"
+                alt=""
+                aria-hidden
+                className="h-4 w-4 object-contain"
+              />
               WeEvolveIT
             </a>
           </p>

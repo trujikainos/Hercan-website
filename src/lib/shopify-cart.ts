@@ -242,6 +242,29 @@ export async function removeLine(lineId: string): Promise<CartMutationResult> {
   return finalize(d.cartLinesRemove.cart, d.cartLinesRemove.userErrors, false);
 }
 
+/** Vacía el carrito por completo: quita todas las líneas en una sola mutación. */
+export async function clearCart(): Promise<CartMutationResult> {
+  if (!isShopifyConnected) return { cart: null, notices: [], recovered: false };
+  const id = await readCartId();
+  if (!id) return { cart: null, notices: [], recovered: false };
+  const current = await call<{ cart: any }>(Q_CART, { id });
+  if (!current.cart) {
+    await clearCartId();
+    return recoveredEmpty();
+  }
+  const lineIds: string[] = (current.cart.lines?.nodes ?? []).map((n: any) => n.id);
+  if (lineIds.length === 0) return finalize(current.cart, [], false);
+  const d = await call<{ cartLinesRemove: { cart: any; userErrors: any[] } }>(M_REMOVE, {
+    cartId: id,
+    lineIds,
+  });
+  if (!d.cartLinesRemove.cart) {
+    await clearCartId();
+    return recoveredEmpty();
+  }
+  return finalize(d.cartLinesRemove.cart, d.cartLinesRemove.userErrors, false);
+}
+
 function recoveredEmpty(): CartMutationResult {
   return {
     cart: null,

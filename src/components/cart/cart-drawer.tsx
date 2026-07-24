@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { useCart } from "./cart-provider";
 import { CartLineItem } from "./cart-line-item";
 import { CartSummary } from "./cart-summary";
 
 export function CartDrawer() {
-  const { isOpen, closeCart, cart, notices } = useCart();
+  const { isOpen, closeCart, cart, notices, clear, isPending } = useCart();
+  const hasItems = Boolean(cart && cart.lines.length > 0);
   const asideRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -65,9 +66,21 @@ export function CartDrawer() {
       >
         <div className="flex items-center justify-between border-b border-hc-metal-light px-4 py-3">
           <h2 className="font-heading text-lg text-hc-navy">Tu carrito</h2>
-          <button onClick={closeCart} aria-label="Cerrar" className="text-hc-gunmetal hover:text-hc-ink">
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            {hasItems && (
+              <button
+                onClick={() => clear()}
+                disabled={isPending}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-hc-gunmetal transition-colors hover:text-red-600 disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                Vaciar
+              </button>
+            )}
+            <button onClick={closeCart} aria-label="Cerrar" className="text-hc-gunmetal hover:text-hc-ink">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
         {notices.length > 0 && (
           <div className="border-b border-hc-metal-light bg-[#fff8ec] px-4 py-2 text-xs text-[#b25e00]">

@@ -100,6 +100,17 @@ export async function removeLineAction(lineId: string): Promise<CartActionResult
   }
 }
 
+export async function clearCartAction(): Promise<CartActionResult> {
+  if (!isShopifyConnected) return DISABLED;
+  try {
+    const r = await api.clearCart();
+    return { ok: true, cart: r.cart, notices: r.notices, recovered: r.recovered };
+  } catch (e) {
+    console.error("[cart] clear", e);
+    return netFail();
+  }
+}
+
 /** Re-lee el carrito vivo al momento del clic; devuelve el checkoutUrl fresco. */
 export async function getCheckoutUrlAction(): Promise<{ url: string | null; result: CartActionResult }> {
   if (!isShopifyConnected) return { url: null, result: DISABLED };

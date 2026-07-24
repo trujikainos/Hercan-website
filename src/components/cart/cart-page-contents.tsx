@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "./cart-provider";
 import { CartLineItem } from "./cart-line-item";
 import { CartSummary } from "./cart-summary";
 
 export function CartPageContents() {
-  const { cart, enabled, notices } = useCart();
+  const { cart, enabled, notices, clear, isPending } = useCart();
 
   if (!enabled) {
     return (
@@ -46,6 +46,16 @@ export function CartPageContents() {
           {cart!.lines.map((l) => (
             <CartLineItem key={l.id} line={l} />
           ))}
+        </div>
+        <div className="mt-3 flex justify-end">
+          <button
+            onClick={() => clear()}
+            disabled={isPending}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-hc-gunmetal transition-colors hover:text-red-600 disabled:opacity-50"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden />
+            Vaciar carrito
+          </button>
         </div>
       </div>
       <div className="h-fit rounded-xl border border-hc-metal-light p-4">

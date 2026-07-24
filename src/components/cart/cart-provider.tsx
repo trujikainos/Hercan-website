@@ -13,6 +13,7 @@ import {
   updateLineAction,
   removeLineAction,
   reorderAction,
+  clearCartAction,
 } from "@/app/cart/actions";
 import { CartDrawer } from "./cart-drawer";
 
@@ -37,6 +38,7 @@ interface CartCtx {
   reorder: (items: { variantId: string; quantity: number }[]) => void;
   updateQty: (lineId: string, qty: number) => void;
   remove: (lineId: string) => void;
+  clear: () => void;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
@@ -178,6 +180,17 @@ export function CartProvider({
     (lineId: string) => run({ kind: "remove", lineId }, () => removeLineAction(lineId)),
     [run],
   );
+  // Vaciar carrito completo: sin optimista (reconcilia con el carrito vacío del servidor).
+  const clear = useCallback(() => {
+    if (!enabled) return;
+    start(async () => {
+      const r = await clearCartAction();
+      if (r.cart) setBase(r.cart);
+      else if (r.recovered) setBase(null);
+      else setBase(null);
+      setNotices(r.notices);
+    });
+  }, [enabled]);
   // Aviso solo-cliente (p. ej. tope de stock), sin ir al servidor.
   const notify = useCallback((message: string) => {
     setNotices([{ code: "OUT_OF_STOCK", message }]);
@@ -200,6 +213,7 @@ export function CartProvider({
         reorder,
         updateQty,
         remove,
+        clear,
       }}
     >
       {children}

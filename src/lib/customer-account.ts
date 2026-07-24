@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { storefront, isShopifyConnected } from "./shopify";
 
 /**
  * Login REAL de clientes vía Customer Account API de Shopify (OAuth 2.0 + PKCE).
@@ -322,6 +323,7 @@ export type OrderDetailItem = {
   title: string;
   quantity: number;
   variantId: string | null;
+  handle: string | null;
   image: string | null;
   lineTotal: { amount: string; currencyCode: string } | null;
 };
@@ -338,9 +340,29 @@ export type OrderDetail = {
   tax: { amount: string; currencyCode: string } | null;
   shippingAddress: string[] | null;
   fulfillmentStatus: string | null;
+  shipmentStatus: string | null;
   tracking: OrderTracking[];
   items: OrderDetailItem[];
 };
+
+// Resuelve variantId (gid ProductVariant) → handle del producto vía Storefront API,
+// para poder enlazar cada renglón del pedido a su ficha /producto/[handle].
+const Q_VARIANT_HANDLES = `query($ids:[ID!]!){ nodes(ids:$ids){ ... on ProductVariant { id product { handle } } } }`;
+async function resolveHandles(variantIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!isShopifyConnected || variantIds.length === 0) return map;
+  try {
+    const d = await storefront<{ nodes: ({ id?: string; product?: { handle?: string } } | null)[] }>(
+      Q_VARIANT_HANDLES,
+      { ids: variantIds },
+      { cache: "no-store" },
+    );
+    for (const n of d.nodes ?? []) if (n?.id && n.product?.handle) map.set(n.id, n.product.handle);
+  } catch {
+    /* sin handles → los renglones no se enlazan (degradación limpia) */
+  }
+  return map;
+}
 /** null = no sesión / pedido no encontrado. {error} = query falló (TEMP: raw para debug). */
 export type OrderDetailResult = OrderDetail | { error: string } | null;
 
@@ -435,6 +457,9 @@ export const getOrderDetail = cache(async (id: string): Promise<OrderDetailResul
         company: t.company ?? null,
       })),
     );
+    const rawItems = (o.lineItems?.edges ?? []).map((e) => e.node);
+    const variantIds = [...new Set(rawItems.map((n) => n.variantId).filter(Boolean))] as string[];
+    const handleByVariant = await resolveHandles(variantIds);
     return {
       id: o.id,
       name: o.name,
@@ -446,14 +471,16 @@ export const getOrderDetail = cache(async (id: string): Promise<OrderDetailResul
       shipping: o.totalShipping ?? null,
       tax: o.totalTax ?? null,
       shippingAddress: o.shippingAddress?.formatted ?? null,
-      fulfillmentStatus: ful[0]?.status ?? ful[0]?.latestShipmentStatus ?? null,
+      fulfillmentStatus: ful[0]?.status ?? null,
+      shipmentStatus: ful.map((f) => f.latestShipmentStatus).find(Boolean) ?? null,
       tracking,
-      items: (o.lineItems?.edges ?? []).map((e) => ({
-        title: e.node.title,
-        quantity: e.node.quantity,
-        variantId: e.node.variantId ?? null,
-        image: e.node.image?.url ?? null,
-        lineTotal: e.node.currentTotalPrice ?? null,
+      items: rawItems.map((n) => ({
+        title: n.title,
+        quantity: n.quantity,
+        variantId: n.variantId ?? null,
+        handle: (n.variantId && handleByVariant.get(n.variantId)) || null,
+        image: n.image?.url ?? null,
+        lineTotal: n.currentTotalPrice ?? null,
       })),
     };
   } catch (e) {
