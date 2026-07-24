@@ -16,7 +16,17 @@ export const HUB_IMAGES: {
   para: Record<string, string | undefined>;
   iso: Record<string, string | undefined>;
 } = {
-  categoria: {},
+  categoria: {
+    fresado: "/brand/taxonomia/categoria/fresado.webp",
+    torneado: "/brand/taxonomia/categoria/torneado.webp",
+    perforacion: "/brand/taxonomia/categoria/perforacion.webp",
+    roscado: "/brand/taxonomia/categoria/roscado.webp",
+    ranurado: "/brand/taxonomia/categoria/ranurado.webp",
+    portaherramientas: "/brand/taxonomia/categoria/portaherramientas.webp",
+    abrasivos: "/brand/taxonomia/categoria/abrasivos.webp",
+    medicion: "/brand/taxonomia/categoria/medicion.webp",
+    accesorios: "/brand/taxonomia/categoria/accesorios.webp",
+  },
   tipo: {},
   material: {},
   recubrimiento: {},

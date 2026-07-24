@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CatalogSection } from "@/components/catalog-section";
 import { TaxonomyHero, SiblingStrip } from "@/components/taxonomy";
+import { HUB_IMAGES } from "@/lib/hub-images";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, collectionNode, breadcrumbNode, faqNode } from "@/lib/schema";
@@ -92,6 +93,11 @@ export default async function CategoryPage({
           title={content.title}
           intro={content.intro}
           bullets={content.bullets}
+          image={
+            HUB_IMAGES.categoria[slug]
+              ? { src: HUB_IMAGES.categoria[slug]!, alt: content.title }
+              : undefined
+          }
         />
         <CatalogSection
           result={result}
