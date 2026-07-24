@@ -95,6 +95,20 @@ export type CoatingContent = {
   bullets?: { heading: string; items: string[] }[];
 };
 
+export type ParaContent = {
+  /** Prefijo ISO 513 (P/M/K/N/S/H): scope (scope.para) por la 1ª letra de cada valor
+   * de `material_a_maquinar` del producto. Multi-valor. */
+  code: string;
+  /** Etiqueta legible del grupo de material. */
+  name: string;
+  /** H1 del hero. */
+  title: string;
+  metaTitle: string;
+  metaDescription: string;
+  intro: string[];
+  bullets?: { heading: string; items: string[] }[];
+};
+
 // ── MARCAS ──────────────────────────────────────────────────────────────────
 // Claves = slug de marca (minúsculas, sin espacios). Deben cubrir site.brands.
 export const BRAND_CONTENT: Record<string, BrandContent> = {
@@ -963,6 +977,122 @@ export const MATERIAL_CONTENT: Record<string, MaterialContent> = {
       {
         heading: "Aplicaciones",
         items: ["Acero inoxidable", "Aleaciones tenaces", "Taladrado exigente"],
+      },
+    ],
+  },
+};
+
+// ── MATERIAL A MAQUINAR (ISO 513) — la "mina de oro" /para/[material] ─────────
+// Claves = slug de la página. `code` = prefijo ISO 513 (P/M/K/N/S/H) con el que se
+// hace el scope (1ª letra de cada `material_a_maquinar`). Contenido = clasificación
+// ISO 513 de materiales (conocimiento técnico factual), no marketing. MULTI-VALOR:
+// un producto que sirve para varios grupos aparece en varias de estas páginas.
+export const PARA_CONTENT: Record<string, ParaContent> = {
+  acero: {
+    code: "P",
+    name: "Acero",
+    title: "Herramientas para acero",
+    metaTitle: "Herramientas de corte para acero (ISO P) en México | HERCAN",
+    metaDescription:
+      "Fresas, brocas e insertos para maquinar acero (grupo ISO P) en HERCAN. Herramienta de corte para acero al carbono y aleado, con cotización B2B en México.",
+    intro: [
+      "El acero (grupo P de la norma ISO 513, identificado con el color azul) es el material más común en el maquinado: abarca aceros al carbono, aleados y de baja aleación. Genera viruta larga y su maquinabilidad depende de la dureza y del contenido de aleación.",
+      "En HERCAN encuentras herramienta de corte para acero —insertos, fresas y brocas— de marcas como Iscar, Toolmex y YG-1. Filtra por categoría, marca, material de herramienta y recubrimiento para dar con la geometría exacta.",
+    ],
+    bullets: [
+      {
+        heading: "Recomendaciones típicas",
+        items: ["Carburo recubierto (TiAlN)", "Geometrías de propósito general", "Refrigeración según la operación"],
+      },
+    ],
+  },
+  "acero-inoxidable": {
+    code: "M",
+    name: "Acero inoxidable",
+    title: "Herramientas para acero inoxidable",
+    metaTitle: "Herramientas de corte para acero inoxidable (ISO M) | HERCAN",
+    metaDescription:
+      "Herramienta para maquinar acero inoxidable (grupo ISO M) en HERCAN: insertos, fresas y brocas para inoxidable austenítico y dúplex. Cotización B2B en México.",
+    intro: [
+      "El acero inoxidable (grupo M de la norma ISO 513, color amarillo) incluye los inoxidables austeníticos, ferríticos y dúplex. Se endurece por deformación y evacua mal el calor, por lo que exige filos vivos, buena tenacidad y control del corte para evitar el endurecimiento superficial.",
+      "En HERCAN distribuimos herramienta de corte apta para inoxidable, con grados y recubrimientos pensados para su tenacidad. Filtra por categoría, marca y recubrimiento.",
+    ],
+    bullets: [
+      {
+        heading: "Recomendaciones típicas",
+        items: ["Filos vivos y positivos", "Grados tenaces", "Refrigeración abundante"],
+      },
+    ],
+  },
+  fundicion: {
+    code: "K",
+    name: "Fundición",
+    title: "Herramientas para fundición",
+    metaTitle: "Herramientas de corte para fundición (ISO K) en México | HERCAN",
+    metaDescription:
+      "Herramienta para maquinar hierro fundido (grupo ISO K) en HERCAN: insertos y fresas para fundición gris y nodular. Cotización B2B en México.",
+    intro: [
+      "La fundición (grupo K de la norma ISO 513, color rojo) comprende el hierro fundido gris y nodular. Produce viruta corta y es abrasiva, por lo que el desgaste de la herramienta es un factor clave; con frecuencia se maquina en seco.",
+      "En HERCAN encuentras herramienta de corte para fundición con grados resistentes al desgaste. Filtra por categoría, marca, material de herramienta y recubrimiento.",
+    ],
+    bullets: [
+      {
+        heading: "Recomendaciones típicas",
+        items: ["Grados resistentes al desgaste", "Corte en seco frecuente", "Geometrías robustas"],
+      },
+    ],
+  },
+  aluminio: {
+    code: "N",
+    name: "Aluminio y no ferrosos",
+    title: "Herramientas para aluminio y no ferrosos",
+    metaTitle: "Herramientas de corte para aluminio y no ferrosos (ISO N) | HERCAN",
+    metaDescription:
+      "Herramienta para maquinar aluminio, cobre y no ferrosos (grupo ISO N) en HERCAN: fresas e insertos de filo vivo para alta velocidad. Cotización B2B en México.",
+    intro: [
+      "Los no ferrosos (grupo N de la norma ISO 513, color verde) incluyen el aluminio, el cobre y sus aleaciones. Son blandos y permiten velocidades de corte muy altas, pero exigen filos muy vivos y buena evacuación de viruta para evitar el pegado del material.",
+      "En HERCAN distribuimos herramienta de corte para aluminio y no ferrosos, con geometrías pulidas y positivas. Filtra por categoría, marca y recubrimiento.",
+    ],
+    bullets: [
+      {
+        heading: "Recomendaciones típicas",
+        items: ["Filos vivos y pulidos", "Geometrías positivas", "Altas velocidades de corte"],
+      },
+    ],
+  },
+  superaleaciones: {
+    code: "S",
+    name: "Superaleaciones y titanio",
+    title: "Herramientas para superaleaciones y titanio",
+    metaTitle: "Herramientas para superaleaciones y titanio (ISO S) | HERCAN",
+    metaDescription:
+      "Herramienta para maquinar superaleaciones y titanio (grupo ISO S) en HERCAN: insertos y fresas para materiales resistentes al calor. Cotización B2B en México.",
+    intro: [
+      "El grupo S de la norma ISO 513 (color café) reúne las superaleaciones termorresistentes (base níquel, cobalto o hierro, como el Inconel) y las aleaciones de titanio. Son materiales difíciles de maquinar: conservan su dureza a alta temperatura y generan mucho calor en el filo.",
+      "En HERCAN encontrarás herramienta de corte para estos materiales exigentes, con grados y recubrimientos de alta resistencia térmica. Filtra por categoría, marca y recubrimiento.",
+    ],
+    bullets: [
+      {
+        heading: "Recomendaciones típicas",
+        items: ["Grados resistentes al calor", "Velocidades de corte bajas", "Refrigeración a presión"],
+      },
+    ],
+  },
+  endurecidos: {
+    code: "H",
+    name: "Materiales endurecidos",
+    title: "Herramientas para materiales endurecidos",
+    metaTitle: "Herramientas para acero endurecido (ISO H) en México | HERCAN",
+    metaDescription:
+      "Herramienta para el torneado y fresado de aceros endurecidos (grupo ISO H) en HERCAN. Insertos para materiales de alta dureza (>45 HRC). Cotización B2B.",
+    intro: [
+      "El grupo H de la norma ISO 513 (color gris) corresponde a los materiales endurecidos: aceros templados y endurecidos por encima de unos 45 HRC, además de fundiciones duras. Se maquinan en operaciones de corte duro (hard turning), muchas veces como alternativa al rectificado.",
+      "En HERCAN distribuimos herramienta de corte para materiales endurecidos, con grados de alta dureza. Filtra por categoría, marca y recubrimiento.",
+    ],
+    bullets: [
+      {
+        heading: "Recomendaciones típicas",
+        items: ["Grados de alta dureza (CBN)", "Geometrías negativas robustas", "Corte estable y rígido"],
       },
     ],
   },

@@ -211,6 +211,11 @@ function mapProduct(n: ShopifyProductNode): Product {
     diameter: num("dc_diametro_corte"),
     flutes: mf.get("cict_no_filos") ? Number(mf.get("cict_no_filos")) || null : null,
     iso: mf.get("designacion_iso") ?? null,
+    // Multi-valor: separa por coma/;. Hoy suele venir 1 ("P-Acero"); soporta N.
+    materialesAMaquinar: (mf.get("material_a_maquinar") ?? "")
+      .split(/[,;]/)
+      .map((s) => s.trim())
+      .filter(Boolean),
     availability,
     price: amount > 0 ? amount : null,
     currency: n.priceRange.minVariantPrice.currencyCode || "USD",
@@ -227,6 +232,12 @@ const PRODUCT_FIELDS = `
   priceRange { minVariantPrice { amount currencyCode } }
   variants(first: 1) { nodes { id sku availableForSale quantityAvailable } }`;
 
+// Listado: PRODUCT_FIELDS + SOLO el metafield `material_a_maquinar` (para la
+// taxonomía "/para/[material]"). Es 1 metafield por producto → payload mínimo; el
+// resto de specs se derivan de tags en el listado y llegan completas en la ficha.
+const PRODUCT_LIST_FIELDS = `${PRODUCT_FIELDS}
+  metafields(identifiers: [{ namespace: "specs", key: "material_a_maquinar" }]) { key value }`;
+
 // La ficha de producto además trae la descripción (HTML del admin) y los
 // metafields técnicos del namespace "specs".
 const PRODUCT_DETAIL_FIELDS = `${PRODUCT_FIELDS} descriptionHtml
@@ -234,14 +245,14 @@ const PRODUCT_DETAIL_FIELDS = `${PRODUCT_FIELDS} descriptionHtml
 
 const PRODUCTS_QUERY = `
   query Products($first: Int!) {
-    products(first: $first) { nodes { ${PRODUCT_FIELDS} } }
+    products(first: $first) { nodes { ${PRODUCT_LIST_FIELDS} } }
   }`;
 
 // Recorrido del catálogo por cursor (Storefront topa `first` en 250 por página).
 const PRODUCTS_PAGE_QUERY = `
   query ProductsPage($first: Int!, $after: String) {
     products(first: $first, after: $after) {
-      nodes { ${PRODUCT_FIELDS} }
+      nodes { ${PRODUCT_LIST_FIELDS} }
       pageInfo { hasNextPage endCursor }
     }
   }`;
@@ -259,7 +270,7 @@ const HANDLES_PAGE_QUERY = `
 const PRODUCTS_SCOPED_QUERY = `
   query ProductsScoped($first: Int!, $query: String!) {
     products(first: $first, query: $query, sortKey: BEST_SELLING) {
-      nodes { ${PRODUCT_FIELDS} }
+      nodes { ${PRODUCT_LIST_FIELDS} }
     }
   }`;
 

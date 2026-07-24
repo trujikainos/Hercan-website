@@ -22,6 +22,10 @@ export interface Product {
   diameter?: number | null;
   flutes?: number | null;
   iso?: string | null;
+  /** Materiales a maquinar (ISO 513: P/M/K/N/S/H). MULTI-VALOR: un producto puede
+   * servir para varios. Hoy suele traer 1; se enriquece cuando se separen en el Sheet.
+   * Alimenta la taxonomía `/para/[material]`. */
+  materialesAMaquinar?: string[];
   availability: Availability;
   price?: number | null;
   currency: string;

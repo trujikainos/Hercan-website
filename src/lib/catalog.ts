@@ -49,6 +49,10 @@ export type Scope = {
   material?: string;
   /** Valor EXACTO de recubrimiento (TiAlN, TiN, AlCrN…) — faceta. */
   coating?: string;
+  /** Prefijo ISO 513 del material a maquinar (P/M/K/N/S/H). Scope por la 1ª letra de
+   * cada valor de `materialesAMaquinar` (MULTI-VALOR). NO es faceta del sidebar:
+   * predicado extra como tipo/iso. Alimenta `/para/[material]`. */
+  para?: string;
 };
 
 export const FACETS: { key: FacetKey; param: string; label: string }[] = [
@@ -172,6 +176,15 @@ export function buildCatalog({
   const scopeOk = (p: Product): boolean => {
     if (scope?.tipo && p.type !== scope.tipo) return false;
     if (scope?.iso && !isoFamilyMatch(p.iso, scope.iso)) return false;
+    // Material a maquinar: matchea si ALGÚN valor del producto tiene el prefijo ISO 513
+    // del scope (P/M/K/N/S/H). Multi-valor → un producto puede caer en varias páginas.
+    if (
+      scope?.para &&
+      !(p.materialesAMaquinar ?? []).some(
+        (m) => m.trim().charAt(0).toUpperCase() === scope.para,
+      )
+    )
+      return false;
     return true;
   };
 
