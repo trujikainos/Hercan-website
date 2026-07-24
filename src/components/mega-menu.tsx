@@ -67,6 +67,18 @@ const AXES: { key: "tipos" | "para" | "recubrimiento" | "material"; heading: str
 ];
 const hasAxes = (c: MenuCategory) => AXES.some((a) => c[a.key].length > 0);
 
+// Hubs/archivos de taxonomía (índices). La fila "Explora todo" del panel: navegar la
+// taxonomía COMPLETA (a diferencia de los chips, que filtran DENTRO de una categoría).
+const HUBS: { href: string; label: string }[] = [
+  { href: "/categorias", label: "Categorías" },
+  { href: "/marcas", label: "Marcas" },
+  { href: "/tipos", label: "Tipos" },
+  { href: "/materiales", label: "Materiales" },
+  { href: "/recubrimientos", label: "Recubrimientos" },
+  { href: "/para", label: "Para maquinar" },
+  { href: "/iso", label: "ISO" },
+];
+
 type Nav = () => void;
 
 // ── Piezas reutilizables (idénticas en desktop y móvil) ─────────────────────
@@ -434,16 +446,20 @@ export function MegaMenu({ data }: { data: MenuData }) {
             </div>
           </div>
 
-          {/* Barra inferior: marcas + accesos a los hubs de taxonomía */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hc-metal-light bg-hc-soft px-5 py-3">
-            <BrandLinks onNavigate={() => closeNow(false)} />
+          {/* Barra inferior en 2 filas: (1) Marcas, (2) Explora todo → hubs. Los chips
+              de arriba filtran DENTRO de la categoría; estos hubs navegan la taxonomía. */}
+          <div className="space-y-2 border-t border-hc-metal-light bg-hc-soft px-5 py-3">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+              <span className="font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+                Marcas
+              </span>
+              <BrandLinks onNavigate={() => closeNow(false)} />
+            </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              {[
-                { href: "/categorias", label: "Categorías" },
-                { href: "/tipos", label: "Tipos" },
-                { href: "/iso", label: "ISO" },
-                { href: "/marcas", label: "Marcas" },
-              ].map((h) => (
+              <span className="font-heading text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+                Explora todo
+              </span>
+              {HUBS.map((h) => (
                 <Link
                   key={h.href}
                   href={h.href}
@@ -456,7 +472,7 @@ export function MegaMenu({ data }: { data: MenuData }) {
               <Link
                 href="/productos"
                 onClick={() => closeNow(false)}
-                className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy transition-colors hover:text-hc-blue focus-visible:underline focus-visible:outline-none"
+                className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-blue transition-colors hover:text-hc-steel focus-visible:underline focus-visible:outline-none"
               >
                 Ver todo
                 <ArrowRight className="h-4 w-4" aria-hidden />
@@ -564,30 +580,31 @@ export function MegaMenu({ data }: { data: MenuData }) {
                   <ArrowRight className="h-4 w-4" aria-hidden />
                 </Link>
               </div>
-              <div className="flex flex-col gap-2 pt-1">
-                {[
-                  { href: "/categorias", label: "Todas las categorías" },
-                  { href: "/tipos", label: "Tipos de herramienta" },
-                  { href: "/iso", label: "Insertos por ISO" },
-                ].map((h) => (
+              <div className="pt-1">
+                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+                  Explora todo
+                </p>
+                <div className="flex flex-col gap-2">
+                  {HUBS.filter((h) => h.href !== "/marcas").map((h) => (
+                    <Link
+                      key={h.href}
+                      href={h.href}
+                      onClick={() => closeNow(false)}
+                      className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy hover:text-hc-blue"
+                    >
+                      {h.label}
+                      <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
+                  ))}
                   <Link
-                    key={h.href}
-                    href={h.href}
+                    href="/productos"
                     onClick={() => closeNow(false)}
-                    className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy hover:text-hc-blue"
+                    className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-blue hover:text-hc-steel"
                   >
-                    {h.label}
+                    Ver todo el catálogo
                     <ArrowRight className="h-4 w-4" aria-hidden />
                   </Link>
-                ))}
-                <Link
-                  href="/productos"
-                  onClick={() => closeNow(false)}
-                  className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy hover:text-hc-blue"
-                >
-                  Ver todo el catálogo
-                  <ArrowRight className="h-4 w-4" aria-hidden />
-                </Link>
+                </div>
               </div>
             </div>
           </div>
