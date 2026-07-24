@@ -6,6 +6,7 @@ import { SearchBar } from "@/components/search-bar";
 import { NavMenu } from "@/components/nav-menu";
 import { MegaMenu } from "@/components/mega-menu";
 import { MarcasMenu } from "@/components/marcas-menu";
+import { ParaMenu } from "@/components/para-menu";
 import { getMenuData } from "@/lib/menu-data";
 
 // Portal de cuentas de cliente de Shopify (login sin contraseña + pedidos + rastreo).
@@ -60,6 +61,7 @@ export async function SiteHeader() {
           {/* Trigger del mega menú: las categorías viven ahora en el riel del panel.
               Fuera de cualquier overflow para que el panel ancho no se recorte. */}
           <MegaMenu data={menuData} />
+          <ParaMenu />
           <MarcasMenu />
           {/* Accesos fijos a la derecha: "Ver todo" + dropdown "Más" (páginas de empresa) */}
           <div className="ml-auto flex shrink-0 items-center gap-5 py-2.5">
