@@ -191,8 +191,8 @@ export type CustomerAccountData = {
   addresses: string[][]; // cada dirección = líneas ya formateadas
   orders: CustomerOrder[];
 };
-/** null = no hay sesión (→ login). {error} = sesión OK pero la query falló (debug). */
-export type AccountResult = CustomerAccountData | { error: string };
+/** null = no hay sesión (→ login). {error:true} = sesión OK pero la query falló. */
+export type AccountResult = CustomerAccountData | { error: true };
 
 const ACCOUNT_QUERY = `query CustomerAccount {
   customer {
@@ -257,8 +257,10 @@ export const getCustomerAccount = cache(async (): Promise<AccountResult | null> 
       data?: { customer?: GqlCustomer };
       errors?: unknown;
     };
-    // TEMP DEBUG: devolver el error de la query para verlo en la primera carga.
-    if (json.errors) return { error: JSON.stringify(json.errors).slice(0, 800) };
+    if (json.errors) {
+      console.error("[getCustomerAccount] GraphQL errors:", JSON.stringify(json.errors));
+      return { error: true };
+    }
     const c = json.data?.customer;
     if (!c) return null;
     const name =
@@ -291,6 +293,7 @@ export const getCustomerAccount = cache(async (): Promise<AccountResult | null> 
       }),
     };
   } catch (e) {
-    return { error: `threw: ${e instanceof Error ? e.message : String(e)}` };
+    console.error("[getCustomerAccount] threw:", e);
+    return { error: true };
   }
 });

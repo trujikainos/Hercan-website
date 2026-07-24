@@ -100,18 +100,29 @@ export default async function CuentaPage() {
   // Sin sesión → arranca el login.
   if (!acc) redirect("/account/login");
 
-  // TEMP: si la query del Customer Account API falló, muéstralo para diagnosticar.
+  // Sesión válida pero la API no respondió (fallo transitorio): mensaje amigable.
   if ("error" in acc) {
     return (
-      <main id="contenido" className="mx-auto max-w-3xl flex-1 px-4 py-12">
+      <main id="contenido" className="mx-auto max-w-3xl flex-1 px-4 py-16 text-center">
         <h1 className="font-heading text-2xl text-hc-navy">Mi cuenta</h1>
-        <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-          <p className="font-semibold">No se pudo cargar la información (diagnóstico temporal):</p>
-          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs">{acc.error}</pre>
+        <p className="mt-3 text-hc-gunmetal">
+          No pudimos cargar tu información en este momento. Vuelve a intentarlo en unos
+          segundos.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/cuenta"
+            className="press rounded-lg bg-hc-steel px-4 py-2 text-sm font-medium text-white hover:bg-hc-blue"
+          >
+            Reintentar
+          </Link>
+          <a
+            href="/account/logout"
+            className="press inline-flex items-center gap-1 rounded-lg border border-hc-metal-light px-4 py-2 text-sm font-medium text-hc-navy hover:border-hc-steel"
+          >
+            <LogOut className="h-4 w-4" aria-hidden /> Cerrar sesión
+          </a>
         </div>
-        <Link href="/account/logout" className="mt-4 inline-flex items-center gap-1 text-sm text-hc-blue">
-          <LogOut className="h-4 w-4" aria-hidden /> Cerrar sesión
-        </Link>
       </main>
     );
   }
