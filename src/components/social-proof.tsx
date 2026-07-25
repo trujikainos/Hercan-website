@@ -77,11 +77,13 @@ export function SocialProof() {
     <div
       role="status"
       aria-live="polite"
-      className={`fixed bottom-4 left-4 z-40 w-[19rem] max-w-[calc(100vw-2rem)] transition-all duration-500 ${
-        visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
+      className={`fixed bottom-4 left-4 z-40 w-[19rem] max-w-[calc(100vw-2rem)] will-change-transform transition-[transform,opacity] ${
+        visible
+          ? "translate-x-0 translate-y-0 scale-100 opacity-100 duration-[450ms] ease-[cubic-bezier(.34,1.56,.64,1)]"
+          : "pointer-events-none -translate-x-3 translate-y-4 scale-95 opacity-0 duration-200 ease-[cubic-bezier(.4,0,1,1)]"
       }`}
     >
-      <div className="flex items-start gap-3 rounded-xl border border-hc-metal-light bg-white p-3 shadow-lg shadow-hc-navy/10">
+      <div className="relative flex items-start gap-3 overflow-hidden rounded-xl border border-hc-metal-light bg-white p-3 shadow-xl shadow-hc-navy/15 ring-1 ring-black/[0.02]">
         <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-hc-navy to-hc-steel text-white">
           <Icon className="h-5 w-5" aria-hidden />
           {c.live && (
@@ -100,6 +102,19 @@ export function SocialProof() {
         >
           <X className="h-4 w-4" />
         </button>
+        {/* Barra de progreso del auto-cierre (se remonta con cada evento → reinicia). */}
+        {visible && (
+          <span
+            key={eventKey(event)}
+            className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-hc-steel/70"
+            style={{
+              animationName: "spProgress",
+              animationDuration: `${VISIBLE_MS}ms`,
+              animationTimingFunction: "linear",
+              animationFillMode: "forwards",
+            }}
+          />
+        )}
       </div>
     </div>
   );
