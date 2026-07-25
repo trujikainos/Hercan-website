@@ -6,6 +6,7 @@ import { getCart } from "@/lib/shopify-cart";
 import { isShopifyConnected } from "@/lib/shopify";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
+import { SocialProof } from "@/components/social-proof";
 import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/home-sections";
 
@@ -101,6 +102,7 @@ export default async function RootLayout({
           <SiteFooter />
         </CartProvider>
         <WhatsAppFloat />
+        <SocialProof />
       </body>
     </html>
   );
