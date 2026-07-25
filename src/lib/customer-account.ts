@@ -193,14 +193,32 @@ export type CustomerOrder = {
   statusUrl: string | null;
   lineItems: OrderItem[];
 };
+export type CustomerAddress = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  company: string | null;
+  address1: string | null;
+  address2: string | null;
+  city: string | null;
+  zip: string | null;
+  phoneNumber: string | null;
+  territoryCode: string | null; // país (ISO 3166-1)
+  zoneCode: string | null; // estado/provincia (ISO 3166-2)
+  formatted: string[];
+  isDefault: boolean;
+};
 export type CustomerAccountData = {
-  profile: { name: string; email: string; phone: string | null };
-  addresses: string[][]; // cada dirección = líneas ya formateadas
+  profile: { name: string; firstName: string | null; lastName: string | null; email: string; phone: string | null };
+  addresses: CustomerAddress[];
   orders: CustomerOrder[];
 };
 /** null = no hay sesión (→ login). {error:true} = sesión OK pero la query falló. */
 export type AccountResult = CustomerAccountData | { error: true };
 
+const ADDR_FIELDS = `
+  id firstName lastName company address1 address2 city zip phoneNumber territoryCode zoneCode
+  formatted(withName: true)`;
 const ACCOUNT_QUERY = `query CustomerAccount {
   customer {
     firstName
@@ -208,8 +226,8 @@ const ACCOUNT_QUERY = `query CustomerAccount {
     displayName
     emailAddress { emailAddress }
     phoneNumber { phoneNumber }
-    defaultAddress { formatted }
-    addresses(first: 6) { edges { node { formatted } } }
+    defaultAddress { id }
+    addresses(first: 10) { edges { node { ${ADDR_FIELDS} } } }
     orders(first: 15, sortKey: PROCESSED_AT, reverse: true) {
       edges { node {
         id
@@ -227,7 +245,20 @@ const ACCOUNT_QUERY = `query CustomerAccount {
 }`;
 
 type GqlMoney = { amount: string; currencyCode: string } | null;
-type GqlAddr = { formatted?: string[] } | null;
+type GqlAddrNode = {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  company?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  city?: string | null;
+  zip?: string | null;
+  phoneNumber?: string | null;
+  territoryCode?: string | null;
+  zoneCode?: string | null;
+  formatted?: string[];
+};
 type GqlOrderNode = {
   id: string;
   name: string;
@@ -252,8 +283,8 @@ type GqlCustomer = {
   displayName?: string | null;
   emailAddress?: { emailAddress?: string } | null;
   phoneNumber?: { phoneNumber?: string } | null;
-  defaultAddress?: GqlAddr;
-  addresses?: { edges?: { node: GqlAddr }[] };
+  defaultAddress?: { id?: string } | null;
+  addresses?: { edges?: { node: GqlAddrNode }[] };
   orders?: { edges?: { node: GqlOrderNode }[] };
 };
 
@@ -283,17 +314,36 @@ export const getCustomerAccount = cache(async (): Promise<AccountResult | null> 
     if (!c) return null;
     const name =
       c.displayName || [c.firstName, c.lastName].filter(Boolean).join(" ").trim();
-    const addrNodes = [c.defaultAddress, ...(c.addresses?.edges ?? []).map((e) => e.node)];
+    const defaultId = c.defaultAddress?.id ?? null;
+    const addresses: CustomerAddress[] = (c.addresses?.edges ?? [])
+      .map((e) => e.node)
+      .filter((a): a is GqlAddrNode => Boolean(a?.id))
+      .map((a) => ({
+        id: a.id,
+        firstName: a.firstName ?? null,
+        lastName: a.lastName ?? null,
+        company: a.company ?? null,
+        address1: a.address1 ?? null,
+        address2: a.address2 ?? null,
+        city: a.city ?? null,
+        zip: a.zip ?? null,
+        phoneNumber: a.phoneNumber ?? null,
+        territoryCode: a.territoryCode ?? null,
+        zoneCode: a.zoneCode ?? null,
+        formatted: a.formatted ?? [],
+        isDefault: a.id === defaultId,
+      }))
+      // La dirección predeterminada primero.
+      .sort((x, y) => Number(y.isDefault) - Number(x.isDefault));
     return {
       profile: {
         name: name || "",
+        firstName: c.firstName ?? null,
+        lastName: c.lastName ?? null,
         email: c.emailAddress?.emailAddress ?? "",
         phone: c.phoneNumber?.phoneNumber ?? null,
       },
-      addresses: addrNodes
-        .filter((a): a is { formatted?: string[] } => Boolean(a))
-        .map((a) => a.formatted ?? [])
-        .filter((lines) => lines.length > 0),
+      addresses,
       orders: (c.orders?.edges ?? []).map((e) => {
         const o = e.node;
         return {
@@ -487,3 +537,114 @@ export const getOrderDetail = cache(async (id: string): Promise<OrderDetailResul
     return { error: `threw: ${e instanceof Error ? e.message : String(e)}` };
   }
 });
+
+// ── Mutaciones de la cuenta (Fase B: editar perfil y direcciones) ────────────
+export type MutationResult = { ok: boolean; error?: string };
+export type AddressInput = {
+  firstName?: string;
+  lastName?: string;
+  company?: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  zip?: string;
+  phoneNumber?: string;
+  territoryCode?: string;
+  zoneCode?: string;
+};
+
+// Ejecuta una mutación autenticada del Customer Account API. Lanza si no hay sesión.
+async function caMutate(
+  query: string,
+  variables: Record<string, unknown>,
+): Promise<{ data?: Record<string, { userErrors?: { field?: string[]; message?: string }[] }>; errors?: unknown }> {
+  const jar = await cookies();
+  const token = jar.get(CA_COOKIES.at)?.value;
+  const exp = Number(jar.get(CA_COOKIES.exp)?.value ?? "0");
+  if (!token || (exp && exp < Date.now())) throw new Error("NO_SESSION");
+  const { graphqlApi } = await discover();
+  const res = await fetch(graphqlApi, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: token },
+    body: JSON.stringify({ query, variables }),
+    cache: "no-store",
+  });
+  return res.json();
+}
+
+// Normaliza el resultado: GraphQL errors o el primer userError → mensaje; si no, ok.
+function settle(
+  json: { data?: Record<string, { userErrors?: { message?: string }[] }>; errors?: unknown },
+  root: string,
+): MutationResult {
+  if (json.errors) return { ok: false, error: "No se pudo completar la operación. Intenta de nuevo." };
+  const ue = json.data?.[root]?.userErrors;
+  if (ue && ue.length > 0) return { ok: false, error: ue[0]?.message || "Revisa los datos e intenta de nuevo." };
+  return { ok: true };
+}
+
+const M_PROFILE = `mutation($input: CustomerUpdateInput!) {
+  customerUpdate(input: $input) { customer { id } userErrors { field message } }
+}`;
+export async function updateCustomerProfile(firstName: string, lastName: string): Promise<MutationResult> {
+  try {
+    const json = await caMutate(M_PROFILE, { input: { firstName, lastName } });
+    return settle(json, "customerUpdate");
+  } catch (e) {
+    return { ok: false, error: e instanceof Error && e.message === "NO_SESSION" ? "Tu sesión expiró." : "Error de red." };
+  }
+}
+
+const M_ADDR_CREATE = `mutation($address: CustomerAddressInput!, $defaultAddress: Boolean) {
+  customerAddressCreate(address: $address, defaultAddress: $defaultAddress) {
+    customerAddress { id } userErrors { field message code }
+  }
+}`;
+export async function addCustomerAddress(input: AddressInput, makeDefault: boolean): Promise<MutationResult> {
+  try {
+    const json = await caMutate(M_ADDR_CREATE, { address: input, defaultAddress: makeDefault });
+    return settle(json, "customerAddressCreate");
+  } catch (e) {
+    return { ok: false, error: e instanceof Error && e.message === "NO_SESSION" ? "Tu sesión expiró." : "Error de red." };
+  }
+}
+
+const M_ADDR_UPDATE = `mutation($addressId: ID!, $address: CustomerAddressInput, $defaultAddress: Boolean) {
+  customerAddressUpdate(addressId: $addressId, address: $address, defaultAddress: $defaultAddress) {
+    customerAddress { id } userErrors { field message code }
+  }
+}`;
+export async function editCustomerAddress(
+  id: string,
+  input: AddressInput,
+  makeDefault: boolean,
+): Promise<MutationResult> {
+  try {
+    const json = await caMutate(M_ADDR_UPDATE, { addressId: id, address: input, defaultAddress: makeDefault });
+    return settle(json, "customerAddressUpdate");
+  } catch (e) {
+    return { ok: false, error: e instanceof Error && e.message === "NO_SESSION" ? "Tu sesión expiró." : "Error de red." };
+  }
+}
+
+// Marcar como predeterminada sin reenviar todos los campos (address es opcional en update).
+export async function setDefaultAddress(id: string): Promise<MutationResult> {
+  try {
+    const json = await caMutate(M_ADDR_UPDATE, { addressId: id, defaultAddress: true });
+    return settle(json, "customerAddressUpdate");
+  } catch (e) {
+    return { ok: false, error: e instanceof Error && e.message === "NO_SESSION" ? "Tu sesión expiró." : "Error de red." };
+  }
+}
+
+const M_ADDR_DELETE = `mutation($addressId: ID!) {
+  customerAddressDelete(addressId: $addressId) { deletedAddressId userErrors { field message code } }
+}`;
+export async function removeCustomerAddress(id: string): Promise<MutationResult> {
+  try {
+    const json = await caMutate(M_ADDR_DELETE, { addressId: id });
+    return settle(json, "customerAddressDelete");
+  } catch (e) {
+    return { ok: false, error: e instanceof Error && e.message === "NO_SESSION" ? "Tu sesión expiró." : "Error de red." };
+  }
+}

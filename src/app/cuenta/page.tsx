@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, LogOut, MapPin, Package, User } from "lucide-react";
+import { ArrowRight, LogOut, Package } from "lucide-react";
 import { getCustomerAccount, type CustomerOrder } from "@/lib/customer-account";
 import { ProductImage } from "@/components/product-image";
 import { ReorderButton } from "@/components/reorder-button";
+import { EditProfile } from "@/components/account/edit-profile";
+import { AddressManager } from "@/components/account/address-manager";
 
 // Página privada de cuenta: SIEMPRE dinámica (lee la sesión), NUNCA indexable.
 export const dynamic = "force-dynamic";
@@ -217,50 +219,10 @@ export default async function CuentaPage() {
           )}
         </section>
 
-        {/* Panel lateral: datos + direcciones */}
+        {/* Panel lateral: datos + direcciones (editables — Fase B) */}
         <aside className="space-y-6">
-          <div className="rounded-xl border border-hc-metal-light bg-white p-5">
-            <h2 className="mb-3 flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
-              <User className="h-4 w-4" aria-hidden />
-              Datos de contacto
-            </h2>
-            <dl className="space-y-1.5 text-sm">
-              <div>
-                <dt className="text-hc-gunmetal">Nombre</dt>
-                <dd className="text-hc-ink">{profile.name || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-hc-gunmetal">Correo</dt>
-                <dd className="break-all text-hc-ink">{profile.email || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-hc-gunmetal">Teléfono</dt>
-                <dd className="text-hc-ink">{profile.phone || "—"}</dd>
-              </div>
-            </dl>
-          </div>
-
-          <div className="rounded-xl border border-hc-metal-light bg-white p-5">
-            <h2 className="mb-3 flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
-              <MapPin className="h-4 w-4" aria-hidden />
-              Direcciones
-            </h2>
-            {addresses.length === 0 ? (
-              <p className="text-sm text-hc-gunmetal">Sin direcciones guardadas.</p>
-            ) : (
-              <ul className="space-y-3">
-                {addresses.map((lines, i) => (
-                  <li key={i} className="text-sm leading-relaxed text-hc-ink">
-                    {lines.map((l, j) => (
-                      <span key={j} className="block">
-                        {l}
-                      </span>
-                    ))}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <EditProfile profile={profile} />
+          <AddressManager addresses={addresses} />
         </aside>
       </div>
     </main>
