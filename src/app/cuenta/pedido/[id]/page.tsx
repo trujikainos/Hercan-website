@@ -96,7 +96,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   return (
     <main id="contenido" className="mx-auto max-w-4xl flex-1 px-4 py-8">
-      <Link href="/cuenta" className="inline-flex items-center gap-1 text-sm text-hc-blue hover:text-hc-steel">
+      <Link href="/cuenta/pedidos" className="inline-flex items-center gap-1 text-sm text-hc-blue hover:text-hc-steel">
         <ArrowLeft className="h-4 w-4" aria-hidden /> Volver a mis pedidos
       </Link>
 

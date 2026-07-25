@@ -5,12 +5,8 @@ import { useRouter } from "next/navigation";
 import { Check, Loader2, MapPin, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import type { CustomerAddress } from "@/lib/customer-account";
 import { COUNTRIES, ZONES } from "@/lib/geo";
-import {
-  saveAddressAction,
-  deleteAddressAction,
-  setDefaultAddressAction,
-  type AddressFormInput,
-} from "@/app/cuenta/actions";
+import { saveAddressAction, deleteAddressAction, setDefaultAddressAction } from "@/app/cuenta/actions";
+import type { AddressFormInput } from "@/lib/account-types";
 
 const inputCls =
   "w-full rounded-lg border border-hc-metal-light px-3 py-2 text-sm outline-none focus:border-hc-steel";

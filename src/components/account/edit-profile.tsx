@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Loader2, Pencil, User, X } from "lucide-react";
 import { saveProfileAction } from "@/app/cuenta/actions";
@@ -82,7 +83,13 @@ export function EditProfile({ profile }: { profile: Profile }) {
           <div>
             <span className="text-xs text-hc-gunmetal">Correo</span>
             <p className="break-all text-sm text-hc-ink">{profile.email || "—"}</p>
-            <p className="mt-0.5 text-[11px] text-hc-metal">El correo y el teléfono se gestionan en el checkout.</p>
+            <p className="mt-0.5 text-[11px] text-hc-metal">
+              El correo es tu identidad de acceso y no se puede cambiar aquí.{" "}
+              <Link href="/contacto" className="text-hc-blue hover:text-hc-steel">
+                Contáctanos
+              </Link>{" "}
+              para modificarlo.
+            </p>
           </div>
           {error && <p className="text-xs text-red-600">{error}</p>}
           <div className="flex gap-2">

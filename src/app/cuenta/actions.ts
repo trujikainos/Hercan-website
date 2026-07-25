@@ -7,9 +7,12 @@ import {
   editCustomerAddress,
   removeCustomerAddress,
   setDefaultAddress,
+  getCustomerOrders,
   type MutationResult,
   type AddressInput,
 } from "@/lib/customer-account";
+import { rangeToQuery } from "@/lib/order-filters";
+import type { AddressFormInput, OrdersActionResult } from "@/lib/account-types";
 
 const clean = (s: unknown) => (typeof s === "string" ? s.trim() : "");
 
@@ -21,11 +24,12 @@ export async function saveProfileAction(input: {
   const lastName = clean(input.lastName);
   if (!firstName && !lastName) return { ok: false, error: "Escribe al menos un nombre." };
   const r = await updateCustomerProfile(firstName, lastName);
-  if (r.ok) revalidatePath("/cuenta");
+  if (r.ok) {
+    revalidatePath("/cuenta");
+    revalidatePath("/cuenta/perfil");
+  }
   return r;
 }
-
-export type AddressFormInput = AddressInput & { id?: string; makeDefault?: boolean };
 
 // Construye el input de dirección solo con campos no vacíos (evita mandar "" a Shopify).
 function buildAddress(input: AddressFormInput): { addr: AddressInput; error?: string } {
@@ -60,20 +64,41 @@ export async function saveAddressAction(input: AddressFormInput): Promise<Mutati
   const r = input.id
     ? await editCustomerAddress(input.id, addr, makeDefault)
     : await addCustomerAddress(addr, makeDefault);
-  if (r.ok) revalidatePath("/cuenta");
+  if (r.ok) {
+    revalidatePath("/cuenta");
+    revalidatePath("/cuenta/direcciones");
+  }
   return r;
 }
 
 export async function deleteAddressAction(id: string): Promise<MutationResult> {
   if (!id) return { ok: false, error: "Dirección no válida." };
   const r = await removeCustomerAddress(id);
-  if (r.ok) revalidatePath("/cuenta");
+  if (r.ok) {
+    revalidatePath("/cuenta");
+    revalidatePath("/cuenta/direcciones");
+  }
   return r;
 }
 
 export async function setDefaultAddressAction(id: string): Promise<MutationResult> {
   if (!id) return { ok: false, error: "Dirección no válida." };
   const r = await setDefaultAddress(id);
-  if (r.ok) revalidatePath("/cuenta");
+  if (r.ok) {
+    revalidatePath("/cuenta");
+    revalidatePath("/cuenta/direcciones");
+  }
   return r;
+}
+
+// Lista de pedidos: filtro por rango + paginación "Cargar más".
+export async function loadOrdersAction(input: {
+  range: string;
+  after?: string | null;
+}): Promise<OrdersActionResult> {
+  const query = rangeToQuery(input.range, Date.now());
+  const r = await getCustomerOrders({ first: 10, after: input.after ?? null, query });
+  if (!r) return { ok: false, error: "Tu sesión expiró. Vuelve a iniciar sesión." };
+  if ("error" in r) return { ok: false, error: "No pudimos cargar los pedidos. Intenta de nuevo." };
+  return { ok: true, orders: r.orders, hasNextPage: r.hasNextPage, endCursor: r.endCursor };
 }

@@ -368,6 +368,101 @@ export const getCustomerAccount = cache(async (): Promise<AccountResult | null> 
   }
 });
 
+// ── Pedidos paginados + filtro (página /cuenta/pedidos con "Cargar más") ─────
+export type OrdersPage = {
+  name: string;
+  email: string;
+  orders: CustomerOrder[];
+  hasNextPage: boolean;
+  endCursor: string | null;
+};
+export type OrdersResult = OrdersPage | { error: true } | null;
+
+const ORDERS_QUERY = `query CustomerOrders($first: Int!, $after: String, $query: String) {
+  customer {
+    firstName
+    lastName
+    emailAddress { emailAddress }
+    orders(first: $first, after: $after, query: $query, sortKey: PROCESSED_AT, reverse: true) {
+      pageInfo { hasNextPage endCursor }
+      edges { node {
+        id
+        name
+        processedAt
+        financialStatus
+        totalPrice { amount currencyCode }
+        statusPageUrl
+        lineItems(first: 6) { edges { node { title quantity variantId image { url } } } }
+      } }
+    }
+  }
+}`;
+
+/** Lee una página de pedidos. `query` = sintaxis de búsqueda de Shopify (p. ej. processed_at:>=2025-01-01). */
+export async function getCustomerOrders(opts: {
+  first?: number;
+  after?: string | null;
+  query?: string | null;
+}): Promise<OrdersResult> {
+  if (!customerAccountsEnabled) return null;
+  const jar = await cookies();
+  const token = jar.get(CA_COOKIES.at)?.value;
+  const exp = Number(jar.get(CA_COOKIES.exp)?.value ?? "0");
+  if (!token || (exp && exp < Date.now())) return null;
+  try {
+    const { graphqlApi } = await discover();
+    const res = await fetch(graphqlApi, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: token },
+      body: JSON.stringify({
+        query: ORDERS_QUERY,
+        variables: { first: opts.first ?? 10, after: opts.after ?? null, query: opts.query || null },
+      }),
+      cache: "no-store",
+    });
+    const json = (await res.json()) as {
+      data?: {
+        customer?: GqlCustomer & {
+          orders?: { pageInfo?: { hasNextPage?: boolean; endCursor?: string | null }; edges?: { node: GqlOrderNode }[] };
+        };
+      };
+      errors?: unknown;
+    };
+    if (json.errors) {
+      console.error("[getCustomerOrders] GraphQL errors:", JSON.stringify(json.errors));
+      return { error: true };
+    }
+    const c = json.data?.customer;
+    if (!c) return null;
+    return {
+      name: c.displayName || [c.firstName, c.lastName].filter(Boolean).join(" ").trim() || "",
+      email: c.emailAddress?.emailAddress ?? "",
+      hasNextPage: Boolean(c.orders?.pageInfo?.hasNextPage),
+      endCursor: c.orders?.pageInfo?.endCursor ?? null,
+      orders: (c.orders?.edges ?? []).map((e) => {
+        const o = e.node;
+        return {
+          id: o.id,
+          name: o.name,
+          processedAt: o.processedAt,
+          financialStatus: o.financialStatus ?? null,
+          total: o.totalPrice ?? null,
+          statusUrl: o.statusPageUrl ?? null,
+          lineItems: (o.lineItems?.edges ?? []).map((le) => ({
+            title: le.node.title,
+            quantity: le.node.quantity,
+            variantId: le.node.variantId ?? null,
+            image: le.node.image?.url ?? null,
+          })),
+        };
+      }),
+    };
+  } catch (e) {
+    console.error("[getCustomerOrders] threw:", e);
+    return { error: true };
+  }
+}
+
 // ── Detalle de un pedido (página /cuenta/pedido/[id]) ────────────────────────
 export type OrderDetailItem = {
   title: string;
