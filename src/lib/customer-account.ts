@@ -473,22 +473,38 @@ export type OrderDetailItem = {
   lineTotal: { amount: string; currencyCode: string } | null;
 };
 export type OrderTracking = { number: string | null; url: string | null; company: string | null };
+export type Money = { amount: string; currencyCode: string };
+export type OrderTxn = {
+  amount: Money | null;
+  processedAt: string | null;
+  type: string | null; // SALE, CAPTURE, REFUND, VOID…
+  card: { brand: string; last4: string | null } | null;
+};
 export type OrderDetail = {
   id: string;
   name: string;
   processedAt: string;
   financialStatus: string | null;
   statusUrl: string | null;
-  total: { amount: string; currencyCode: string } | null;
-  subtotal: { amount: string; currencyCode: string } | null;
-  shipping: { amount: string; currencyCode: string } | null;
-  tax: { amount: string; currencyCode: string } | null;
+  total: Money | null;
+  subtotal: Money | null;
+  shipping: Money | null;
+  tax: Money | null;
+  totalPaid: Money | null;
   shippingAddress: string[] | null;
+  shippingMethod: string | null;
   fulfillmentStatus: string | null;
   shipmentStatus: string | null;
+  statusDate: string | null; // fecha del último cambio de preparación/envío
+  estimatedDeliveryAt: string | null;
   tracking: OrderTracking[];
+  transactions: OrderTxn[];
+  itemCount: number;
   items: OrderDetailItem[];
 };
+
+// Quitamos contactEmail: en la página de la propia cuenta el correo del usuario ya se
+// muestra en el encabezado; no vale la pena arriesgar el query por un campo redundante.
 
 // Resuelve variantId (gid ProductVariant) → handle del producto vía Storefront API,
 // para poder enlazar cada renglón del pedido a su ficha /producto/[handle].
@@ -523,10 +539,21 @@ const ORDER_QUERY = `query OrderDetail($id: ID!) {
     totalShipping { amount currencyCode }
     totalTax { amount currencyCode }
     shippingAddress { formatted }
+    shippingLine { title }
+    paymentInformation { totalPaidAmount { amount currencyCode } }
+    transactions {
+      processedAt
+      type
+      transactionAmount { presentmentMoney { amount currencyCode } }
+      paymentDetails { ... on CardPaymentDetails { cardBrand last4 } }
+    }
     fulfillments(first: 5) {
       edges { node {
         status
         latestShipmentStatus
+        createdAt
+        updatedAt
+        estimatedDeliveryAt
         trackingInformation { number url company }
       } }
     }
@@ -570,11 +597,22 @@ export const getOrderDetail = cache(async (id: string): Promise<OrderDetailResul
           totalShipping: { amount: string; currencyCode: string } | null;
           totalTax: { amount: string; currencyCode: string } | null;
           shippingAddress: { formatted?: string[] } | null;
+          shippingLine?: { title?: string | null } | null;
+          paymentInformation?: { totalPaidAmount?: { amount: string; currencyCode: string } | null } | null;
+          transactions?: {
+            processedAt?: string | null;
+            type?: string | null;
+            transactionAmount?: { presentmentMoney?: { amount: string; currencyCode: string } | null } | null;
+            paymentDetails?: { cardBrand?: string | null; last4?: string | null } | null;
+          }[];
           fulfillments?: {
             edges?: {
               node: {
                 status?: string | null;
                 latestShipmentStatus?: string | null;
+                createdAt?: string | null;
+                updatedAt?: string | null;
+                estimatedDeliveryAt?: string | null;
                 trackingInformation?: { number?: string; url?: string; company?: string }[];
               };
             }[];
@@ -605,6 +643,15 @@ export const getOrderDetail = cache(async (id: string): Promise<OrderDetailResul
     const rawItems = (o.lineItems?.edges ?? []).map((e) => e.node);
     const variantIds = [...new Set(rawItems.map((n) => n.variantId).filter(Boolean))] as string[];
     const handleByVariant = await resolveHandles(variantIds);
+    const f0 = ful[0];
+    const transactions: OrderTxn[] = (o.transactions ?? []).map((t) => ({
+      amount: t.transactionAmount?.presentmentMoney ?? null,
+      processedAt: t.processedAt ?? null,
+      type: t.type ?? null,
+      card: t.paymentDetails?.cardBrand
+        ? { brand: t.paymentDetails.cardBrand, last4: t.paymentDetails.last4 ?? null }
+        : null,
+    }));
     return {
       id: o.id,
       name: o.name,
@@ -615,10 +662,16 @@ export const getOrderDetail = cache(async (id: string): Promise<OrderDetailResul
       subtotal: o.subtotal ?? null,
       shipping: o.totalShipping ?? null,
       tax: o.totalTax ?? null,
+      totalPaid: o.paymentInformation?.totalPaidAmount ?? null,
       shippingAddress: o.shippingAddress?.formatted ?? null,
-      fulfillmentStatus: ful[0]?.status ?? null,
+      shippingMethod: o.shippingLine?.title ?? null,
+      fulfillmentStatus: f0?.status ?? null,
       shipmentStatus: ful.map((f) => f.latestShipmentStatus).find(Boolean) ?? null,
+      statusDate: f0?.updatedAt ?? f0?.createdAt ?? null,
+      estimatedDeliveryAt: ful.map((f) => f.estimatedDeliveryAt).find(Boolean) ?? null,
       tracking,
+      transactions,
+      itemCount: rawItems.reduce((n, it) => n + (it.quantity || 0), 0),
       items: rawItems.map((n) => ({
         title: n.title,
         quantity: n.quantity,

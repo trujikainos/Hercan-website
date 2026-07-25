@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ExternalLink, MapPin, Truck } from "lucide-react";
-import { getOrderDetail } from "@/lib/customer-account";
+import { ArrowLeft, CheckCircle2, CreditCard, ExternalLink, MapPin, Package, Truck } from "lucide-react";
+import { getOrderDetail, type OrderDetail } from "@/lib/customer-account";
 import { ProductImage } from "@/components/product-image";
 import { ReorderButton } from "@/components/reorder-button";
 
@@ -18,13 +18,16 @@ const money = (m: { amount: string; currencyCode: string } | null) => {
   if (!Number.isFinite(n)) return "—";
   return new Intl.NumberFormat("es-MX", { style: "currency", currency: m.currencyCode || "MXN" }).format(n);
 };
-const fmtDate = (iso: string) => {
+const isZero = (m: { amount: string } | null) => Boolean(m && Number(m.amount) === 0);
+const fmtDate = (iso: string | null) => {
+  if (!iso) return "";
   try {
     return new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(iso));
   } catch {
     return iso;
   }
 };
+
 const FIN: Record<string, { label: string; cls: string }> = {
   PAID: { label: "Pagado", cls: "bg-[#e6f4ea] text-[#2e7d46]" },
   PENDING: { label: "Pendiente", cls: "bg-[#fff4e5] text-[#b25e00]" },
@@ -36,36 +39,59 @@ const FIN: Record<string, { label: string; cls: string }> = {
   EXPIRED: { label: "Expirado", cls: "bg-hc-soft text-hc-gunmetal" },
 };
 
-// Estado de entrega (latestShipmentStatus del envío) → etiqueta en español.
-const SHIP: Record<string, string> = {
-  LABEL_PRINTED: "Etiqueta impresa",
-  LABEL_PURCHASED: "Etiqueta generada",
-  ATTEMPTED_DELIVERY: "Intento de entrega",
-  READY_FOR_PICKUP: "Listo para recoger",
-  PICKED_UP: "Recogido",
-  CONFIRMED: "Envío confirmado",
-  IN_TRANSIT: "En tránsito",
-  OUT_FOR_DELIVERY: "En reparto",
-  DELIVERED: "Entregado",
-  FAILURE: "Problema con el envío",
+const TXN_TYPE: Record<string, string> = {
+  SALE: "Pago",
+  CAPTURE: "Pago",
+  AUTHORIZATION: "Autorización",
+  REFUND: "Reembolso",
+  VOID: "Anulación",
+  CHANGE: "Ajuste",
 };
-// Estado de preparación del pedido (fulfillment status) → etiqueta en español.
-const FUL: Record<string, string> = {
-  FULFILLED: "Preparado y enviado",
-  SUCCESS: "Preparado y enviado",
-  UNFULFILLED: "Por preparar",
-  PARTIALLY_FULFILLED: "Preparado parcialmente",
-  IN_PROGRESS: "En preparación",
-  OPEN: "En preparación",
-  PENDING: "Pendiente",
-  SCHEDULED: "Programado",
-  ON_HOLD: "En espera",
-  CANCELLED: "Cancelado",
-  ERROR: "Error",
-  RESTOCKED: "Reingresado a stock",
+
+type Tone = "green" | "blue" | "amber" | "gray";
+const TONE: Record<Tone, { card: string; icon: string }> = {
+  green: { card: "border-[#2e7d46]/25 bg-[#e6f4ea]", icon: "text-[#2e7d46]" },
+  blue: { card: "border-hc-steel/25 bg-hc-soft", icon: "text-hc-steel" },
+  amber: { card: "border-amber-300 bg-amber-50", icon: "text-amber-700" },
+  gray: { card: "border-hc-metal-light bg-hc-soft", icon: "text-hc-gunmetal" },
 };
-const shipLabel = (s: string | null) => (s ? SHIP[s] ?? s : null);
-const fulLabel = (s: string | null) => (s ? FUL[s] ?? s : null);
+
+// Estado global del pedido con descripción, tomando lo más específico (envío > preparación > pago).
+function progress(o: OrderDetail): { label: string; desc: string; tone: Tone; done: boolean } {
+  switch (o.shipmentStatus) {
+    case "DELIVERED":
+      return { label: "Entregado", desc: "Tu pedido fue entregado.", tone: "green", done: true };
+    case "OUT_FOR_DELIVERY":
+      return { label: "En reparto", desc: "Tu pedido está en reparto y llegará pronto.", tone: "blue", done: false };
+    case "IN_TRANSIT":
+      return { label: "En tránsito", desc: "Tu pedido va en camino.", tone: "blue", done: false };
+    case "ATTEMPTED_DELIVERY":
+      return { label: "Intento de entrega", desc: "Se intentó entregar tu pedido.", tone: "amber", done: false };
+    case "READY_FOR_PICKUP":
+    case "PICKED_UP":
+      return { label: "Listo para recoger", desc: "Tu pedido está listo para recoger.", tone: "blue", done: false };
+    case "FAILURE":
+      return { label: "Problema con el envío", desc: "Hubo un problema con el envío. Contáctanos.", tone: "amber", done: false };
+  }
+  switch (o.fulfillmentStatus) {
+    case "SUCCESS":
+    case "FULFILLED":
+      return { label: "Enviado", desc: "Preparamos y enviamos tus artículos.", tone: "blue", done: false };
+    case "PARTIALLY_FULFILLED":
+      return { label: "Enviado parcialmente", desc: "Parte de tu pedido ya fue enviado.", tone: "blue", done: false };
+    case "IN_PROGRESS":
+    case "OPEN":
+      return { label: "En preparación", desc: "Estamos preparando estos artículos para el envío.", tone: "blue", done: false };
+    case "ON_HOLD":
+    case "SCHEDULED":
+      return { label: "En espera", desc: "Tu pedido está en espera.", tone: "amber", done: false };
+    case "CANCELLED":
+      return { label: "Cancelado", desc: "Este pedido fue cancelado.", tone: "gray", done: false };
+  }
+  if (o.financialStatus === "PAID")
+    return { label: "Confirmado", desc: "Estamos preparando estos artículos para el envío.", tone: "blue", done: false };
+  return { label: "Pendiente", desc: "Estamos procesando tu pedido.", tone: "gray", done: false };
+}
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -78,8 +104,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   if ("error" in order) {
     return (
       <main id="contenido" className="mx-auto max-w-3xl flex-1 px-4 py-12">
-        <Link href="/cuenta" className="inline-flex items-center gap-1 text-sm text-hc-blue">
-          <ArrowLeft className="h-4 w-4" aria-hidden /> Volver a mi cuenta
+        <Link href="/cuenta/pedidos" className="inline-flex items-center gap-1 text-sm text-hc-blue">
+          <ArrowLeft className="h-4 w-4" aria-hidden /> Volver a mis pedidos
         </Link>
         <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           <p className="font-semibold">No se pudo cargar el pedido (diagnóstico temporal):</p>
@@ -93,6 +119,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     label: order.financialStatus ?? "—",
     cls: "bg-hc-soft text-hc-gunmetal",
   };
+  const prog = progress(order);
+  const tone = TONE[prog.tone];
+  const StatusIcon = prog.done ? CheckCircle2 : Truck;
+  const paid = order.totalPaid && !isZero(order.totalPaid) ? order.totalPaid : order.total;
 
   return (
     <main id="contenido" className="mx-auto max-w-4xl flex-1 px-4 py-8">
@@ -109,7 +139,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               {fin.label}
             </span>
           </div>
-          <p className="mt-0.5 text-sm text-hc-gunmetal">{fmtDate(order.processedAt)}</p>
+          <p className="mt-0.5 text-sm text-hc-gunmetal">Fecha de confirmación: {fmtDate(order.processedAt)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ReorderButton items={order.items} />
@@ -127,9 +157,31 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_300px]">
+      {/* Banner de estado del pedido */}
+      <div className={`mt-5 flex items-start gap-3 rounded-xl border p-4 ${tone.card}`}>
+        <StatusIcon className={`mt-0.5 h-6 w-6 shrink-0 ${tone.icon}`} aria-hidden />
+        <div className="min-w-0">
+          <p className="font-heading text-hc-navy">{prog.label}</p>
+          <p className="text-sm text-hc-gunmetal">{prog.desc}</p>
+          {(order.statusDate || order.estimatedDeliveryAt) && (
+            <p className="mt-1 text-xs text-hc-gunmetal">
+              {order.statusDate && <>Actualizado: {fmtDate(order.statusDate)}</>}
+              {order.estimatedDeliveryAt && (
+                <span className={order.statusDate ? "ml-2" : ""}>
+                  Entrega estimada: {fmtDate(order.estimatedDeliveryAt)}
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Productos */}
         <section className="rounded-xl border border-hc-metal-light bg-white p-4">
+          <h2 className="mb-1 flex items-center gap-2 px-1 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
+            <Package className="h-4 w-4" aria-hidden /> Artículos ({order.itemCount})
+          </h2>
           <ul className="divide-y divide-hc-metal-light">
             {order.items.map((it, i) => {
               const thumb = (
@@ -138,7 +190,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 </span>
               );
               return (
-                <li key={i} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                <li key={i} className="flex items-center gap-3 py-3">
                   {it.handle ? (
                     <Link href={`/producto/${it.handle}`} className="group flex min-w-0 flex-1 items-center gap-3">
                       {thumb}
@@ -163,100 +215,122 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           </ul>
         </section>
 
-        {/* Resumen + envío */}
+        {/* Resumen + pago + envío */}
         <aside className="space-y-6">
+          {/* Desglose */}
           <div className="rounded-xl border border-hc-metal-light bg-white p-5">
-            <h2 className="mb-3 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
-              Resumen
-            </h2>
+            <h2 className="mb-3 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">Resumen</h2>
             <dl className="space-y-1.5 text-sm">
               {order.subtotal && (
                 <div className="flex justify-between">
-                  <dt className="text-hc-gunmetal">Subtotal</dt>
+                  <dt className="text-hc-gunmetal">Subtotal · {order.itemCount} art.</dt>
                   <dd className="text-hc-ink">{money(order.subtotal)}</dd>
                 </div>
               )}
               {order.shipping && (
                 <div className="flex justify-between">
                   <dt className="text-hc-gunmetal">Envío</dt>
-                  <dd className="text-hc-ink">{money(order.shipping)}</dd>
+                  <dd className={isZero(order.shipping) ? "font-medium text-[#2e7d46]" : "text-hc-ink"}>
+                    {isZero(order.shipping) ? "Gratis" : money(order.shipping)}
+                  </dd>
                 </div>
               )}
-              {order.tax && (
-                <div className="flex justify-between">
-                  <dt className="text-hc-gunmetal">Impuestos</dt>
-                  <dd className="text-hc-ink">{money(order.tax)}</dd>
-                </div>
-              )}
-              <div className="mt-1 flex justify-between border-t border-hc-metal-light pt-2">
+              <div className="mt-1 flex items-baseline justify-between border-t border-hc-metal-light pt-2">
                 <dt className="font-heading text-hc-navy">Total</dt>
-                <dd className="font-heading text-lg text-hc-navy">{money(order.total)}</dd>
+                <dd className="text-right">
+                  <span className="font-heading text-lg text-hc-navy">{money(order.total)}</span>
+                  {order.total && <span className="ml-1 text-[11px] text-hc-gunmetal">{order.total.currencyCode}</span>}
+                </dd>
               </div>
+              {order.tax && !isZero(order.tax) && (
+                <p className="text-right text-[11px] text-hc-gunmetal">Incluye {money(order.tax)} de impuestos</p>
+              )}
             </dl>
           </div>
 
-          {order.shippingAddress && order.shippingAddress.length > 0 && (
+          {/* Pago */}
+          {(order.transactions.length > 0 || paid) && (
             <div className="rounded-xl border border-hc-metal-light bg-white p-5">
               <h2 className="mb-2 flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
-                <MapPin className="h-4 w-4" aria-hidden /> Envío a
+                <CreditCard className="h-4 w-4" aria-hidden /> Pago
               </h2>
-              <address className="text-sm not-italic leading-relaxed text-hc-ink">
-                {order.shippingAddress.map((l, j) => (
-                  <span key={j} className="block">
-                    {l}
-                  </span>
-                ))}
-              </address>
+              <div className="mb-2">
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${fin.cls}`}>
+                  {fin.label}
+                </span>
+              </div>
+              {order.transactions.length > 0 ? (
+                <ul className="space-y-2 text-sm">
+                  {order.transactions.map((t, j) => (
+                    <li key={j} className="flex items-baseline justify-between gap-2">
+                      <span className="text-hc-gunmetal">
+                        {t.type ? TXN_TYPE[t.type] ?? "Pago" : "Pago"}
+                        {t.card && (
+                          <span className="text-hc-ink">
+                            {" · "}
+                            {t.card.brand}
+                            {t.card.last4 ? ` ····${t.card.last4}` : ""}
+                          </span>
+                        )}
+                        {t.processedAt && <span className="block text-[11px] text-hc-metal">{fmtDate(t.processedAt)}</span>}
+                      </span>
+                      <span className="shrink-0 text-hc-ink">{money(t.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-hc-ink">Pagado {money(paid)}</p>
+              )}
             </div>
           )}
 
-          {(() => {
-            const ship = shipLabel(order.shipmentStatus);
-            const ful = fulLabel(order.fulfillmentStatus);
-            const estado = ship ?? ful; // el estado de envío es más específico que el de preparación
-            const delivered = order.shipmentStatus === "DELIVERED";
-            const hasTracking = order.tracking.length > 0;
-            if (!estado && !hasTracking) return null;
-            return (
-              <div className="rounded-xl border border-hc-metal-light bg-white p-5">
-                <h2 className="mb-3 flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
-                  <Truck className="h-4 w-4" aria-hidden /> Envío
-                </h2>
-                {estado && (
-                  <span
-                    className={`mb-3 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                      delivered ? "bg-[#e6f4ea] text-[#2e7d46]" : "bg-hc-soft text-hc-steel"
-                    }`}
-                  >
-                    {estado}
-                  </span>
-                )}
-                {ship && ful && ship !== ful && (
-                  <p className="mb-3 text-xs text-hc-gunmetal">Preparación: {ful}</p>
-                )}
-                {hasTracking && (
-                  <>
-                    <p className="mb-1 text-xs uppercase tracking-wide text-hc-gunmetal">Guía</p>
-                    <ul className="space-y-2 text-sm">
-                      {order.tracking.map((t, j) => (
-                        <li key={j} className="flex items-baseline gap-1.5">
-                          {t.company && <span className="text-hc-gunmetal">{t.company}:</span>}
-                          {t.url ? (
-                            <a href={t.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-hc-blue hover:text-hc-steel">
-                              {t.number || "Rastrear envío"}
-                              <ExternalLink className="h-3 w-3" aria-hidden />
-                            </a>
-                          ) : (
-                            <span className="text-hc-ink">{t.number}</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </div>
-            );
-          })()}
+          {/* Envío a + método */}
+          {((order.shippingAddress && order.shippingAddress.length > 0) || order.shippingMethod) && (
+            <div className="rounded-xl border border-hc-metal-light bg-white p-5">
+              <h2 className="mb-2 flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
+                <MapPin className="h-4 w-4" aria-hidden /> Envío
+              </h2>
+              {order.shippingMethod && (
+                <p className="mb-2 text-sm">
+                  <span className="text-hc-gunmetal">Método: </span>
+                  <span className="text-hc-ink">{order.shippingMethod}</span>
+                </p>
+              )}
+              {order.shippingAddress && order.shippingAddress.length > 0 && (
+                <address className="text-sm not-italic leading-relaxed text-hc-ink">
+                  {order.shippingAddress.map((l, j) => (
+                    <span key={j} className="block">
+                      {l}
+                    </span>
+                  ))}
+                </address>
+              )}
+            </div>
+          )}
+
+          {/* Rastreo (guía) */}
+          {order.tracking.length > 0 && (
+            <div className="rounded-xl border border-hc-metal-light bg-white p-5">
+              <h2 className="mb-2 flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-hc-gunmetal">
+                <Truck className="h-4 w-4" aria-hidden /> Rastreo
+              </h2>
+              <ul className="space-y-2 text-sm">
+                {order.tracking.map((t, j) => (
+                  <li key={j} className="flex items-baseline gap-1.5">
+                    {t.company && <span className="text-hc-gunmetal">{t.company}:</span>}
+                    {t.url ? (
+                      <a href={t.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-hc-blue hover:text-hc-steel">
+                        {t.number || "Rastrear envío"}
+                        <ExternalLink className="h-3 w-3" aria-hidden />
+                      </a>
+                    ) : (
+                      <span className="text-hc-ink">{t.number}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </aside>
       </div>
     </main>
