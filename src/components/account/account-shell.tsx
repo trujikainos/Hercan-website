@@ -50,7 +50,7 @@ export function AccountShell({
 
       {/* Navegación por secciones */}
       <nav className="border-b border-hc-metal-light bg-white">
-        <div className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4">
+        <div className="no-scrollbar mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4">
           {TABS.map((t) => {
             const on = t.key === active;
             const Icon = t.icon;

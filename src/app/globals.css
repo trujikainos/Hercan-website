@@ -101,6 +101,16 @@
 }
 
 @layer components {
+  /* Oculta la barra de scroll pero conserva el desplazamiento (tab strips, carruseles).
+     En Windows el overflow-x-auto muestra una barra permanente aunque no haga falta. */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE/Edge legacy */
+    scrollbar-width: none; /* Firefox */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Edge */
+  }
+
   /* Reveal on-scroll — FOUC-safe: solo se oculta si hay JS (clase .js en <html>) */
   /* Reveal de entrada — SOLO CSS. Antes dependía de que el JS agregara .is-visible
      (un observer): eso ocultaba el contenido hasta que React hidrataba → en páginas
