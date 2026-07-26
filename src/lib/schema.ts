@@ -128,7 +128,7 @@ export function breadcrumbNode(items: { name: string; path?: string }[]) {
   };
 }
 
-export function productNode(p: Product) {
+export function productNode(p: Product, rating?: { average: number; count: number } | null) {
   const url = absoluteUrl(`/producto/${p.handle}`);
   // Specs técnicas como PropertyValue → legibles por buscadores y motores de IA
   // (rich results de producto, AEO/GEO). Se toman de los metafields agrupados.
@@ -160,7 +160,19 @@ export function productNode(p: Product) {
       // TODO(Fase venta): shippingDetails + hasMerchantReturnPolicy (Google los pide
       // para rich results de producto — agregar cuando existan políticas reales).
     },
-    // NOTA: sin AggregateRating/Review hasta tener reseñas reales de terceros (anti-fabricación).
+    // AggregateRating REAL: solo si hay reseñas verificadas (Judge.me). Sin reseñas, se
+    // omite por completo (nada inventado). Ver src/lib/reviews.ts.
+    ...(rating && rating.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: String(rating.average),
+            reviewCount: String(rating.count),
+            bestRating: "5",
+            worstRating: "1",
+          },
+        }
+      : {}),
   };
 }
 

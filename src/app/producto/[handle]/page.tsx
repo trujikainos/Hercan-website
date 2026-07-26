@@ -14,6 +14,8 @@ import { ProductCard } from "@/components/product-card";
 import { RelatedProducts } from "@/components/related-products";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, productNode, breadcrumbNode, faqNode } from "@/lib/schema";
+import { getProductReviews } from "@/lib/reviews";
+import { ProductReviews } from "@/components/product-reviews";
 import { buildProductFaqs } from "@/lib/faq";
 import {
   getProductByHandle,
@@ -78,6 +80,8 @@ export default async function ProductPage({
   const alternatives = isBuyable
     ? []
     : await getInStockAlternatives(product, 4).catch(() => []);
+  // Reseñas reales (Judge.me). null si está desactivado o falla → no rompe la ficha.
+  const reviews = await getProductReviews(product.id).catch(() => null);
 
   // Identificadores: el N° de parte real es el mpn (por lo que busca/pide el
   // comprador); el SKU es el código interno de Hercan (menos relevante, pero se
@@ -127,7 +131,7 @@ export default async function ProductPage({
     <>
       <JsonLd
         data={pageGraph(
-          productNode(product),
+          productNode(product, reviews),
           breadcrumbNode([
             { name: "Inicio", path: "/" },
             { name: "Catálogo", path: "/productos" },
@@ -295,6 +299,9 @@ export default async function ProductPage({
           <h2 className="mb-4 font-heading text-lg text-hc-navy">Especificaciones</h2>
           <ProductTabs specGroups={specGroups} />
         </section>
+
+        {/* Reseñas reales (Judge.me) — no renderiza nada si está desactivado */}
+        <ProductReviews data={reviews} />
 
         {isBuyable && related.length > 0 && (
           <section className="mt-16">
