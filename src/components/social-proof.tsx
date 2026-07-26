@@ -7,9 +7,9 @@ import { SOCIAL_PROOF_ENABLED, makeEvent, eventKey, type SocialEvent } from "@/l
 // Ritmo (ms). Ajustable sin tocar la lógica.
 const INITIAL_DELAY = 6000; // espera antes del primer toast
 const VISIBLE_MS = 6000; // cuánto se queda visible
-const GAP_MIN = 22000; // pausa mínima entre toasts
-const GAP_MAX = 45000; // pausa máxima
-const MAX_PER_SESSION = 6; // tope por sesión (anti-spam)
+const GAP_MIN = 21000; // pausa mínima entre toasts
+const GAP_MAX = 111000; // pausa máxima
+const NO_REPEAT_WINDOW = 15; // no repetir dentro de los últimos N eventos
 
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -37,13 +37,10 @@ export function SocialProof() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const shown = useRef(0);
-  const used = useRef<Set<string>>(new Set()); // firmas ya mostradas → sin repeticiones
+  const recent = useRef<string[]>([]); // firmas recientes → sin repeticiones en la ventana
 
   useEffect(() => {
     if (!SOCIAL_PROOF_ENABLED || dismissed) return;
-    // Continúa el conteo dentro de la sesión (no reinicia el tope al navegar).
-    shown.current = Number(sessionStorage.getItem("hc_sp_count") || "0");
 
     const clearAll = () => {
       timers.current.forEach(clearTimeout);
@@ -51,14 +48,14 @@ export function SocialProof() {
     };
     const at = (ms: number, fn: () => void) => timers.current.push(setTimeout(fn, ms));
 
+    // Loop infinito mientras el visitante siga en el sitio; sin repetir dentro de la
+    // ventana reciente (para que no se noten los ficticios) pero sin tope total.
     const cycle = () => {
-      if (shown.current >= MAX_PER_SESSION) return;
-      const e = makeEvent(used.current);
-      used.current.add(eventKey(e));
+      const e = makeEvent(new Set(recent.current));
+      recent.current.push(eventKey(e));
+      if (recent.current.length > NO_REPEAT_WINDOW) recent.current.shift();
       setEvent(e);
       setVisible(true);
-      shown.current += 1;
-      sessionStorage.setItem("hc_sp_count", String(shown.current));
       at(VISIBLE_MS, () => {
         setVisible(false);
         at(rand(GAP_MIN, GAP_MAX), cycle);
