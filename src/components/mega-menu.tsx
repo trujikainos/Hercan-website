@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ChevronDown, ChevronRight, FileText, Wrench, X } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronRight, FileText, LayoutGrid, X } from "lucide-react";
 import type { MenuData, MenuChip, MenuCategory } from "@/lib/menu-data";
 import { HUB_IMAGES } from "@/lib/hub-images";
 
@@ -307,7 +307,7 @@ export function MegaMenu({ data }: { data: MenuData }) {
         onKeyDown={onTriggerKeyDown}
         className="flex items-center gap-1.5 whitespace-nowrap rounded py-2.5 font-heading text-base text-white transition-colors hover:text-hc-sky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-sky"
       >
-        <Wrench className="h-5 w-5" aria-hidden />
+        <LayoutGrid className="h-5 w-5" aria-hidden />
         Catálogo
         <ChevronDown
           className={`h-5 w-5 transition-transform duration-200 motion-reduce:transition-none ${

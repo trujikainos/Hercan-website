@@ -111,11 +111,18 @@ async function clearCartId() {
   }
 }
 
+// Errores de Shopify que solo dicen que el carrito guardado ya no existe: son
+// recuperables (recreamos el carrito y el producto sí se agrega), NO fallas que el
+// usuario deba ver. Se descartan para no mostrar "El carrito especificado no existe".
+const CART_MISSING = /no existe|does\s?n['’]?t exist|no longer exists|invalid.*cart|cart.*not.*found/i;
 function noticesFromUserErrors(errs: any[]): CartNotice[] {
-  return (errs ?? []).map((e) => ({
-    code: "MERCHANDISE_UNAVAILABLE" as const,
-    message: e.message || "No disponible.",
-  }));
+  return (errs ?? [])
+    .filter(
+      (e) =>
+        !CART_MISSING.test(e?.message || "") &&
+        !(Array.isArray(e?.field) && e.field.some((f: string) => /cart[_ ]?id/i.test(f))),
+    )
+    .map((e) => ({ code: "MERCHANDISE_UNAVAILABLE" as const, message: e.message || "No disponible." }));
 }
 
 // ---- READ (recupera si expiró) ----
@@ -147,7 +154,11 @@ export async function addToCart(variantId: string, quantity: number): Promise<Ca
   const c = await call<{ cartCreate: { cart: any; userErrors: any[] } }>(M_CREATE, { lines });
   const cart = c.cartCreate.cart;
   if (cart) await writeCartId(cart.id);
-  return finalize(cart, c.cartCreate.userErrors, Boolean(id));
+  const r = finalize(cart, c.cartCreate.userErrors, Boolean(id));
+  // Recuperación silenciosa: si el carrito viejo expiró pero el producto SÍ se agregó
+  // a uno nuevo, no mostramos "tu carrito expiró" (confunde tras un add exitoso).
+  if (cart) r.notices = r.notices.filter((n) => n.code !== "CART_RECOVERED");
+  return r;
 }
 
 // Disponibilidad de variantes (para "Volver a pedir": no agregar productos agotados).
