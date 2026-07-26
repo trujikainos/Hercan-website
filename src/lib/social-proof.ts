@@ -37,19 +37,19 @@ const CITIES = [
 ];
 
 // Nombre + inicial (anonimizado; nunca nombre completo ni correo).
+// Lista amplia para que no se repitan nombres y no se noten los ficticios.
 const NAMES = [
-  "Carlos T.",
-  "Luis M.",
-  "Jorge R.",
-  "Miguel A.",
-  "Ana G.",
-  "Roberto S.",
-  "Fernando L.",
-  "Diana P.",
-  "Héctor V.",
-  "Raúl C.",
-  "Mónica H.",
-  "Iván D.",
+  "Carlos T.", "Luis M.", "Jorge R.", "Miguel A.", "Ana G.", "Roberto S.",
+  "Fernando L.", "Diana P.", "Héctor V.", "Raúl C.", "Mónica H.", "Iván D.",
+  "José M.", "Ricardo N.", "Alejandro P.", "Sergio R.", "Óscar G.", "Pedro L.",
+  "Javier H.", "Manuel C.", "Eduardo S.", "Gerardo V.", "Arturo M.", "Francisco J.",
+  "Daniel R.", "Emilio T.", "Rodrigo A.", "Gabriel N.", "Andrés P.", "Mauricio L.",
+  "César H.", "Alfredo G.", "Ramiro S.", "Ismael V.", "Tomás R.", "Guillermo M.",
+  "Patricia L.", "Laura M.", "Verónica S.", "Claudia R.", "Karla G.", "Adriana P.",
+  "Gabriela H.", "Fernanda C.", "Sofía V.", "Regina M.", "Marisol T.", "Paola R.",
+  "Lucía G.", "Alma N.", "Brenda P.", "Cristina L.", "Nadia H.", "Valeria S.",
+  "Enrique M.", "Salvador R.", "Abel G.", "Noé V.", "Ulises P.", "Marco A.",
+  "Rubén T.", "Efraín L.", "Joel H.", "Damián C.", "Leonardo S.", "Bruno M.",
 ];
 
 // Productos representativos del catálogo (herramental CNC / medición).

@@ -6,7 +6,7 @@ import { SOCIAL_PROOF_ENABLED, makeEvent, eventKey, type SocialEvent } from "@/l
 
 // Ritmo (ms). Ajustable sin tocar la lógica.
 const INITIAL_DELAY = 6000; // espera antes del primer toast
-const VISIBLE_MS = 6000; // cuánto se queda visible
+const VISIBLE_MS = 14000; // cuánto se queda visible (con botón de cerrar)
 const GAP_MIN = 21000; // pausa mínima entre toasts
 const GAP_MAX = 111000; // pausa máxima
 const NO_REPEAT_WINDOW = 15; // no repetir dentro de los últimos N eventos

@@ -74,6 +74,10 @@ export default async function RootLayout({
     <html
       lang="es-MX"
       suppressHydrationWarning
+      // Next 16 ya no sobre-escribe scroll-behavior al navegar; sin esto, el `smooth`
+      // global hace que la navegación no llegue limpio hasta arriba (queda un poco abajo).
+      // Este atributo restaura el salto instantáneo al top en cada navegación SPA.
+      data-scroll-behavior="smooth"
       className={`${oswald.variable} ${inter.variable} h-full antialiased`}
     >
       {/* suppressHydrationWarning: extensiones del navegador (ColorZilla,
