@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { ProductCard } from "@/components/product-card";
+import { ProductList } from "@/components/product-list";
 import { FilterSidebar } from "@/components/filter-sidebar";
 import type { CatalogResult } from "@/lib/catalog";
 
@@ -30,14 +30,7 @@ export function CatalogSection({
       <FilterSidebar facets={facetGroups} hiddenFacets={hiddenFacets} />
 
       <section>
-        <p className="mb-3 text-sm text-hc-gunmetal">
-          {total} producto{total === 1 ? "" : "s"}
-        </p>
-        <div className="stagger-in grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {shown.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        <ProductList products={shown} total={total} />
 
         {hasMore && (
           <div className="mt-6 flex justify-center">
