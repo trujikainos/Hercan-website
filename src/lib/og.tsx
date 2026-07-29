@@ -64,6 +64,27 @@ export async function getBrandLogoDataUrl(): Promise<string> {
   return logoDataUrl;
 }
 
+// Fondos de OG por familia (public/og/bg-<name>.jpg). JPEG para que Satori los
+// decodifique de forma fiable. Cacheados por proceso. Devuelve null si el fondo no
+// existe o falla la lectura → el llamador cae al degradado navy plano (nunca 500).
+const ogBgCache: Record<string, string | null> = {};
+export async function getOgBackgroundDataUrl(
+  name: string,
+): Promise<string | null> {
+  if (!(name in ogBgCache)) {
+    try {
+      const base64 = await readFile(
+        join(process.cwd(), "public", "og", `bg-${name}.jpg`),
+        "base64",
+      );
+      ogBgCache[name] = `data:image/jpeg;base64,${base64}`;
+    } catch {
+      ogBgCache[name] = null;
+    }
+  }
+  return ogBgCache[name];
+}
+
 /**
  * Descarga una imagen remota (portada de producto en el CDN de Shopify) y la
  * devuelve como data URL base64 lista para `<img src>` en `ImageResponse`.
@@ -116,6 +137,12 @@ export type BrandOGInput = {
    * Pasar `""` para ocultarlo (p. ej. en fichas de producto se usa el N° de parte).
    */
   footer?: string;
+  /**
+   * Nombre del fondo de taller (public/og/bg-<name>.jpg) que va detrás con overlay
+   * navy: "cnc" | "fresado" | "torneado" | "medicion". Default: "cnc". Si el fondo
+   * no existe, cae al degradado plano.
+   */
+  background?: string;
 };
 
 /** Tamaño de fuente del título según su longitud, para que nunca se desborde. */
@@ -129,15 +156,18 @@ function titleFontSize(title: string): number {
 
 /**
  * Devuelve un `ImageResponse` 1200×630 con la identidad de HERCAN:
- * fondo navy elegante, logo real sobre tarjeta blanca ajustada, barra de acento
- * (espectro navy→steel→sky), título grande y pie con marcas o dato de la página.
+ * fondo navy elegante (o foto de taller con overlay si `background`), logo real
+ * sobre tarjeta blanca, barra de acento (espectro navy→steel→sky), título grande
+ * y pie con marcas o dato de la página.
  */
 export async function renderBrandOG({
   title,
   eyebrow,
   footer = BRANDS_LINE,
+  background = "cnc",
 }: BrandOGInput): Promise<ImageResponse> {
   const logoSrc = await getBrandLogoDataUrl();
+  const bgSrc = background ? await getOgBackgroundDataUrl(background) : null;
   const clean =
     title.length > 118 ? `${title.slice(0, 117).trimEnd()}…` : title;
   const fontSize = titleFontSize(clean);
@@ -146,102 +176,146 @@ export async function renderBrandOG({
     (
       <div
         style={{
+          position: "relative",
           height: "100%",
           width: "100%",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
           background:
             "linear-gradient(135deg, #0e3e60 0%, #082a43 58%, #061f31 100%)",
           color: "#ffffff",
-          padding: "70px 72px",
           fontFamily: "sans-serif",
         }}
       >
-        {/* Top: logo real grande, sobre una tarjeta blanca que lo abraza. */}
-        <div style={{ display: "flex", alignItems: "center" }}>
+        {/* Foto de fondo (solo variante con `background`). */}
+        {bgSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={bgSrc}
+            alt=""
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+        ) : null}
+        {/* Overlay navy: oscurece la izquierda (texto) y deja ver la foto a la derecha. */}
+        {bgSrc ? (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              background:
+                "linear-gradient(105deg, rgba(6,31,49,0.96) 0%, rgba(8,42,67,0.88) 38%, rgba(8,42,67,0.55) 72%, rgba(14,62,96,0.40) 100%)",
+            }}
+          />
+        ) : null}
+
+        {/* Contenido (encima del fondo). */}
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            width: "100%",
+            height: "100%",
+            padding: "70px 72px",
+          }}
+        >
+          {/* Top: logo real grande, sobre una tarjeta blanca que lo abraza. */}
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                background: "#ffffff",
+                borderRadius: 16,
+                padding: "10px 16px",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.28)",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logoSrc} width={260} height={120} alt="HERCAN" />
+            </div>
+          </div>
+
+          {/* Middle: eyebrow + barra de acento + título. */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {eyebrow ? (
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: 25,
+                  fontWeight: 600,
+                  letterSpacing: 4,
+                  textTransform: "uppercase",
+                  color: "#5e9cc1",
+                  marginBottom: 20,
+                }}
+              >
+                {eyebrow}
+              </div>
+            ) : null}
+
+            <div
+              style={{
+                display: "flex",
+                width: 132,
+                height: 11,
+                borderRadius: 6,
+                background:
+                  "linear-gradient(90deg, #0e3e60 0%, #2083a3 50%, #5e9cc1 100%)",
+                marginBottom: 26,
+              }}
+            />
+
+            <div
+              style={{
+                display: "flex",
+                fontSize,
+                fontWeight: 800,
+                lineHeight: 1.06,
+                letterSpacing: -0.5,
+                maxWidth: 1010,
+                textShadow: bgSrc ? "0 2px 18px rgba(0,0,0,0.45)" : "none",
+              }}
+            >
+              {clean}
+            </div>
+          </div>
+
+          {/* Bottom: dominio de marca + pie (marcas por defecto, o dato de la página). */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              background: "#ffffff",
-              borderRadius: 16,
-              padding: "10px 16px",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.28)",
+              justifyContent: "space-between",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logoSrc} width={260} height={120} alt="HERCAN" />
-          </div>
-        </div>
-
-        {/* Middle: eyebrow + barra de acento + título. */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {eyebrow ? (
             <div
               style={{
                 display: "flex",
-                fontSize: 25,
+                fontSize: 26,
                 fontWeight: 600,
-                letterSpacing: 4,
-                textTransform: "uppercase",
                 color: "#5e9cc1",
-                marginBottom: 20,
               }}
             >
-              {eyebrow}
+              {BRAND_DOMAIN}
             </div>
-          ) : null}
-
-          <div
-            style={{
-              display: "flex",
-              width: 132,
-              height: 11,
-              borderRadius: 6,
-              background:
-                "linear-gradient(90deg, #0e3e60 0%, #2083a3 50%, #5e9cc1 100%)",
-              marginBottom: 26,
-            }}
-          />
-
-          <div
-            style={{
-              display: "flex",
-              fontSize,
-              fontWeight: 800,
-              lineHeight: 1.06,
-              letterSpacing: -0.5,
-              maxWidth: 1010,
-            }}
-          >
-            {clean}
+            {footer ? (
+              <div style={{ display: "flex", fontSize: 24, color: "#a9bccb" }}>
+                {footer}
+              </div>
+            ) : null}
           </div>
-        </div>
-
-        {/* Bottom: dominio de marca + pie (marcas por defecto, o dato de la página). */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              fontSize: 26,
-              fontWeight: 600,
-              color: "#5e9cc1",
-            }}
-          >
-            {BRAND_DOMAIN}
-          </div>
-          {footer ? (
-            <div style={{ display: "flex", fontSize: 24, color: "#a9bccb" }}>
-              {footer}
-            </div>
-          ) : null}
         </div>
       </div>
     ),

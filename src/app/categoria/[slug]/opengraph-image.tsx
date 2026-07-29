@@ -10,6 +10,14 @@ export const contentType = "image/png";
 // OG de producto). Se renderiza al vuelo cuando un crawler la pide por slug.
 export const dynamic = "force-dynamic";
 
+// Fondo de OG por categoría: fresado→fresa, torneado→torno, medición→técnico; el
+// resto de categorías usa el genérico "cnc".
+const OG_BG_BY_CATEGORY: Record<string, string> = {
+  fresado: "fresado",
+  torneado: "torneado",
+  medicion: "medicion",
+};
+
 export default async function Image({
   params,
 }: {
@@ -21,5 +29,6 @@ export default async function Image({
   return renderBrandOG({
     eyebrow: "Categoría",
     title: content?.title ?? "Herramentales CNC y equipos de medición",
+    background: OG_BG_BY_CATEGORY[slug] ?? "cnc",
   });
 }
