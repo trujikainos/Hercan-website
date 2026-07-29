@@ -107,9 +107,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <Link href="/cuenta/pedidos" className="inline-flex items-center gap-1 text-sm text-hc-blue">
           <ArrowLeft className="h-4 w-4" aria-hidden /> Volver a mis pedidos
         </Link>
-        <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-          <p className="font-semibold">No se pudo cargar el pedido (diagnóstico temporal):</p>
-          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs">{order.error}</pre>
+        <div className="mt-6 rounded-xl border border-hc-metal-light bg-hc-soft/40 p-6 text-center">
+          <p className="font-heading text-lg text-hc-navy">No pudimos cargar este pedido</p>
+          <p className="mt-2 text-sm text-hc-gunmetal">{order.error}</p>
+          <Link
+            href="/cuenta/pedidos"
+            className="mt-4 inline-block text-sm font-medium text-hc-blue hover:text-hc-steel"
+          >
+            Ver todos mis pedidos
+          </Link>
         </div>
       </main>
     );

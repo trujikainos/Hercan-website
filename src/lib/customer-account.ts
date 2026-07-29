@@ -584,7 +584,12 @@ export const getOrderDetail = cache(async (id: string): Promise<OrderDetailResul
       cache: "no-store",
     });
     const json = (await res.json()) as { data?: { order?: Record<string, unknown> }; errors?: unknown };
-    if (json.errors) return { error: JSON.stringify(json.errors).slice(0, 800) }; // TEMP debug
+    if (json.errors) {
+      // El detalle del error de Shopify se queda SOLO en logs de servidor (Vercel);
+      // al usuario se le muestra un mensaje genérico (no filtrar esquema/campos).
+      console.error("[getOrderDetail] Shopify GraphQL errors:", JSON.stringify(json.errors).slice(0, 800));
+      return { error: "No pudimos cargar este pedido. Intenta de nuevo más tarde o contáctanos si el problema sigue." };
+    }
     const o = json.data?.order as
       | {
           id: string;
