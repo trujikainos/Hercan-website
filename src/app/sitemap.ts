@@ -11,28 +11,63 @@ import {
 } from "@/lib/taxonomy-content";
 
 /**
- * Sitemap dinámico auto-derivado de la FUENTE ÚNICA DE VERDAD:
- *   - Estáticas: home + páginas fijas.
- *   - Marcas:     site.brands + brandSlug()  → misma derivación que /marca/[slug].
- *   - Categorías: keys de CATEGORY_CONTENT   → misma derivación que /categoria/[slug].
- *   - Tipos:      keys de TIPO_CONTENT       → misma derivación que /tipo/[slug].
- *   - ISO:        keys de ISO_CONTENT        → misma derivación que /iso/[slug].
- *   - Materiales: keys de MATERIAL_CONTENT   → misma derivación que /material/[slug].
- *   - Recubrim.:  keys de RECUBRIMIENTO_CONTENT → misma derivación que /recubrimiento/[slug].
- *   - Catálogo:   handles reales de Shopify (cursor).
- *   - Blog:       artículos de Shopify (lastModified = fecha real del post).
- * Cero desincronización: agregar una marca/categoría/producto lo mete solo aquí.
- * `/carrito` queda fuera (noindex). Prioridad por palanca SEO: pilares (taxonomía)
- * ≥ hojas (producto). Un fallo transitorio de Shopify no tumba el sitemap: las
- * estáticas + taxonomía siempre se emiten.
+ * Sitemap INDEX dividido por silo. Next genera:
+ *   - /sitemap.xml            → índice que referencia a los de abajo
+ *   - /sitemap/paginas.xml    → estáticas + taxonomía (pilares SEO/AEO)
+ *   - /sitemap/productos.xml  → hojas de producto (handles reales de Shopify)
+ *   - /sitemap/blog.xml       → artículos del blog
+ *
+ * Por qué dividir (aunque hoy quepa en un archivo):
+ *   1. Diagnóstico en Search Console: cobertura de indexado POR sección
+ *      (productos vs pilares vs blog), no todo revuelto.
+ *   2. A prueba de futuro: al importar el catálogo ISO 13399 completo de
+ *      Iscar/Toolmex se rebasa el tope de 50k URLs/archivo → el índice es
+ *      obligatorio. Mejor tenerlo armado desde el día 1.
+ *   3. Rastreo eficiente: Google reprocesa solo el sub-sitemap que cambió.
+ *
+ * Cero desincronización: cada silo se auto-deriva de la MISMA fuente que sus
+ * páginas ([slug] de taxonomy-content, handles de Shopify). Un fallo transitorio
+ * de Shopify no tumba el índice: cada silo cae a [] si su query falla.
+ * `/carrito` queda fuera (noindex).
  */
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [products, articles] = await Promise.all([
-    getAllProductHandles().catch(() => []),
-    getArticles(100).catch(() => []),
-  ]);
+export async function generateSitemaps(): Promise<{ id: string }[]> {
+  return [{ id: "paginas" }, { id: "productos" }, { id: "blog" }];
+}
+
+export default async function sitemap({
+  id,
+}: {
+  id: Promise<string>;
+}): Promise<MetadataRoute.Sitemap> {
+  const which = await id;
   const now = new Date();
 
+  // ── Silo: productos ────────────────────────────────────────────────────────
+  if (which === "productos") {
+    const products = await getAllProductHandles().catch(() => []);
+    return products.map((p) => ({
+      url: `${site.url}/producto/${p.handle}`,
+      lastModified: p.updatedAt ? new Date(p.updatedAt) : now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
+  }
+
+  // ── Silo: blog ─────────────────────────────────────────────────────────────
+  if (which === "blog") {
+    const articles = await getArticles(100).catch(() => []);
+    return [
+      { url: `${site.url}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+      ...articles.map((a) => ({
+        url: `${site.url}/blog/${a.handle}`,
+        lastModified: a.publishedAt ? new Date(a.publishedAt) : now,
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      })),
+    ];
+  }
+
+  // ── Silo: paginas (estáticas + taxonomía pilar) ────────────────────────────
   const staticPages: MetadataRoute.Sitemap = [
     { url: site.url, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${site.url}/productos`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
@@ -45,7 +80,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${site.url}/materiales`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${site.url}/recubrimientos`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${site.url}/iso`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${site.url}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${site.url}/cotizacion`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${site.url}/contacto`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${site.url}/nosotros`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
@@ -103,20 +137,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const productPages: MetadataRoute.Sitemap = products.map((p) => ({
-    url: `${site.url}/producto/${p.handle}`,
-    lastModified: p.updatedAt ? new Date(p.updatedAt) : now,
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
-
-  const articlePages: MetadataRoute.Sitemap = articles.map((a) => ({
-    url: `${site.url}/blog/${a.handle}`,
-    lastModified: a.publishedAt ? new Date(a.publishedAt) : now,
-    changeFrequency: "monthly",
-    priority: 0.6,
-  }));
-
   return [
     ...staticPages,
     ...brandPages,
@@ -125,7 +145,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...materialPages,
     ...recubrimientoPages,
     ...isoPages,
-    ...productPages,
-    ...articlePages,
   ];
 }
