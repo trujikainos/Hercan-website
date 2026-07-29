@@ -69,6 +69,39 @@ export function xmlIndex(children: { loc: string; lastmod: string }[]): string {
 /** URL de un silo dentro del índice. */
 export const siloUrl = (silo: Silo) => `${site.url}/sitemaps/${silo}.xml`;
 
+/** Fecha ISO más reciente de una lista (o fallback si no hay ninguna válida). */
+function maxDate(dates: (string | Date | undefined)[], fallback: string): string {
+  const times = dates
+    .filter(Boolean)
+    .map((d) => (d instanceof Date ? d : new Date(d as string)).getTime())
+    .filter((t) => !isNaN(t));
+  return times.length ? new Date(Math.max(...times)).toISOString() : fallback;
+}
+
+/**
+ * `<lastmod>` REAL por silo para el índice: Google solo confía en lastmod si es
+ * verificable, así que se deriva del dato más reciente de cada silo (no un "now"
+ * genérico). "paginas" es código estático → cae al now del deploy.
+ */
+export async function siloLastmods(): Promise<Record<Silo, string>> {
+  const now = new Date().toISOString();
+  const [products, articles] = await Promise.all([
+    getAllProductHandles().catch(() => []),
+    getArticles(100).catch(() => []),
+  ]);
+  return {
+    paginas: now,
+    productos: maxDate(
+      products.map((p) => p.updatedAt),
+      now,
+    ),
+    blog: maxDate(
+      articles.map((a) => a.publishedAt),
+      now,
+    ),
+  };
+}
+
 // ── Silo: páginas (estáticas + taxonomía pilar) ──────────────────────────────
 export function paginasUrls(): UrlEntry[] {
   const now = new Date().toISOString();
