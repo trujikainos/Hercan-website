@@ -45,11 +45,12 @@ export interface QuoteResult {
 
 // Destino de los leads (a quién le llega la notificación de cotización).
 // Lista separada por comas; se puede sobreescribir en Vercel con QUOTE_LEADS_TO.
-// TEMPORAL (pruebas del cliente, 22-jul): solo leads@ para no spamear a Armando/ventas.
-// Reactivar agregando de nuevo: ,ventas@hercan.com.mx,amendoza@saminsa.com.mx
+// ACTIVO (29-jul): notifica a Kainos (leads@, para seguimiento/comisión) + Hercan
+// comercial (ventas@) + Armando (dueño). Durante pruebas (22-jul) estuvo reducido
+// solo a leads@; se reactivó al confirmar el cliente.
 const LEADS_TO = (
   process.env.QUOTE_LEADS_TO ||
-  "leads@weevolveit.com"
+  "leads@weevolveit.com,ventas@hercan.com.mx,amendoza@saminsa.com.mx"
 )
   .split(",")
   .map((s) => s.trim())
