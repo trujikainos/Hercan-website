@@ -8,6 +8,7 @@ import {
   ISO_CONTENT,
   MATERIAL_CONTENT,
   RECUBRIMIENTO_CONTENT,
+  PARA_CONTENT,
 } from "@/lib/taxonomy-content";
 
 /**
@@ -112,6 +113,9 @@ export function paginasUrls(): UrlEntry[] {
     ...taxo("tipo", Object.keys(TIPO_CONTENT), 0.8),
     ...taxo("material", Object.keys(MATERIAL_CONTENT), 0.8),
     ...taxo("recubrimiento", Object.keys(RECUBRIMIENTO_CONTENT), 0.8),
+    // "Para maquinar [material]" (ISO 513: P/M/K/N/S/H): pilar de aplicación,
+    // mismo peso 0.8. Faltaba en el sitemap anterior.
+    ...taxo("para", Object.keys(PARA_CONTENT), 0.8),
     ...taxo("iso", Object.keys(ISO_CONTENT), 0.7),
   ];
 }
