@@ -59,6 +59,15 @@ export function AddToCartButton({
         unitPrice: { amount: String(unitPrice ?? 0), currencyCode: currency },
       },
     });
+    // Evento de conversión GA4 (se dispara si GA4 está montado en el layout).
+    const w = window as unknown as { gtag?: (...a: unknown[]) => void };
+    w.gtag?.("event", "add_to_cart", {
+      currency,
+      value: (unitPrice ?? 0) * qty,
+      items: [
+        { item_id: handle, item_name: productTitle, price: unitPrice ?? 0, quantity: qty },
+      ],
+    });
     setJustAdded(true);
     if (addedTimer.current) clearTimeout(addedTimer.current);
     addedTimer.current = setTimeout(() => setJustAdded(false), 1800);
