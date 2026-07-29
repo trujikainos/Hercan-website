@@ -23,27 +23,66 @@ function authHeaders(): Record<string, string> {
   return { "X-Shopify-Storefront-Access-Token": PUBLIC_TOKEN as string };
 }
 
+// Errores transitorios de Shopify (5xx, throttle, "internal error") que NO deben
+// tumbar un build estático de miles de páginas: se reintentan con backoff. Un solo
+// hipo en generateMetadata/prerender antes hacía fallar TODO el `next build`.
+const TRANSIENT = /INTERNAL_SERVER_ERROR|THROTTLED|internal error|timeout|too many requests/i;
+
 export async function storefront<T>(
   query: string,
   variables: Record<string, unknown> = {},
   init?: { cache?: RequestCache; revalidate?: number; signal?: AbortSignal },
 ): Promise<T> {
-  const res = await fetch(`https://${DOMAIN}/api/${API_VERSION}/graphql.json`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify({ query, variables }),
-    // Timeout por defecto (10s): una lectura lenta de Shopify no debe colgar el
-    // render del RSC sin límite (caché fría). El error boundary lo captura y
-    // muestra la página de error con marca. Si el llamador pasa su signal, se respeta.
-    signal: init?.signal ?? AbortSignal.timeout(10_000),
-    ...(init?.cache
-      ? { cache: init.cache }
-      : { next: { revalidate: init?.revalidate ?? 60 } }),
-  });
-  if (!res.ok) throw new Error(`Storefront API ${res.status}: ${await res.text()}`);
-  const json = await res.json();
-  if (json.errors) throw new Error(JSON.stringify(json.errors));
-  return json.data as T;
+  const MAX_ATTEMPTS = 3;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(`https://${DOMAIN}/api/${API_VERSION}/graphql.json`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ query, variables }),
+        // Timeout por defecto (10s): una lectura lenta de Shopify no debe colgar el
+        // render del RSC sin límite (caché fría). El error boundary lo captura y
+        // muestra la página de error con marca. Si el llamador pasa su signal, se respeta.
+        signal: init?.signal ?? AbortSignal.timeout(10_000),
+        ...(init?.cache
+          ? { cache: init.cache }
+          : { next: { revalidate: init?.revalidate ?? 60 } }),
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        // 5xx / 429 → transitorio: reintenta. 4xx (401/403/404) → error real: aborta.
+        if ((res.status >= 500 || res.status === 429) && attempt < MAX_ATTEMPTS) {
+          lastErr = new Error(`Storefront API ${res.status}: ${body}`);
+          await new Promise((r) => setTimeout(r, 400 * attempt));
+          continue;
+        }
+        throw new Error(`Storefront API ${res.status}: ${body}`);
+      }
+      const json = await res.json();
+      if (json.errors) {
+        const msg = JSON.stringify(json.errors);
+        if (TRANSIENT.test(msg) && attempt < MAX_ATTEMPTS) {
+          lastErr = new Error(msg);
+          await new Promise((r) => setTimeout(r, 400 * attempt));
+          continue;
+        }
+        throw new Error(msg);
+      }
+      return json.data as T;
+    } catch (err) {
+      // Errores de red / timeout del fetch: reintenta si quedan intentos.
+      const msg = err instanceof Error ? err.message : String(err);
+      const retriable = TRANSIENT.test(msg) || /fetch failed|network|aborted|ECONN/i.test(msg);
+      if (retriable && attempt < MAX_ATTEMPTS) {
+        lastErr = err;
+        await new Promise((r) => setTimeout(r, 400 * attempt));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
 }
 
 type ShopifyProductNode = {
