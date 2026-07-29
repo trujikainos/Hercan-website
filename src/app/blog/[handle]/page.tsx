@@ -24,7 +24,7 @@ export async function generateMetadata({
     title: a.seoTitle || a.title,
     description: a.seoDescription || a.excerpt || undefined,
     alternates: { canonical: `/blog/${a.handle}` },
-    openGraph: a.image ? { images: [{ url: a.image }] } : undefined,
+    // og:image lo genera opengraph-image.tsx (portada del artículo o fallback de marca).
   };
 }
 
