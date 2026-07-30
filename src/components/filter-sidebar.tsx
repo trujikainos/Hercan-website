@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, Loader2, SlidersHorizontal, X } from "lucide-react";
 import type { FacetGroup, FacetOption } from "@/lib/catalog";
 
 // Los tipos de faceta viven en la capa de datos (`@/lib/catalog`); se re-exportan
@@ -80,7 +80,12 @@ export function FilterSidebar({
   const groups = (
     <>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-heading text-lg text-hc-navy">Filtrar</h2>
+        <h2 className="flex items-center gap-2 font-heading text-lg text-hc-navy">
+          Filtrar
+          {isPending && (
+            <Loader2 className="h-4 w-4 animate-spin text-hc-blue" aria-hidden />
+          )}
+        </h2>
         {activeCount > 0 && (
           <button
             type="button"
@@ -91,19 +96,23 @@ export function FilterSidebar({
           </button>
         )}
       </div>
-      {visibleFacets.map((f) =>
-        f.options.length === 0 ? null : (
-          <FilterGroup key={f.param} facet={f} onToggle={toggle} />
-        ),
-      )}
+      {/* Mientras aplica un filtro, la lista se atenúa un poco (feedback), pero el
+          spinner de arriba deja claro que está cargando. */}
+      <div
+        className="transition-opacity duration-150"
+        style={{ opacity: isPending ? 0.55 : 1, pointerEvents: isPending ? "none" : "auto" }}
+      >
+        {visibleFacets.map((f) =>
+          f.options.length === 0 ? null : (
+            <FilterGroup key={f.param} facet={f} onToggle={toggle} />
+          ),
+        )}
+      </div>
     </>
   );
 
   return (
-    <div
-      style={{ opacity: isPending ? 0.6 : 1, transition: "opacity 0.15s" }}
-      aria-busy={isPending}
-    >
+    <div aria-busy={isPending}>
       {/* MÓVIL: botón compacto que abre el drawer (evita la lista larga apilada) */}
       <button
         type="button"
@@ -147,9 +156,16 @@ export function FilterSidebar({
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
-                className="press w-full rounded-lg bg-hc-blue py-2.5 text-sm font-semibold text-white"
+                className="press flex w-full items-center justify-center gap-2 rounded-lg bg-hc-blue py-2.5 text-sm font-semibold text-white"
               >
-                Ver resultados
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    Aplicando…
+                  </>
+                ) : (
+                  "Ver resultados"
+                )}
               </button>
             </div>
           </div>
