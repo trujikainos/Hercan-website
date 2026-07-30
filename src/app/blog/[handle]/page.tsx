@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
-import { pageGraph, breadcrumbNode, blogPostingNode } from "@/lib/schema";
+import { pageGraph, breadcrumbNode, blogPostingNode, faqNode } from "@/lib/schema";
 import { getArticleByHandle } from "@/lib/shopify";
 
 // Los artículos se publican en Shopify SIN redeploy del sitio → esta ficha debe
@@ -47,6 +47,27 @@ function enrichArticle(html: string) {
   return { html: wrapped, headings, readMin };
 }
 
+// Extrae el bloque "Preguntas frecuentes" (h2) → pares pregunta (h3) + respuesta (p)
+// para emitir schema FAQPage. Es la señal más fuerte para AI Overviews / citas de
+// IA y para rich results de Google. Devuelve [] si el artículo no tiene FAQ.
+function extractFaqs(html: string): { question: string; answer: string }[] {
+  const faqStart = html.search(/<h2[^>]*>\s*preguntas frecuentes\s*<\/h2>/i);
+  if (faqStart === -1) return [];
+  const rest = html.slice(faqStart);
+  const nextH2 = rest.slice(5).search(/<h2[^>]*>/i);
+  const block = nextH2 === -1 ? rest : rest.slice(0, nextH2 + 5);
+  const strip = (s: string) => s.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const faqs: { question: string; answer: string }[] = [];
+  const re = /<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(block)) !== null) {
+    const question = strip(m[1]);
+    const answer = strip(m[2]);
+    if (question && answer) faqs.push({ question, answer });
+  }
+  return faqs;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -78,6 +99,7 @@ export default async function ArticlePage({
     day: "numeric",
   });
   const enriched = a.contentHtml ? enrichArticle(a.contentHtml) : null;
+  const faqs = a.contentHtml ? extractFaqs(a.contentHtml) : [];
 
   return (
     <>
@@ -89,6 +111,7 @@ export default async function ArticlePage({
             { name: "Blog", path: "/blog" },
             { name: a.title },
           ]),
+          ...(faqs.length ? [faqNode(faqs)] : []),
         )}
       />
       <main id="contenido" className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:py-10">

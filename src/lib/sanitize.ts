@@ -47,14 +47,26 @@ export function sanitizeRichHtml(html: string | null | undefined): string {
     allowedSchemes: ["http", "https", "mailto", "tel"],
     allowedSchemesByTag: { img: ["https"] },
     allowProtocolRelative: false,
-    // Fuerza atributos seguros DESPUÉS de sanear: <a> abre en pestaña nueva sin
-    // pasar referrer ni "juice" SEO; <img> con carga diferida. Si el src del <img>
-    // no era https, `allowedSchemesByTag` ya lo quitó.
+    // Fuerza atributos seguros DESPUÉS de sanear. Distinguimos por destino:
+    //  · Enlace INTERNO (href relativo "/..." o al propio dominio) → follow y misma
+    //    pestaña: así el contenido del blog reparte "link juice" a categorías y
+    //    productos (clave para rankear las páginas que venden).
+    //  · Enlace EXTERNO → nofollow + noopener + pestaña nueva (seguridad y no fugar
+    //    autoridad a terceros).
     transformTags: {
-      a: (tagName, attribs) => ({
-        tagName,
-        attribs: { ...attribs, rel: "noopener nofollow", target: "_blank" },
-      }),
+      a: (tagName, attribs) => {
+        const href = attribs.href || "";
+        const internal =
+          href.startsWith("/") ||
+          href.startsWith("#") ||
+          href.includes("hercan.com.mx");
+        return {
+          tagName,
+          attribs: internal
+            ? { ...attribs, rel: "" }
+            : { ...attribs, rel: "noopener nofollow", target: "_blank" },
+        };
+      },
       img: (tagName, attribs) => ({
         tagName,
         attribs: { ...attribs, loading: "lazy" },

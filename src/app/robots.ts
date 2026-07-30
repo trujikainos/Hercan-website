@@ -11,8 +11,11 @@ const AI_BOTS = [
   "ChatGPT-User",
   "ClaudeBot",
   "Claude-Web",
+  "Claude-SearchBot",
+  "Claude-User",
   "anthropic-ai",
   "PerplexityBot",
+  "Perplexity-User",
   "Google-Extended",
   "Applebot-Extended",
 ];
