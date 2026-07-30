@@ -50,7 +50,7 @@ export interface QuoteResult {
 // solo a leads@; se reactivó al confirmar el cliente.
 const LEADS_TO = (
   process.env.QUOTE_LEADS_TO ||
-  "leads@weevolveit.com,ventas@hercan.com.mx,amendoza@saminsa.com.mx"
+  "leads@weevolveit.com,ventas2@hercan.com.mx,amendoza@saminsa.com.mx"
 )
   .split(",")
   .map((s) => s.trim())
@@ -58,7 +58,7 @@ const LEADS_TO = (
 // Reply-to de la AUTORESPUESTA al cliente: si el cliente responde su acuse,
 // la respuesta llega a la bandeja comercial de HERCAN (quien lo atiende), no a
 // Kainos. Overridable en Vercel con QUOTE_REPLY_TO.
-const LEADS_REPLY_TO = process.env.QUOTE_REPLY_TO || "ventas@hercan.com.mx";
+const LEADS_REPLY_TO = process.env.QUOTE_REPLY_TO || "ventas2@hercan.com.mx";
 
 const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 

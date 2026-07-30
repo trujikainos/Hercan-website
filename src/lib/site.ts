@@ -52,9 +52,9 @@ export const site = {
   ] as { name: string; logo: string }[],
 
   // Contacto / NAP — debe coincidir con el Google Business Profile
-  email: "ventas@hercan.com.mx", // TODO: confirmar correo comercial
-  phone: "", // TODO: teléfono comercial (formato +52…) — no viene en la constancia
-  whatsapp: "528442864095", // WhatsApp de ventas (dígitos con lada país)
+  email: "ventas2@hercan.com.mx",
+  phone: "+528443426853", // 844 342 6853
+  whatsapp: "528443426853", // WhatsApp de ventas (dígitos con lada país): 844 342 6853
   // Datos fiscales de la constancia SAT (jul-2026).
   rfc: "HCT130408CK5",
   // Razón social EXACTA del SAT (difiere del branding "Tungsteno del Norte"):
