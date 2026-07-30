@@ -40,6 +40,20 @@ export const CA_COOKIES = {
   nonce: "hc_nonce",
 } as const;
 
+/**
+ * Chequeo LIGERO (solo cookie, sin red) de si hay una sesión de cliente activa.
+ * Úsalo cuando solo necesitas saber "¿está logueado?" sin traer el perfil
+ * (p. ej. para decidir si añadir `sso=silent` al checkoutUrl). No refresca el
+ * token: si venció, devuelve false (el usuario re-loguea en el flujo normal).
+ */
+export async function hasCustomerSession(): Promise<boolean> {
+  if (!customerAccountsEnabled) return false;
+  const jar = await cookies();
+  const token = jar.get(CA_COOKIES.at)?.value;
+  const exp = Number(jar.get(CA_COOKIES.exp)?.value ?? "0");
+  return Boolean(token) && !(exp && exp < Date.now());
+}
+
 // ── PKCE / utilidades (Web Crypto) ──────────────────────────────────────────
 function b64url(bytes: Uint8Array): string {
   let s = "";

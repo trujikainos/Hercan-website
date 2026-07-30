@@ -3,6 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { storefront, isShopifyConnected } from "./shopify";
 import type { Cart, CartLine, CartNotice } from "./cart-types";
+import { hasCustomerSession } from "./customer-account";
 
 const CART_COOKIE = "hercan_cart";
 const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 10; // 10 días (los carritos de Shopify persisten ~10d)
@@ -125,6 +126,17 @@ function noticesFromUserErrors(errs: any[]): CartNotice[] {
     .map((e) => ({ code: "MERCHANDISE_UNAVAILABLE" as const, message: e.message || "No disponible." }));
 }
 
+// Si el cliente inició sesión (Customer Account API), añade `sso=silent` al
+// checkoutUrl → el checkout de Shopify verifica su sesión vía OIDC y lo reconoce
+// (pre-llena datos). Invitados: se devuelve el checkoutUrl SIN tocar, para no
+// arriesgar la venta principal. Doc Shopify: "Authenticate buyers in checkout".
+async function withCheckoutAuth(cart: Cart | null): Promise<Cart | null> {
+  if (!cart?.checkoutUrl) return cart;
+  if (!(await hasCustomerSession())) return cart;
+  const sep = cart.checkoutUrl.includes("?") ? "&" : "?";
+  return { ...cart, checkoutUrl: `${cart.checkoutUrl}${sep}sso=silent` };
+}
+
 // ---- READ (recupera si expiró) ----
 export async function getCart(): Promise<Cart | null> {
   if (!isShopifyConnected) return null;
@@ -135,7 +147,7 @@ export async function getCart(): Promise<Cart | null> {
     await clearCartId();
     return null;
   }
-  return mapCart(d.cart);
+  return withCheckoutAuth(mapCart(d.cart));
 }
 
 // ---- ADD (crea al primer add, recupera si expiró) ----
@@ -154,7 +166,7 @@ export async function addToCart(variantId: string, quantity: number): Promise<Ca
   const c = await call<{ cartCreate: { cart: any; userErrors: any[] } }>(M_CREATE, { lines });
   const cart = c.cartCreate.cart;
   if (cart) await writeCartId(cart.id);
-  const r = finalize(cart, c.cartCreate.userErrors, Boolean(id));
+  const r = await finalize(cart, c.cartCreate.userErrors, Boolean(id));
   // Recuperación silenciosa: si el carrito viejo expiró pero el producto SÍ se agregó
   // a uno nuevo, no mostramos "tu carrito expiró" (confunde tras un add exitoso).
   if (cart) r.notices = r.notices.filter((n) => n.code !== "CART_RECOVERED");
@@ -219,7 +231,7 @@ export async function reorderToCart(
     userErrors = c.cartCreate.userErrors;
     if (raw) await writeCartId(raw.id);
   }
-  return { cart: mapCart(raw), notices: noticesFromUserErrors(userErrors), recovered, skipped, added: toAdd.length };
+  return { cart: await withCheckoutAuth(mapCart(raw)), notices: noticesFromUserErrors(userErrors), recovered, skipped, added: toAdd.length };
 }
 
 export async function updateLine(lineId: string, quantity: number): Promise<CartMutationResult> {
@@ -284,8 +296,12 @@ function recoveredEmpty(): CartMutationResult {
   };
 }
 
-function finalize(rawCart: any, userErrors: any[], recovered: boolean): CartMutationResult {
-  const cart = mapCart(rawCart);
+async function finalize(
+  rawCart: any,
+  userErrors: any[],
+  recovered: boolean,
+): Promise<CartMutationResult> {
+  const cart = await withCheckoutAuth(mapCart(rawCart));
   const notices = noticesFromUserErrors(userErrors);
   if (recovered)
     notices.push({ code: "CART_RECOVERED", message: "Tu carrito anterior expiró; creamos uno nuevo." });
