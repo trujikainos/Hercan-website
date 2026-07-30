@@ -101,7 +101,8 @@ export async function fetchRemoteImageDataUrl(
     try {
       const u = new URL(rawUrl);
       if (u.hostname.endsWith("cdn.shopify.com")) {
-        u.searchParams.set("width", "720");
+        // 500px basta para la tarjeta (~418px) y mantiene ligero el PNG final.
+        u.searchParams.set("width", "500");
       }
       url = u.toString();
     } catch {
@@ -164,10 +165,12 @@ export async function renderBrandOG({
   title,
   eyebrow,
   footer = BRANDS_LINE,
-  background = "cnc",
 }: BrandOGInput): Promise<ImageResponse> {
   const logoSrc = await getBrandLogoDataUrl();
-  const bgSrc = background ? await getOgBackgroundDataUrl(background) : null;
+  // SIN foto de fondo a propósito: una foto full-bleed rasterizada a PNG 1200×630
+  // pesa ~600KB y WhatsApp descarta previews > ~300KB (por eso "no cargaban" al
+  // compartir). El degradado navy plano mantiene la OG <150KB y SÍ aparece.
+  const bgSrc: string | null = null;
   const clean =
     title.length > 118 ? `${title.slice(0, 117).trimEnd()}…` : title;
   const fontSize = titleFontSize(clean);
