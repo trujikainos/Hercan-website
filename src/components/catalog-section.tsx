@@ -26,10 +26,10 @@ export function CatalogSection({
   const { shown, facetGroups, hasMore, moreQuery, total, remaining } = result;
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 md:grid-cols-[220px_1fr]">
+    <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 md:grid-cols-[220px_1fr]">
       <FilterSidebar facets={facetGroups} hiddenFacets={hiddenFacets} />
 
-      <section>
+      <section className="min-w-0">
         <ProductList products={shown} total={total} />
 
         {hasMore && (

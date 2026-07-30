@@ -130,8 +130,8 @@ export function FilterSidebar({
             onClick={() => setDrawerOpen(false)}
             aria-hidden
           />
-          <div className="absolute right-0 top-0 flex h-full w-[86%] max-w-sm flex-col bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-hc-metal-light px-4 py-3">
+          <div className="absolute right-0 top-0 flex max-h-[100dvh] w-[86%] max-w-sm flex-col bg-white shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-hc-metal-light px-4 py-3">
               <span className="font-heading text-base text-hc-navy">Filtros</span>
               <button
                 type="button"
@@ -142,8 +142,8 @@ export function FilterSidebar({
                 <X className="h-5 w-5" aria-hidden />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-4 py-3">{groups}</div>
-            <div className="border-t border-hc-metal-light p-3">
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">{groups}</div>
+            <div className="shrink-0 border-t border-hc-metal-light p-3">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
