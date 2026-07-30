@@ -44,8 +44,11 @@ export async function SiteHeader() {
 
         <SearchBar />
 
-        {/* "Más" (páginas de empresa) vive ahora en el top header, no en la barra navy. */}
-        <NavMenu />
+        {/* "Más" (páginas de empresa). Oculto en móvil para un header limpio
+            (Búsqueda · Carrito · Cuenta); visible en desktop. */}
+        <div className="hidden md:block">
+          <NavMenu />
+        </div>
 
         <Link
           href="/cotizacion"
@@ -54,8 +57,14 @@ export async function SiteHeader() {
           <FileText className="h-4 w-4" aria-hidden />
           Solicitar cotización
         </Link>
-        <AccountButton enabled={customerAccountsEnabled} loginUrl={loginUrl} />
-        <CartButton />
+        {/* Móvil: orden Búsqueda · Carrito · Cuenta (via order-*); desktop = orden
+            DOM natural (Cuenta · Carrito). */}
+        <div className="order-2 md:order-none">
+          <AccountButton enabled={customerAccountsEnabled} loginUrl={loginUrl} />
+        </div>
+        <div className="order-1 md:order-none">
+          <CartButton />
+        </div>
       </div>
 
       <nav className="bg-hc-navy">

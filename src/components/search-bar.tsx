@@ -167,7 +167,7 @@ export function SearchBar() {
         type="button"
         aria-label="Buscar"
         onClick={() => setMobileOpen(true)}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-hc-navy transition-colors hover:bg-hc-soft md:hidden"
+        className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-hc-navy transition-colors hover:bg-hc-soft md:hidden"
       >
         <Search className="h-5 w-5" aria-hidden />
       </button>
