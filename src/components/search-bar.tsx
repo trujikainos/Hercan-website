@@ -44,6 +44,7 @@ export function SearchBar() {
   // En móvil el buscador es solo un ícono; al tocarlo se abre un overlay a
   // pantalla completa (así el header no se satura y el carrito queda visible).
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileShown, setMobileShown] = useState(false); // controla la animación in/out
   const boxRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
 
@@ -127,13 +128,25 @@ export function SearchBar() {
     setMobileOpen(false);
   }, [pathname]);
 
-  // Al abrir el overlay móvil, enfoca el input y muestra el dropdown de ayuda.
+  // Al abrir el overlay móvil: anima la entrada (rAF), enfoca el input y muestra
+  // el dropdown de ayuda. Al cerrar (mobileOpen=false) se apaga la animación.
   useEffect(() => {
     if (mobileOpen) {
       setOpen(true);
+      const id = requestAnimationFrame(() => setMobileShown(true));
       mobileInputRef.current?.focus();
+      return () => cancelAnimationFrame(id);
     }
+    setMobileShown(false);
   }, [mobileOpen]);
+
+  // Cierra el overlay con animación de SALIDA: apaga la clase visible y desmonta
+  // tras la transición (200ms) para que se vea el efecto de salida.
+  const closeMobileSearch = () => {
+    setMobileShown(false);
+    setOpen(false);
+    setTimeout(() => setMobileOpen(false), 200);
+  };
 
   // Enter/submit/chip → página de resultados completa (/buscar), filtrable.
   function go(term: string) {
@@ -159,13 +172,26 @@ export function SearchBar() {
         <Search className="h-5 w-5" aria-hidden />
       </button>
 
-      {/* Caja de búsqueda: inline en desktop; overlay superior en móvil abierto;
-          oculta en móvil cerrado (ahí manda el ícono de arriba). */}
+      {/* MÓVIL: backdrop del overlay (fade in/out; tap para cerrar) */}
+      {mobileOpen && (
+        <div
+          onClick={closeMobileSearch}
+          aria-hidden
+          className={`fixed inset-0 z-[65] bg-black/30 backdrop-blur-[1px] transition-opacity duration-200 md:hidden ${
+            mobileShown ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
+
+      {/* Caja de búsqueda: inline en desktop; overlay superior animado en móvil
+          abierto; oculta en móvil cerrado (ahí manda el ícono de arriba). */}
       <div
         ref={boxRef}
         className={
           mobileOpen
-            ? "fixed inset-x-0 top-0 z-[70] border-b border-hc-metal-light bg-white p-3 md:relative md:inset-auto md:top-auto md:z-auto md:flex-1 md:border-0 md:bg-transparent md:p-0"
+            ? `fixed inset-x-0 top-0 z-[70] border-b border-hc-metal-light bg-white p-3 shadow-lg transition-all duration-200 ease-out ${
+                mobileShown ? "translate-y-0 opacity-100" : "-translate-y-3 opacity-0"
+              } md:relative md:inset-auto md:top-auto md:z-auto md:translate-y-0 md:border-0 md:bg-transparent md:p-0 md:opacity-100 md:shadow-none md:flex-1`
             : "relative hidden md:block md:flex-1"
         }
       >
@@ -203,10 +229,7 @@ export function SearchBar() {
           {mobileOpen && (
             <button
               type="button"
-              onClick={() => {
-                setMobileOpen(false);
-                setOpen(false);
-              }}
+              onClick={closeMobileSearch}
               className="shrink-0 px-1 text-sm font-medium text-hc-blue md:hidden"
             >
               Cancelar
