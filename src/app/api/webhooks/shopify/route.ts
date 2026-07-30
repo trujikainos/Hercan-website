@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { submitToIndexNow } from "@/lib/indexnow";
 
 // Webhook de Shopify para REVALIDACIÓN INSTANTÁNEA de inventario/producto.
 // Cuando cambia un producto (venta, cancelación, reabasto, edición), Shopify
@@ -44,6 +45,9 @@ export async function POST(req: NextRequest) {
   const handle = typeof payload.handle === "string" ? payload.handle : null;
   if (handle) {
     revalidatePath(`/producto/${handle}`);
+    // INSTANT INDEXING: avisa a IndexNow (Bing/Yandex/…) que la ficha cambió →
+    // re-rastreo casi inmediato. Falla en silencio; no bloquea el 2xx a Shopify.
+    await submitToIndexNow([`/producto/${handle}`]);
   }
   // El catálogo también muestra badges de stock → refréscalo.
   revalidatePath("/productos");
