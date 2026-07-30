@@ -3,14 +3,15 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, breadcrumbNode, blogPostingNode } from "@/lib/schema";
-import { getArticles, getArticleByHandle } from "@/lib/shopify";
+import { getArticleByHandle } from "@/lib/shopify";
 
-export const revalidate = 300;
-
-export async function generateStaticParams() {
-  const articles = await getArticles();
-  return articles.map((a) => ({ handle: a.handle }));
-}
+// Los artículos se publican en Shopify SIN redeploy del sitio → esta ficha debe
+// renderizar ON-DEMAND (dinámica). Si se pre-genera estáticamente, un handle
+// nuevo (no visto en el build) intenta generarse en runtime y el layout —que lee
+// cookies del carrito— rompe con "Page changed from static to dynamic at runtime,
+// reason: cookies". force-dynamic evita ese conflicto; el fetch a Shopify sigue
+// cacheado a su nivel, así que no es más lento de forma notable.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
