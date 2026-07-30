@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, Loader2, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 import type { FacetGroup, FacetOption } from "@/lib/catalog";
 
 // Los tipos de faceta viven en la capa de datos (`@/lib/catalog`); se re-exportan
@@ -31,6 +31,16 @@ export function FilterSidebar({
   const [isPending, startTransition] = useTransition();
   // Drawer de filtros SOLO en móvil (en desktop el sidebar siempre está visible).
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Buscador dentro de los filtros (visible en todas las resoluciones).
+  const [filterQuery, setFilterQuery] = useState("");
+
+  function onSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const t = filterQuery.trim();
+    if (t.length < 2) return;
+    setDrawerOpen(false);
+    router.push(`/buscar?q=${encodeURIComponent(t)}`);
+  }
 
   const hidden = new Set(hiddenFacets ?? []);
   const visibleFacets = facets.filter((f) => !hidden.has(f.param));
@@ -79,6 +89,22 @@ export function FilterSidebar({
   // desktop y en el drawer de móvil.
   const groups = (
     <>
+      {/* Buscador de productos dentro de los filtros (todas las resoluciones). */}
+      <form
+        onSubmit={onSearchSubmit}
+        className="mb-3 flex items-center gap-2 rounded-lg border border-hc-metal-light bg-hc-soft px-3 py-2 transition-colors focus-within:border-hc-steel"
+      >
+        <Search className="h-4 w-4 shrink-0 text-hc-gunmetal" aria-hidden />
+        <input
+          type="search"
+          value={filterQuery}
+          onChange={(e) => setFilterQuery(e.target.value)}
+          placeholder="Buscar producto…"
+          aria-label="Buscar productos"
+          className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-hc-gunmetal"
+        />
+      </form>
+
       <div className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-2 font-heading text-lg text-hc-navy">
           Filtrar
