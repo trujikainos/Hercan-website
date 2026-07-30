@@ -30,7 +30,7 @@ export async function SiteHeader() {
   const loginUrl = customerAccountsEnabled ? "/account/login" : ACCOUNT_URL;
   return (
     <header className="sticky top-0 z-40 border-b border-hc-metal-light bg-white">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 sm:gap-4">
         <Link href="/" className="flex shrink-0 items-center" aria-label="HERCAN — inicio">
           <Image
             src="/brand/hercan-logo.png"
@@ -38,7 +38,7 @@ export async function SiteHeader() {
             width={1300}
             height={400}
             priority
-            className="h-12 w-auto sm:h-14"
+            className="h-9 w-auto sm:h-14"
           />
         </Link>
 

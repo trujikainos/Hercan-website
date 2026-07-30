@@ -41,7 +41,11 @@ export function SearchBar() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  // En móvil el buscador es solo un ícono; al tocarlo se abre un overlay a
+  // pantalla completa (así el header no se satura y el carrito queda visible).
+  const [mobileOpen, setMobileOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
 
   // Placeholder con efecto MÁQUINA DE ESCRIBIR: escribe un ejemplo letra por letra,
   // lo mantiene, lo borra y pasa al siguiente. Da ideas de cómo buscar. Se detiene
@@ -120,7 +124,16 @@ export function SearchBar() {
   const pathname = usePathname();
   useEffect(() => {
     setOpen(false);
+    setMobileOpen(false);
   }, [pathname]);
+
+  // Al abrir el overlay móvil, enfoca el input y muestra el dropdown de ayuda.
+  useEffect(() => {
+    if (mobileOpen) {
+      setOpen(true);
+      mobileInputRef.current?.focus();
+    }
+  }, [mobileOpen]);
 
   // Enter/submit/chip → página de resultados completa (/buscar), filtrable.
   function go(term: string) {
@@ -135,18 +148,40 @@ export function SearchBar() {
   const showDropdown = open; // al enfocar mostramos hint + sugerencias aunque no haya texto
 
   return (
-    <div ref={boxRef} className="relative flex-1">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          submitSearch();
-        }}
-        className="flex items-center gap-2 rounded-lg border border-hc-metal-light bg-hc-soft px-3 py-2 transition-colors focus-within:border-hc-steel"
+    <>
+      {/* MÓVIL: ícono compacto que abre el buscador a pantalla completa */}
+      <button
+        type="button"
+        aria-label="Buscar"
+        onClick={() => setMobileOpen(true)}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-hc-navy transition-colors hover:bg-hc-soft md:hidden"
       >
-        <Search className="h-4 w-4 shrink-0 text-hc-gunmetal" aria-hidden />
-        <input
-          type="search"
-          value={q}
+        <Search className="h-5 w-5" aria-hidden />
+      </button>
+
+      {/* Caja de búsqueda: inline en desktop; overlay superior en móvil abierto;
+          oculta en móvil cerrado (ahí manda el ícono de arriba). */}
+      <div
+        ref={boxRef}
+        className={
+          mobileOpen
+            ? "fixed inset-x-0 top-0 z-[70] border-b border-hc-metal-light bg-white p-3 md:relative md:inset-auto md:top-auto md:z-auto md:flex-1 md:border-0 md:bg-transparent md:p-0"
+            : "relative hidden md:block md:flex-1"
+        }
+      >
+        <div className="flex items-center gap-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitSearch();
+            }}
+            className="flex flex-1 items-center gap-2 rounded-lg border border-hc-metal-light bg-hc-soft px-3 py-2 transition-colors focus-within:border-hc-steel"
+          >
+            <Search className="h-4 w-4 shrink-0 text-hc-gunmetal" aria-hidden />
+            <input
+              ref={mobileInputRef}
+              type="search"
+              value={q}
           onChange={(e) => {
             setQ(e.target.value);
             setOpen(true);
@@ -164,10 +199,23 @@ export function SearchBar() {
             ↵ Enter
           </kbd>
         ) : null}
-      </form>
+          </form>
+          {mobileOpen && (
+            <button
+              type="button"
+              onClick={() => {
+                setMobileOpen(false);
+                setOpen(false);
+              }}
+              className="shrink-0 px-1 text-sm font-medium text-hc-blue md:hidden"
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
 
-      {showDropdown && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-hc-metal-light bg-white shadow-xl">
+        {showDropdown && (
+          <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-hc-metal-light bg-white shadow-xl">
           {!hasQuery ? (
             <div className="p-3">
               <p className="px-1 pb-2 text-xs leading-relaxed text-hc-gunmetal">
@@ -259,6 +307,7 @@ export function SearchBar() {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
