@@ -136,7 +136,6 @@ export function MegaMenu({ data }: { data: MenuData }) {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0); // categoría activa del centro (desktop)
-  const [mobileOpenIdx, setMobileOpenIdx] = useState<number | null>(0); // acordeón móvil
 
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -480,85 +479,72 @@ export function MegaMenu({ data }: { data: MenuData }) {
           </div>
 
           <div className="flex-1 overflow-y-auto overscroll-contain">
-            {/* Acordeón de categorías */}
-            <ul>
-              {data.map((c, i) => {
-                const expanded = mobileOpenIdx === i;
-                const sectionId = `${panelId}-cat-${i}`;
+            {/* Categorías como CUADROS (2 por fila) — app-like, fáciles de tocar.
+                Cada cuadro navega a su página de categoría (que ya tiene sus filtros). */}
+            <div className="grid grid-cols-2 gap-3 p-4">
+              {data.map((c) => {
+                const img = HUB_IMAGES.categoria[c.slug];
                 return (
-                  <li key={c.slug} className="border-b border-hc-metal-light">
-                    <button
-                      type="button"
-                      aria-expanded={expanded}
-                      aria-controls={sectionId}
-                      onClick={() => setMobileOpenIdx(expanded ? null : i)}
-                      className="flex w-full items-center justify-between px-4 py-3.5 text-left font-heading text-hc-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-hc-steel"
-                    >
-                      <span className="flex items-baseline gap-1.5">
-                        {c.name}
-                        <span className="text-xs font-normal text-hc-gunmetal">{c.total}</span>
-                      </span>
-                      <ChevronDown
-                        className={`h-5 w-5 transition-transform duration-200 motion-reduce:transition-none ${
-                          expanded ? "rotate-180" : ""
-                        }`}
-                        aria-hidden
+                  <Link
+                    key={c.slug}
+                    href={categoriaHref(c.slug)}
+                    onClick={() => closeNow(false)}
+                    className="press group relative flex aspect-square flex-col justify-end overflow-hidden rounded-xl border border-hc-metal-light bg-hc-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-steel"
+                  >
+                    {img ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={img}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                    </button>
-                    {expanded && (
-                      <div id={sectionId} className="space-y-4 px-4 pb-4">
-                        {AXES.map((a) => (
-                          <ChipGroup
-                            key={a.key}
-                            heading={a.heading}
-                            chips={c[a.key]}
-                            onNavigate={() => closeNow(false)}
-                          />
-                        ))}
-                        <Link
-                          href={categoriaHref(c.slug)}
-                          onClick={() => closeNow(false)}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-hc-blue hover:text-hc-steel"
-                        >
-                          Ver todo {c.name}
-                          <span className="text-hc-gunmetal">({c.total})</span>
-                          <ArrowRight className="h-4 w-4" aria-hidden />
-                        </Link>
-                      </div>
-                    )}
-                  </li>
+                    ) : null}
+                    <div
+                      className={`absolute inset-0 ${
+                        img
+                          ? "bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+                          : "bg-gradient-to-br from-hc-navy to-hc-steel"
+                      }`}
+                    />
+                    <div className="relative p-3">
+                      <span className="block font-heading text-sm leading-tight text-white">
+                        {c.name}
+                      </span>
+                      <span className="text-xs text-white/75">{c.total} productos</span>
+                    </div>
+                  </Link>
                 );
               })}
-            </ul>
+            </div>
 
-            {/* CTA de cotización + Explora todo (las marcas viven en su propio menú). */}
-            <div className="space-y-3 p-4">
+            {/* CTA de cotización + Explora todo como CUADROS (2 por fila). */}
+            <div className="space-y-4 px-4 pb-6">
               <QuoteCta onNavigate={() => closeNow(false)} />
-              <div className="pt-1">
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+              <div>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
                   Explora todo
                 </p>
-                <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2.5">
                   {HUBS.map((h) => (
                     <Link
                       key={h.href}
                       href={h.href}
                       onClick={() => closeNow(false)}
-                      className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-navy hover:text-hc-blue"
+                      className="press flex items-center justify-between gap-1 rounded-lg border border-hc-metal-light bg-white px-3 py-3 font-heading text-sm font-semibold text-hc-navy transition-colors hover:border-hc-steel hover:bg-hc-soft"
                     >
                       {h.label}
-                      <ArrowRight className="h-4 w-4" aria-hidden />
+                      <ArrowRight className="h-4 w-4 shrink-0 text-hc-steel" aria-hidden />
                     </Link>
                   ))}
-                  <Link
-                    href="/productos"
-                    onClick={() => closeNow(false)}
-                    className="flex items-center gap-1 font-heading text-sm font-semibold text-hc-blue hover:text-hc-steel"
-                  >
-                    Ver todo el catálogo
-                    <ArrowRight className="h-4 w-4" aria-hidden />
-                  </Link>
                 </div>
+                <Link
+                  href="/productos"
+                  onClick={() => closeNow(false)}
+                  className="press mt-2.5 flex items-center justify-center gap-1.5 rounded-lg bg-hc-blue px-3 py-3 font-heading text-sm font-semibold text-white transition-colors hover:bg-hc-steel"
+                >
+                  Ver todo el catálogo
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
               </div>
             </div>
           </div>
