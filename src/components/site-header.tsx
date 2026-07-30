@@ -18,7 +18,7 @@ const ACCOUNT_URL =
 export function AnnouncementBar() {
   return (
     <div className="bg-hc-navy px-4 py-2 text-center text-xs text-hc-sky">
-      B2B industrial · Envíos a todo México · Cotización en línea
+      B2B y B2C · Envíos a todo México · Cotización en línea
     </div>
   );
 }

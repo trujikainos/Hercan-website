@@ -7,7 +7,7 @@ import {
   QuoteCTA,
   SeoBlock,
 } from "@/components/home-sections";
-import { ProductCard } from "@/components/product-card";
+import { FeaturedProducts } from "@/components/featured-products";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { getProducts, getCategories } from "@/lib/shopify";
 import { JsonLd } from "@/components/json-ld";
@@ -49,10 +49,8 @@ export default async function HomePage() {
               Ver todo →
             </a>
           </div>
-          <div className="reveal grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {featured.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
+          <div className="reveal">
+            <FeaturedProducts products={featured} />
           </div>
         </section>
 

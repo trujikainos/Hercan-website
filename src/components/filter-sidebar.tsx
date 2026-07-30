@@ -1,8 +1,8 @@
 "use client";
 
-import { useId, useState, useTransition } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import type { FacetGroup, FacetOption } from "@/lib/catalog";
 
 // Los tipos de faceta viven en la capa de datos (`@/lib/catalog`); se re-exportan
@@ -29,6 +29,8 @@ export function FilterSidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  // Drawer de filtros SOLO en móvil (en desktop el sidebar siempre está visible).
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const hidden = new Set(hiddenFacets ?? []);
   const visibleFacets = facets.filter((f) => !hidden.has(f.param));
@@ -37,6 +39,16 @@ export function FilterSidebar({
     (n, f) => n + f.options.filter((o) => o.selected).length,
     0,
   );
+
+  // Bloquea el scroll del body mientras el drawer móvil está abierto.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [drawerOpen]);
 
   function navigate(params: URLSearchParams) {
     params.delete("ver"); // cualquier cambio de filtro vuelve a la primera página
@@ -63,12 +75,10 @@ export function FilterSidebar({
     navigate(params);
   }
 
-  return (
-    <aside
-      className="reveal"
-      style={{ opacity: isPending ? 0.6 : 1, transition: "opacity 0.15s" }}
-      aria-busy={isPending}
-    >
+  // Contenido de filtros (encabezado + grupos), reutilizado en el sidebar de
+  // desktop y en el drawer de móvil.
+  const groups = (
+    <>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-heading text-lg text-hc-navy">Filtrar</h2>
         {activeCount > 0 && (
@@ -86,7 +96,66 @@ export function FilterSidebar({
           <FilterGroup key={f.param} facet={f} onToggle={toggle} />
         ),
       )}
-    </aside>
+    </>
+  );
+
+  return (
+    <div
+      style={{ opacity: isPending ? 0.6 : 1, transition: "opacity 0.15s" }}
+      aria-busy={isPending}
+    >
+      {/* MÓVIL: botón compacto que abre el drawer (evita la lista larga apilada) */}
+      <button
+        type="button"
+        onClick={() => setDrawerOpen(true)}
+        className="press flex w-full items-center justify-center gap-2 rounded-lg border border-hc-metal-light bg-white py-2.5 text-sm font-medium text-hc-navy md:hidden"
+      >
+        <SlidersHorizontal className="h-4 w-4" aria-hidden />
+        Filtros
+        {activeCount > 0 && (
+          <span className="ml-0.5 rounded-full bg-hc-blue px-1.5 text-xs font-semibold text-white">
+            {activeCount}
+          </span>
+        )}
+      </button>
+
+      {/* DESKTOP: sidebar siempre visible */}
+      <aside className="reveal hidden md:block">{groups}</aside>
+
+      {/* MÓVIL: drawer deslizable (fixed → fuera del flujo del grid) */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setDrawerOpen(false)}
+            aria-hidden
+          />
+          <div className="absolute right-0 top-0 flex h-full w-[86%] max-w-sm flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-hc-metal-light px-4 py-3">
+              <span className="font-heading text-base text-hc-navy">Filtros</span>
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(false)}
+                aria-label="Cerrar filtros"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-hc-gunmetal hover:text-hc-navy"
+              >
+                <X className="h-5 w-5" aria-hidden />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-3">{groups}</div>
+            <div className="border-t border-hc-metal-light p-3">
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(false)}
+                className="press w-full rounded-lg bg-hc-blue py-2.5 text-sm font-semibold text-white"
+              >
+                Ver resultados
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
