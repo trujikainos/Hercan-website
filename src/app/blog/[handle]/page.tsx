@@ -74,11 +74,28 @@ export async function generateMetadata({
   const { handle } = await params;
   const a = await getArticleByHandle(handle);
   if (!a) return {};
+  // El og:image ES la featured image del artículo, tal cual (no una tarjeta
+  // generada). Si el artículo no tiene portada, cae al OG por defecto del layout.
+  const ogImage = a.image
+    ? [{ url: a.image, alt: a.imageAlt ?? a.title }]
+    : undefined;
   return {
     title: a.seoTitle || a.title,
     description: a.seoDescription || a.excerpt || undefined,
     alternates: { canonical: `/blog/${a.handle}` },
-    // og:image lo genera opengraph-image.tsx (portada del artículo o fallback de marca).
+    openGraph: {
+      type: "article",
+      title: a.seoTitle || a.title,
+      description: a.seoDescription || a.excerpt || undefined,
+      url: `/blog/${a.handle}`,
+      ...(ogImage ? { images: ogImage } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: a.seoTitle || a.title,
+      description: a.seoDescription || a.excerpt || undefined,
+      ...(a.image ? { images: [a.image] } : {}),
+    },
   };
 }
 
