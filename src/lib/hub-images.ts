@@ -11,6 +11,7 @@
 export const HUB_IMAGES: {
   categoria: Record<string, string | undefined>;
   tipo: Record<string, string | undefined>;
+  instrumento: Record<string, string | undefined>;
   material: Record<string, string | undefined>;
   recubrimiento: Record<string, string | undefined>;
   para: Record<string, string | undefined>;
@@ -36,6 +37,9 @@ export const HUB_IMAGES: {
     escariador: "/brand/taxonomia/tipo/escariador.webp",
     "barra-mandrinar": "/brand/taxonomia/tipo/barra-mandrinar.webp",
     portaherramientas: "/brand/taxonomia/tipo/portaherramientas.webp",
+  },
+  instrumento: {
+    micrometro: "/brand/taxonomia/instrumento/micrometro.webp",
   },
   material: {
     carburo: "/brand/taxonomia/material/carburo.webp",

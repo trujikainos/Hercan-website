@@ -3,6 +3,7 @@ import { TaxonomyHero, TaxonomyHubGrid } from "@/components/taxonomy";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, breadcrumbNode } from "@/lib/schema";
 import { INSTRUMENTO_CONTENT } from "@/lib/taxonomy-content";
+import { HUB_IMAGES } from "@/lib/hub-images";
 
 // Hub/archivo de la familia MEDICIÓN (silo paralelo a /tipos). Enlaza a cada
 // /instrumento/[slug]. Separa medición del herramental de corte (decisión de
@@ -19,7 +20,7 @@ export default function InstrumentosHubPage() {
     slug,
     title: c.title,
     blurb: c.intro[0],
-    image: undefined,
+    image: HUB_IMAGES.instrumento[slug],
   }));
 
   return (

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CatalogSection } from "@/components/catalog-section";
 import { TaxonomyHero, SiblingStrip } from "@/components/taxonomy";
+import { HUB_IMAGES } from "@/lib/hub-images";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, collectionNode, breadcrumbNode, faqNode } from "@/lib/schema";
@@ -84,6 +85,11 @@ export default async function InstrumentoPage({
           title={content.title}
           intro={content.intro}
           bullets={content.bullets}
+          image={
+            HUB_IMAGES.instrumento[slug]
+              ? { src: HUB_IMAGES.instrumento[slug]!, alt: content.title }
+              : undefined
+          }
         />
         {/* La faceta "tipo" (tipo_herramienta) no aplica a medición → oculta. */}
         <CatalogSection result={result} basePath={basePath} hiddenFacets={["tipo"]} />
