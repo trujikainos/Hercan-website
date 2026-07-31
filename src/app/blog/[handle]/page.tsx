@@ -42,9 +42,7 @@ function enrichArticle(html: string) {
   const wrapped = withIds
     .replace(/<table/gi, '<div class="tbl-wrap"><table')
     .replace(/<\/table>/gi, "</table></div>");
-  const words = html.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
-  const readMin = Math.max(1, Math.round(words / 200));
-  return { html: wrapped, headings, readMin };
+  return { html: wrapped, headings };
 }
 
 // Extrae el bloque "Preguntas frecuentes" (h2) → pares pregunta (h3) + respuesta (p)
@@ -149,12 +147,6 @@ export default async function ArticlePage({
                     <span>{a.author}</span>
                   </>
                 ) : null}
-                {enriched ? (
-                  <>
-                    <span className="text-white/40">·</span>
-                    <span>{enriched.readMin} min de lectura</span>
-                  </>
-                ) : null}
               </div>
             </div>
           </header>
@@ -172,12 +164,6 @@ export default async function ArticlePage({
                 <>
                   <span className="text-white/40">·</span>
                   <span>{a.author}</span>
-                </>
-              ) : null}
-              {enriched ? (
-                <>
-                  <span className="text-white/40">·</span>
-                  <span>{enriched.readMin} min de lectura</span>
                 </>
               ) : null}
             </div>
