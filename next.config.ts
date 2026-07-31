@@ -22,6 +22,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // sharp es binario nativo: se usa en /api/og-image (optimizador de OG image).
+  // Marcarlo como externo evita que el bundler del server intente empaquetarlo.
+  serverExternalPackages: ["sharp"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

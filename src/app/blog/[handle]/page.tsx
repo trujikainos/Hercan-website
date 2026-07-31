@@ -74,10 +74,20 @@ export async function generateMetadata({
   const { handle } = await params;
   const a = await getArticleByHandle(handle);
   if (!a) return {};
-  // El og:image ES la featured image del artículo, tal cual (no una tarjeta
-  // generada). Si el artículo no tiene portada, cae al OG por defecto del layout.
+  // OG/Twitter usan una versión OPTIMIZADA (JPG 1200x630, <200 KB) de la MISMA
+  // featured image, servida por /api/og-image. Así el preview carga en todas las
+  // plataformas —incluido WhatsApp, que descarta la featured original en PNG
+  // pesado (~1.5 MB)—. width/height explícitos → el preview aparece al instante.
+  // Si el artículo no tiene portada, cae al OG por defecto del layout.
   const ogImage = a.image
-    ? [{ url: a.image, alt: a.imageAlt ?? a.title }]
+    ? [
+        {
+          url: `/api/og-image?src=${encodeURIComponent(a.image)}`,
+          width: 1200,
+          height: 630,
+          alt: a.imageAlt ?? a.title,
+        },
+      ]
     : undefined;
   return {
     title: a.seoTitle || a.title,
@@ -94,7 +104,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: a.seoTitle || a.title,
       description: a.seoDescription || a.excerpt || undefined,
-      ...(a.image ? { images: [a.image] } : {}),
+      ...(ogImage ? { images: [ogImage[0].url] } : {}),
     },
   };
 }
