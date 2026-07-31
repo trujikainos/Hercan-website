@@ -1,5 +1,5 @@
 import { site } from "@/lib/site";
-import { getProducts, getCategories } from "@/lib/shopify";
+import { getProducts, getCategories, getArticles } from "@/lib/shopify";
 import { brandSlug } from "@/lib/catalog";
 import { BRAND_CONTENT, CATEGORY_CONTENT } from "@/lib/taxonomy-content";
 import { HOME_FAQS } from "@/lib/faq";
@@ -19,10 +19,12 @@ const firstSentence = (s: string): string => {
 };
 
 export async function GET() {
-  // Muestra de catálogo (25) + conteos por categoría (los que Shopify reporta).
-  const [products, categories] = await Promise.all([
+  // Muestra de catálogo (25) + conteos por categoría (los que Shopify reporta) +
+  // guías del blog (para citabilidad GEO/AEO; se derivan igual que el sitemap).
+  const [products, categories, articles] = await Promise.all([
     getProducts(25).catch(() => []),
     getCategories().catch(() => []),
+    getArticles(50).catch(() => []),
   ]);
   const countBySlug = new Map(categories.map((c) => [c.slug, c.count]));
 
@@ -56,6 +58,16 @@ export async function GET() {
     .map((p) => `- ${p.title} — marca ${p.brand}, categoría ${p.category}: ${site.url}/producto/${p.handle}`)
     .join("\n");
 
+  // Guías del blog: título + URL + primera oración del excerpt (contexto citable).
+  const guideLines = [...articles]
+    .sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
+    .map((a) => {
+      const ctx = a.excerpt || a.seoDescription || "";
+      const c = ctx ? ` — ${firstSentence(ctx)}` : "";
+      return `- ${a.title}: ${site.url}/blog/${a.handle}${c}`;
+    })
+    .join("\n");
+
   const body = `# ${site.name} — ${site.tagline}
 
 > ${site.tagline}
@@ -81,6 +93,9 @@ ${brandLines}
 
 ## Productos (muestra)
 ${productLines}
+
+## Guías técnicas (blog)
+${guideLines}
 
 ## Preguntas frecuentes
 ${HOME_FAQS.map((f) => `### ${f.question}\n${f.answer}`).join("\n\n")}
