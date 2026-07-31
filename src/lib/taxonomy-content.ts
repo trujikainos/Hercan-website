@@ -266,7 +266,7 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     bullets: [
       {
         heading: "Herramientas típicas",
-        items: ["Insertos de torneado", "Portaherramientas", "Barras de mandrinar"],
+        items: ["Insertos de torneado", "Buriles", "Portaherramientas", "Barras de mandrinar"],
       },
       {
         heading: "Aplicaciones",
@@ -277,9 +277,9 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
   perforacion: {
     name: "Perforación",
     title: "Perforación",
-    metaTitle: "Perforación: brocas, escariadores y cabezales | HERCAN",
+    metaTitle: "Perforación y taladrado: brocas, brocas de inserto y escariadores | HERCAN",
     metaDescription:
-      "Herramienta de perforación en HERCAN: brocas de carburo y HSS, brocas de inserto, cabezales intercambiables y escariadores para CNC. Cotización B2B.",
+      "Herramienta de perforación y taladrado en HERCAN: brocas para metal de carburo y HSS, brocas de inserto, avellanadores y escariadores para CNC. Cotización B2B.",
     intro: [
       "La perforación (o taladrado) es la operación de crear o agrandar agujeros mediante una herramienta rotativa de corte, generalmente una broca. Es un proceso base, previo a roscado, escariado o mandrinado.",
       "Abarca brocas de carburo y de acero rápido (HSS), brocas de inserto intercambiable, cabezales de perforación y escariadores para el acabado de agujeros.",
@@ -370,7 +370,7 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
   abrasivos: {
     name: "Abrasivos",
     title: "Abrasivos",
-    metaTitle: "Abrasivos: muelas, discos y puntas montadas | HERCAN",
+    metaTitle: "Abrasivos: discos de corte, muelas y puntas montadas | HERCAN",
     metaDescription:
       "Abrasivos en HERCAN: muelas de rectificado, discos de corte y desbaste, puntas montadas y bandas para acabado de superficies. Cotización B2B.",
     intro: [
