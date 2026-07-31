@@ -44,6 +44,22 @@ const G: Record<string, GuideLink> = {
     href: "/blog/velocidades-y-avances-de-corte",
     title: "Velocidades y avances de corte: tablas por material",
   },
+  avellanadores: {
+    href: "/blog/avellanadores-guia",
+    title: "Avellanador: qué es, tipos y tabla de ángulos",
+  },
+  tarrajas: {
+    href: "/blog/tarrajas-para-roscar-guia",
+    title: "Tarrajas para roscar: tipos, uso y medidas",
+  },
+  carburo: {
+    href: "/blog/carburo-de-tungsteno-que-es",
+    title: "Carburo de tungsteno: qué es y por qué corta",
+  },
+  discos: {
+    href: "/blog/discos-de-corte-guia",
+    title: "Discos de corte: tipos, grosor y RPM máxima",
+  },
 };
 
 // Clave: "<namespace>:<slug>". El namespace es el tipo de nodo.
@@ -52,9 +68,10 @@ const RELATED_GUIDES: Record<string, GuideLink[]> = {
   "tipo:broca": [G.brocas],
   "tipo:machuelo": [G.machuelos],
   "tipo:buril": [G.buriles],
-  "tipo:inserto": [G.insertos],
-  "tipo:fresa-endmill": [G.fresas],
-  "tipo:tarraja": [G.machuelos], // la guía de machuelos cubre tarrajas/roscado
+  "tipo:inserto": [G.insertos, G.carburo], // insertos son de carburo
+  "tipo:fresa-endmill": [G.fresas, G.carburo], // endmills de carburo
+  "tipo:tarraja": [G.tarrajas, G.machuelos], // guía propia (rosca exterior) + machuelos (rosca interior)
+  "tipo:avellanador": [G.avellanadores],
 
   // Instrumentos de medición → su guía específica.
   "instrumento:calibrador-vernier": [G.vernier],
@@ -62,11 +79,12 @@ const RELATED_GUIDES: Record<string, GuideLink[]> = {
   "instrumento:indicador": [G.indicador],
 
   // Categorías (operación) → guía(s) de la operación + el pillar de parámetros.
-  "categoria:perforacion": [G.brocas, G.velocidades],
-  "categoria:roscado": [G.machuelos, G.velocidades],
+  "categoria:perforacion": [G.brocas, G.avellanadores, G.velocidades],
+  "categoria:roscado": [G.machuelos, G.tarrajas, G.velocidades],
   "categoria:torneado": [G.buriles, G.insertos, G.velocidades],
   "categoria:fresado": [G.fresas, G.velocidades],
   "categoria:portaherramientas": [G.insertos],
+  "categoria:abrasivos": [G.discos],
   "categoria:medicion": [G.vernier, G.micrometro, G.indicador],
 };
 
