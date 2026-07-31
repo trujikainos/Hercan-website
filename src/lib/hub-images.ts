@@ -37,9 +37,14 @@ export const HUB_IMAGES: {
     escariador: "/brand/taxonomia/tipo/escariador.webp",
     "barra-mandrinar": "/brand/taxonomia/tipo/barra-mandrinar.webp",
     portaherramientas: "/brand/taxonomia/tipo/portaherramientas.webp",
+    buril: "/brand/taxonomia/tipo/buril.webp",
+    avellanador: "/brand/taxonomia/tipo/avellanador.webp",
+    tarraja: "/brand/taxonomia/tipo/tarraja.webp",
   },
   instrumento: {
     micrometro: "/brand/taxonomia/instrumento/micrometro.webp",
+    "calibrador-vernier": "/brand/taxonomia/instrumento/calibrador-vernier.webp",
+    indicador: "/brand/taxonomia/instrumento/indicador.webp",
   },
   material: {
     carburo: "/brand/taxonomia/material/carburo.webp",
