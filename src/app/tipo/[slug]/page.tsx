@@ -52,11 +52,13 @@ export default async function TipoPage({
   // Catálogo scopeado al tipo de herramienta (tipo_herramienta). No es una faceta
   // del sidebar (vive en la ruta), así que no se oculta ningún grupo: categoría,
   // marca, material, recubrimiento y disponibilidad siguen usables.
+  // Nodos de FAMILIA (buril/avellanador/tarraja, todos tipo_herramienta "Cortador"):
+  // se scopean por `familia` en vez de por tipo.
   const result = buildCatalog({
     products: all,
     categories,
     searchParams: sp,
-    scope: { tipo: content.name },
+    scope: content.familia ? { familia: content.familia } : { tipo: content.name },
   });
   const basePath = `/tipo/${slug}`;
 

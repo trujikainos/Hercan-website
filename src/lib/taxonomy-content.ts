@@ -47,6 +47,10 @@ export type CategoryContent = {
 export type TipoContent = {
   /** Valor REAL de `tipo_herramienta` usado como scope del catálogo (scope.tipo). */
   name: string;
+  /** Si se define, el catálogo se scopea por `familia` (no por tipo_herramienta).
+   * Para nodos que son una familia dentro de un tipo genérico: buril/avellanador/
+   * tarraja viven bajo tipo_herramienta "Cortador", distinguidos por `familia`. */
+  familia?: string;
   /** H1 del hero. */
   title: string;
   metaTitle: string;
@@ -575,6 +579,72 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
       {
         heading: "Tipos comunes",
         items: ["Conos BT / HSK / CAT", "Boquillas y mandriles", "Portaherramientas de torno"],
+      },
+    ],
+  },
+  buril: {
+    name: "Buril",
+    familia: "Buril",
+    title: "Buriles para torno",
+    metaTitle: "Buriles para torno: HSS y de forma | HERCAN",
+    metaDescription:
+      "Buriles para torno en HERCAN: buriles cuadrados y de forma en HSS para cilindrar, refrentar, ranurar y roscar. Por pieza; cotización B2B y B2C en México.",
+    intro: [
+      "Un buril es la herramienta de corte de un solo filo que se monta en la torreta del torno para cilindrar, refrentar, ranurar o roscar. Se afila según la operación y el material, y define en buena medida el acabado de la pieza.",
+      "Los hay integrales de acero rápido (HSS) —cuadrados o de forma— y con inserto de metal duro intercambiable. La sección del cuerpo (zanco) se elige por la altura de centros del torno.",
+    ],
+    bullets: [
+      {
+        heading: "Por tipo",
+        items: ["Buril cuadrado HSS", "Buril de forma", "Con inserto de carburo"],
+      },
+      {
+        heading: "Operaciones",
+        items: ["Cilindrado", "Refrentado", "Ranurado", "Roscado"],
+      },
+    ],
+  },
+  avellanador: {
+    name: "Avellanador",
+    familia: "Avellanador",
+    title: "Avellanadores para metal",
+    metaTitle: "Avellanadores para metal: 82° y 90° HSS | HERCAN",
+    metaDescription:
+      "Avellanadores para metal en HERCAN: de HSS a 82° y 90° para avellanar y desbarbar agujeros y alojar tornillos de cabeza avellanada. Cotización B2B y B2C en México.",
+    intro: [
+      "Un avellanador es la herramienta que abre un chaflán cónico en la boca de un agujero, para alojar la cabeza de un tornillo avellanado o para desbarbar. El ángulo típico es 82° (pulgada) o 90° (métrico).",
+      "Se usan en acero rápido (HSS), de uno o varios filos, y se trabajan a baja velocidad para un chaflán limpio sin traqueteo. El diámetro mayor define hasta qué tamaño de tornillo se puede alojar.",
+    ],
+    bullets: [
+      {
+        heading: "Por ángulo",
+        items: ["82° (pulgada)", "90° (métrico)"],
+      },
+      {
+        heading: "Usos",
+        items: ["Alojar tornillo avellanado", "Desbarbado de agujeros"],
+      },
+    ],
+  },
+  tarraja: {
+    name: "Tarraja",
+    familia: "Dado (Tarraja)",
+    title: "Tarrajas y dados de roscar",
+    metaTitle: "Tarrajas (dados de roscar): métricas y en pulgada | HERCAN",
+    metaDescription:
+      "Tarrajas o dados de roscar en HERCAN: para roscas externas métricas y en pulgada (UNC/UNF) en HSS. Por pieza y en juego; cotización B2B y B2C en México.",
+    intro: [
+      "Una tarraja (o dado de roscar) es la herramienta que genera roscas externas sobre una barra o tornillo por arranque de viruta. Es la contraparte del machuelo, que hace la rosca interna.",
+      "Las hay métricas y en pulgada (UNC/UNF), normalmente de acero rápido (HSS), y se giran con un porta-dado o maneral. El diámetro de la barra debe ajustarse al de la rosca para un corte limpio.",
+    ],
+    bullets: [
+      {
+        heading: "Por tipo de rosca",
+        items: ["Métrica", "En pulgada (UNC / UNF)"],
+      },
+      {
+        heading: "Uso",
+        items: ["Roscas externas", "Se usa con maneral / porta-dado"],
       },
     ],
   },
@@ -1433,6 +1503,57 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
       question: "¿Cuál es la diferencia entre un machuelo para agujero pasante y uno ciego?",
       answer:
         "El machuelo para agujero pasante expulsa la viruta hacia adelante y es más productivo cuando el agujero atraviesa la pieza; el de agujero ciego evacúa la viruta hacia atrás para no acumularla en el fondo del agujero.",
+    },
+  ],
+  buril: [
+    {
+      question: "¿Qué es un buril de torno?",
+      answer:
+        "Un buril es la herramienta de corte de un solo filo que se monta en la torreta del torno para cilindrar, refrentar, ranurar o roscar. Se afila según la operación y el material de la pieza.",
+    },
+    {
+      question: "¿Qué diferencia hay entre un buril de HSS y uno con inserto?",
+      answer:
+        "El buril integral de HSS se afila a mano y es económico y versátil para taller. El buril con inserto de metal duro cambia solo la plaquita cuando se desgasta, aguanta más velocidad y es la opción para producción.",
+    },
+    {
+      question: "¿Venden buriles por pieza?",
+      answer:
+        "Sí. HERCAN es distribuidor B2B y B2C: manejamos buriles cuadrados y de forma por pieza y para volumen. Solicita tu cotización en línea y te respondemos en horas.",
+    },
+  ],
+  avellanador: [
+    {
+      question: "¿Para qué sirve un avellanador?",
+      answer:
+        "Un avellanador abre un chaflán cónico en la boca de un agujero, ya sea para alojar la cabeza de un tornillo avellanado a ras de la superficie o para desbarbar el borde del agujero.",
+    },
+    {
+      question: "¿Cuándo uso un avellanador de 82° y cuándo de 90°?",
+      answer:
+        "El ángulo debe coincidir con la cabeza del tornillo: 82° para tornillos en pulgada y 90° para tornillos métricos. Usar el ángulo correcto asegura que la cabeza quede a ras.",
+    },
+    {
+      question: "¿Se puede usar para desbarbar?",
+      answer:
+        "Sí. Además de avellanar para tornillos, el avellanador elimina la rebaba que deja la broca en la boca del agujero, dejando un borde limpio; se trabaja a baja velocidad.",
+    },
+  ],
+  tarraja: [
+    {
+      question: "¿Qué es una tarraja o dado de roscar?",
+      answer:
+        "Una tarraja (dado de roscar) es la herramienta que genera roscas externas sobre una barra o tornillo por arranque de viruta. Se gira con un maneral o porta-dado alrededor de la pieza.",
+    },
+    {
+      question: "¿Cuál es la diferencia entre una tarraja y un machuelo?",
+      answer:
+        "La tarraja hace la rosca EXTERNA (sobre una barra); el machuelo hace la rosca INTERNA (dentro de un agujero). Son herramientas complementarias del roscado manual.",
+    },
+    {
+      question: "¿Vienen métricas y en pulgada?",
+      answer:
+        "Sí. Manejamos tarrajas métricas y en pulgada (UNC/UNF) en acero rápido (HSS), por pieza y en juego con machuelos y maneral. Solicita tu cotización en línea.",
     },
   ],
   cortador: [

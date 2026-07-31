@@ -280,6 +280,7 @@ const PRODUCT_LIST_FIELDS = `${PRODUCT_FIELDS}
   metafields(identifiers: [
     { namespace: "specs", key: "material_a_maquinar" },
     { namespace: "specs", key: "tipo_herramienta" },
+    { namespace: "specs", key: "familia" },
     { namespace: "specs", key: "mpn" }
   ]) { key value }`;
 
