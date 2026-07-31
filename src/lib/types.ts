@@ -56,6 +56,7 @@ export interface Article {
   image: string | null;
   imageAlt: string | null;
   author: string | null;
+  tags: string[];
   seoTitle?: string | null;
   seoDescription?: string | null;
 }

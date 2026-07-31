@@ -596,7 +596,7 @@ export async function searchProducts(query: string, limit = 7): Promise<SearchRe
 const BLOG_HANDLE = process.env.SHOPIFY_BLOG_HANDLE || "news";
 
 const ARTICLE_FIELDS = `
-  id handle title excerpt publishedAt
+  id handle title excerpt publishedAt tags
   image { url altText }
   authorV2 { name }`;
 
@@ -627,6 +627,7 @@ type ShopifyArticleNode = {
   excerpt: string | null;
   contentHtml?: string;
   publishedAt: string;
+  tags?: string[] | null;
   image?: { url: string; altText: string | null } | null;
   authorV2?: { name: string } | null;
   seo?: { title: string | null; description: string | null } | null;
@@ -643,6 +644,7 @@ function mapArticle(n: ShopifyArticleNode): Article {
     image: n.image?.url ?? null,
     imageAlt: n.image?.altText ?? null,
     author: n.authorV2?.name ?? null,
+    tags: n.tags ?? [],
     seoTitle: n.seo?.title ?? null,
     seoDescription: n.seo?.description ?? null,
   };

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 import type { Article } from "@/lib/types";
+import { articleCategory } from "@/lib/blog-categories";
 
 export function ArticleCard({ article }: { article: Article }) {
   const date = new Date(article.publishedAt).toLocaleDateString("es-MX", {
@@ -8,6 +9,7 @@ export function ArticleCard({ article }: { article: Article }) {
     month: "long",
     day: "numeric",
   });
+  const category = articleCategory(article);
   return (
     <Link
       href={`/blog/${article.handle}`}
@@ -23,6 +25,11 @@ export function ArticleCard({ article }: { article: Article }) {
           />
         ) : (
           <ImageIcon className="h-9 w-9" aria-hidden />
+        )}
+        {category && (
+          <span className="absolute left-3 top-3 rounded-full bg-hc-navy/90 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+            {category.label}
+          </span>
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
