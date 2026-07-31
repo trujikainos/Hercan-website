@@ -428,35 +428,43 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
 export const TIPO_CONTENT: Record<string, TipoContent> = {
   inserto: {
     name: "Inserto",
-    title: "Insertos intercambiables",
-    metaTitle: "Insertos intercambiables para torno y fresado | HERCAN",
+    title: "Insertos para torno y fresado",
+    metaTitle: "Insertos de carburo para torno y fresado (ISO) | HERCAN",
     metaDescription:
-      "Insertos (plaquitas) de corte intercambiables en HERCAN: metal duro para torneado, fresado y perforación, normalizados por ISO 1832. Filtra por marca, material y recubrimiento.",
+      "Insertos (plaquitas) de corte intercambiables en HERCAN: de carburo para torneado, fresado y perforación, por designación ISO (CNMG, TNMG, DNMG…). Filtra por marca, material y recubrimiento.",
     intro: [
-      "Un inserto (o plaquita) es la pieza de corte intercambiable que se sujeta mecánicamente en un portaherramientas o en el cuerpo de una fresa. Cuando un filo se desgasta, el inserto se indexa a un filo nuevo o se reemplaza, sin necesidad de reafilar la herramienta.",
-      "La mayoría son de metal duro (carburo), con frecuencia recubiertos, y sus formas y medidas están normalizadas por la norma ISO 1832, lo que permite intercambiarlos entre fabricantes.",
+      "Un inserto (o plaquita) es la pieza de corte intercambiable que se sujeta mecánicamente en un portaherramientas o en el cuerpo de una fresa. Cuando un filo se desgasta, el inserto se indexa a un filo nuevo o se reemplaza, sin reafilar la herramienta.",
+      "La mayoría son de carburo (metal duro), con frecuencia recubiertos (TiAlN, TiCN). Su forma y medidas están normalizadas por ISO 1832 —de ahí las designaciones tipo CNMG, TNMG o DNMG—, lo que permite intercambiarlos entre fabricantes.",
     ],
     bullets: [
       {
         heading: "Operaciones",
         items: ["Torneado", "Fresado", "Perforación", "Ranurado y roscado"],
       },
+      {
+        heading: "Designaciones comunes",
+        items: ["CNMG", "TNMG", "DNMG", "WNMG", "CCMT / DCMT"],
+      },
     ],
   },
   "fresa-endmill": {
     name: "Fresa/Endmill",
-    title: "Fresas integrales (endmills)",
-    metaTitle: "Fresas integrales (endmills) de carburo y HSS | HERCAN",
+    title: "Fresas de carburo (endmills)",
+    metaTitle: "Fresas de carburo y HSS (endmills) para CNC | HERCAN",
     metaDescription:
-      "Fresas integrales o endmills en HERCAN: herramienta rotativa de carburo y HSS para ranurado, contorneado y refrentado de hombros en CNC. Filtra por marca, material y recubrimiento.",
+      "Fresas integrales o endmills en HERCAN: de carburo y HSS para ranurado, contorneado y refrentado en CNC, para acero, inoxidable y aluminio. Filtra por marca, material y recubrimiento.",
     intro: [
-      "Una fresa integral o endmill es una herramienta rotativa de fresado con filos de corte en la periferia y, según el tipo, también en la cara frontal. Se fabrica en una sola pieza, normalmente de metal duro (carburo) o acero rápido (HSS).",
-      "Se emplea en ranurado, contorneado, refrentado de hombros y perfilado en fresadoras y centros de maquinado CNC. El número de filos (flautas) y el ángulo de hélice se eligen según el material y el tipo de corte.",
+      "Una fresa de carburo integral o endmill es una herramienta rotativa de fresado con filos en la periferia y, según el tipo, también en la cara frontal. Se fabrica en una sola pieza, normalmente de carburo (metal duro) o acero rápido (HSS).",
+      "Se usa para ranurar, contornear, refrentar hombros y perfilar en fresadoras y centros de maquinado CNC, en acero, inoxidable y aluminio. El número de filos (flautas) y el ángulo de hélice se eligen según el material y el tipo de corte.",
     ],
     bullets: [
       {
         heading: "Operaciones",
         items: ["Ranurado", "Contorneado", "Refrentado de hombros", "Perfilado"],
+      },
+      {
+        heading: "Para qué metal",
+        items: ["Acero (ISO P)", "Acero inoxidable (ISO M)", "Aluminio y no ferrosos (ISO N)"],
       },
     ],
   },
@@ -483,18 +491,22 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
   },
   machuelo: {
     name: "Machuelo",
-    title: "Machuelos",
-    metaTitle: "Machuelos para roscado interno (HSS y carburo) | HERCAN",
+    title: "Machuelos para roscar",
+    metaTitle: "Machuelos para roscar: métricos, HSS y carburo | HERCAN",
     metaDescription:
-      "Machuelos en HERCAN: herramienta de roscado interno por arranque de viruta, en HSS y metal duro, para agujero pasante y ciego. Cotización B2B en México.",
+      "Machuelos para roscado interno en HERCAN: métricos y en pulgada, HSS y de carburo, para agujero pasante y ciego. Por pieza y en juego; cotización B2B y B2C en México.",
     intro: [
       "Un machuelo es la herramienta que genera roscas internas por arranque de viruta dentro de un agujero previamente taladrado. Sus filos reproducen el perfil de la rosca a medida que la herramienta avanza girando.",
-      "Existen machuelos de acero rápido (HSS) y de metal duro, con variantes para agujero pasante o ciego según cómo evacuen la viruta. El diámetro del barreno previo se define por el paso y el tipo de rosca.",
+      "Hay machuelos métricos y en pulgada, de acero rápido (HSS) y de metal duro, con variantes para agujero pasante o ciego según cómo evacuen la viruta. El diámetro del barreno previo depende del paso y el tipo de rosca (consulta la tabla broca–machuelo).",
     ],
     bullets: [
       {
-        heading: "Aplicaciones",
-        items: ["Roscas internas", "Agujero pasante y ciego"],
+        heading: "Por tipo de rosca / uso",
+        items: ["Métrico", "En pulgada (UNC / UNF / NPT)", "Agujero pasante", "Agujero ciego"],
+      },
+      {
+        heading: "Material",
+        items: ["HSS (acero rápido)", "Carburo"],
       },
     ],
   },
