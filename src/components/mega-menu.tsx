@@ -70,6 +70,7 @@ const HUBS: { href: string; label: string }[] = [
   { href: "/categorias", label: "Categorías" },
   { href: "/marcas", label: "Marcas" },
   { href: "/tipos", label: "Tipos" },
+  { href: "/instrumentos", label: "Medición" },
   { href: "/materiales", label: "Materiales" },
   { href: "/recubrimientos", label: "Recubrimientos" },
   { href: "/para", label: "Para maquinar" },
