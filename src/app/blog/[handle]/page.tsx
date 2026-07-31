@@ -123,38 +123,65 @@ export default async function ArticlePage({
           <span className="text-hc-ink">{a.title}</span>
         </nav>
 
-        {/* Hero de marca — no depende de foto (aún no hay banco de imágenes). */}
-        <header className="reveal overflow-hidden rounded-2xl bg-gradient-to-br from-hc-navy via-hc-blue to-hc-steel px-6 py-9 text-white shadow-sm sm:px-10 sm:py-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
-            Guía técnica
-          </p>
-          <h1 className="mt-3 font-heading text-3xl leading-tight sm:text-[2.6rem] sm:leading-[1.1]">
-            {a.title}
-          </h1>
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/80">
-            <time dateTime={a.publishedAt}>{date}</time>
-            {a.author ? (
-              <>
-                <span className="text-white/40">·</span>
-                <span>{a.author}</span>
-              </>
-            ) : null}
-            {enriched ? (
-              <>
-                <span className="text-white/40">·</span>
-                <span>{enriched.readMin} min de lectura</span>
-              </>
-            ) : null}
-          </div>
-        </header>
-
-        {a.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={a.image}
-            alt={a.imageAlt ?? a.title}
-            className="reveal mt-6 w-full rounded-xl border border-hc-metal-light"
-          />
+        {/* Encabezado editorial: si hay portada, la FOTO es el hero (con overlay y
+            título encima, estilo revista/orgánico); si no, cae al gradiente de marca. */}
+        {a.image ? (
+          <header className="reveal relative overflow-hidden rounded-2xl shadow-sm">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={a.image}
+              alt={a.imageAlt ?? a.title}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-hc-navy/95 via-hc-navy/55 to-hc-navy/15" />
+            <div className="relative flex min-h-[300px] flex-col justify-end px-6 py-7 text-white sm:min-h-[380px] sm:px-10 sm:py-9">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
+                Guía técnica
+              </p>
+              <h1 className="mt-2 max-w-2xl font-heading text-3xl leading-tight sm:text-[2.6rem] sm:leading-[1.1]">
+                {a.title}
+              </h1>
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/85">
+                <time dateTime={a.publishedAt}>{date}</time>
+                {a.author ? (
+                  <>
+                    <span className="text-white/40">·</span>
+                    <span>{a.author}</span>
+                  </>
+                ) : null}
+                {enriched ? (
+                  <>
+                    <span className="text-white/40">·</span>
+                    <span>{enriched.readMin} min de lectura</span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </header>
+        ) : (
+          <header className="reveal overflow-hidden rounded-2xl bg-gradient-to-br from-hc-navy via-hc-blue to-hc-steel px-6 py-9 text-white shadow-sm sm:px-10 sm:py-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+              Guía técnica
+            </p>
+            <h1 className="mt-3 font-heading text-3xl leading-tight sm:text-[2.6rem] sm:leading-[1.1]">
+              {a.title}
+            </h1>
+            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/80">
+              <time dateTime={a.publishedAt}>{date}</time>
+              {a.author ? (
+                <>
+                  <span className="text-white/40">·</span>
+                  <span>{a.author}</span>
+                </>
+              ) : null}
+              {enriched ? (
+                <>
+                  <span className="text-white/40">·</span>
+                  <span>{enriched.readMin} min de lectura</span>
+                </>
+              ) : null}
+            </div>
+          </header>
         )}
 
         {a.excerpt && (
