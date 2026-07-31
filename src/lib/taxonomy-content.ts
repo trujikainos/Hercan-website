@@ -462,18 +462,22 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
   },
   broca: {
     name: "Broca",
-    title: "Brocas",
-    metaTitle: "Brocas de carburo, HSS y de inserto | HERCAN",
+    title: "Brocas para metal",
+    metaTitle: "Brocas para metal: carburo, HSS y cobalto | HERCAN",
     metaDescription:
-      "Brocas en HERCAN: brocas helicoidales de carburo y HSS y brocas de inserto intercambiable para taladrado en CNC. Filtra por marca, material y recubrimiento.",
+      "Brocas para metal en HERCAN: HSS, cobalto (M35/M42), carburo y de inserto para acero, inoxidable y aluminio. Filtra por marca, material y recubrimiento; cotización B2B y B2C en México.",
     intro: [
-      "Una broca es una herramienta rotativa de corte para crear o agrandar agujeros. La broca helicoidal, con dos filos y canales en hélice que evacuan la viruta, es la más común; existen en metal duro (carburo) y acero rápido (HSS), además de brocas de inserto intercambiable.",
-      "El taladrado suele ser una operación previa al roscado, el escariado o el mandrinado. La geometría de la punta y el recubrimiento influyen en la penetración y en la vida de la herramienta.",
+      "Las brocas para metal se eligen sobre todo por el material que vas a perforar: HSS para acero suave, aluminio y latón; cobalto (M35/M42) para acero inoxidable y aceros duros; y carburo de tungsteno para producción en CNC y aceros endurecidos. Para diámetros grandes existen además las brocas de inserto intercambiable.",
+      "La broca helicoidal —dos filos y canales en hélice que evacúan la viruta— es la más común. El ángulo de punta (118° para uso general, 135° para metal duro) y el recubrimiento (TiN, TiAlN) definen la penetración y la vida de la herramienta. Filtra por marca, material y recubrimiento para dar con la geometría exacta.",
     ],
     bullets: [
       {
-        heading: "Tipos comunes",
-        items: ["Broca helicoidal", "Broca de carburo", "Broca de inserto"],
+        heading: "Por material de la broca",
+        items: ["HSS (acero rápido)", "Cobalto M35/M42", "Carburo de tungsteno", "De inserto intercambiable"],
+      },
+      {
+        heading: "Para qué metal",
+        items: ["Acero (ISO P)", "Acero inoxidable (ISO M)", "Aluminio y no ferrosos (ISO N)", "Fundición (ISO K)"],
       },
     ],
   },
@@ -1377,19 +1381,29 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
   ],
   broca: [
     {
-      question: "¿Qué es una broca?",
+      question: "¿Qué broca se usa para acero inoxidable?",
       answer:
-        "Una broca es una herramienta rotativa de corte para crear o agrandar agujeros. La broca helicoidal, con dos filos y canales en hélice que evacuan la viruta, es la más común; existe en metal duro (carburo) y acero rápido (HSS).",
+        "Para acero inoxidable se usan brocas de cobalto (M35/M42) o de carburo con recubrimiento TiAlN. Trabaja a RPM baja, con mucho refrigerante y sin dejar de avanzar: si te detienes, el inoxidable se endurece por trabajo y la broca deja de entrar.",
     },
     {
-      question: "¿Qué broca se usa para acero?",
+      question: "¿De qué material son las brocas para metal?",
       answer:
-        "Para acero se prefieren brocas de HSS o de carburo con recubrimiento (por ejemplo TiN o TiAlN), que resisten mejor el calor. El carburo permite mayores velocidades y vida en producción, mientras que el HSS es más tenaz y económico.",
+        "Principalmente HSS (acero rápido), HSS con cobalto —para material duro e inoxidable— y carburo de tungsteno para producción y aceros endurecidos. Para diámetros grandes también hay brocas de inserto intercambiable.",
     },
     {
-      question: "¿Qué es una broca de inserto?",
+      question: "¿A cuántas RPM se perfora el metal?",
       answer:
-        "Una broca de inserto es una broca de cuerpo de acero que aloja insertos de corte intercambiables en la punta. Se usa en diámetros grandes, donde reponer solo los insertos resulta más económico que reemplazar toda la broca.",
+        "Depende del material y del diámetro: mientras más duro el metal o más grande la broca, menos RPM. El acero inoxidable pide RPM bajas (del orden de 400-800 en diámetros chicos) con mucho refrigerante; el aluminio admite RPM altas.",
+    },
+    {
+      question: "¿Qué broca uso para aluminio?",
+      answer:
+        "Una broca de HSS bien afilada, de ángulo de punta agudo, trabajando a alta RPM y evacuando la viruta con frecuencia. El aluminio es blando y pegajoso, así que la prioridad es despejar la viruta para que no se embarre.",
+    },
+    {
+      question: "¿Venden brocas por pieza y para volumen de producción?",
+      answer:
+        "Sí. HERCAN es distribuidor B2B y B2C: manejamos desde piezas sueltas hasta pedidos de producción para CNC, de marcas como Iscar, Toolmex y YG-1. Solicita tu cotización en línea y te respondemos en horas.",
     },
   ],
   machuelo: [
