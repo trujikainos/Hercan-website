@@ -9,6 +9,7 @@ import { pageGraph, collectionNode, breadcrumbNode, faqNode } from "@/lib/schema
 import { buildCatalog } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
 import { TIPO_CONTENT, TIPO_FAQS } from "@/lib/taxonomy-content";
+import { RelatedGuides } from "@/components/related-guides";
 
 // Slugs prerenderizados desde los tipos de herramienta del negocio (TIPO_CONTENT).
 export function generateStaticParams() {
@@ -109,6 +110,7 @@ export default async function TipoPage({
             </div>
           </section>
         )}
+        <RelatedGuides ns="tipo" slug={slug} />
         <SiblingStrip
           heading="Otros tipos de herramienta"
           items={siblings}

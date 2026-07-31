@@ -10,6 +10,7 @@ import { pageGraph, collectionNode, breadcrumbNode, faqNode } from "@/lib/schema
 import { buildCatalog } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
 import { INSTRUMENTO_CONTENT, INSTRUMENTO_FAQS } from "@/lib/taxonomy-content";
+import { RelatedGuides } from "@/components/related-guides";
 
 // Slugs prerenderizados desde los instrumentos de medición (INSTRUMENTO_CONTENT).
 export function generateStaticParams() {
@@ -126,6 +127,7 @@ export default async function InstrumentoPage({
             </div>
           </section>
         )}
+        <RelatedGuides ns="instrumento" slug={slug} />
         <SiblingStrip
           heading="Otros instrumentos de medición"
           items={siblings}

@@ -9,6 +9,7 @@ import { pageGraph, collectionNode, breadcrumbNode, faqNode } from "@/lib/schema
 import { buildCatalog } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
 import { CATEGORY_CONTENT, CATEGORY_FAQS } from "@/lib/taxonomy-content";
+import { RelatedGuides } from "@/components/related-guides";
 
 // Slugs prerenderizados desde las 9 categorías del negocio (CATEGORY_CONTENT).
 export function generateStaticParams() {
@@ -114,6 +115,7 @@ export default async function CategoryPage({
             </div>
           </section>
         )}
+        <RelatedGuides ns="categoria" slug={slug} />
         <SiblingStrip
           heading="Otras categorías"
           items={siblings}
