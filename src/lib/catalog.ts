@@ -58,6 +58,9 @@ export type Scope = {
    * (buril/avellanador/tarraja viven todos bajo "Cortador"): se scopea por familia
    * en vez de por tipo. Predicado extra, no faceta del sidebar. */
   familia?: string;
+  /** Valor EXACTO de `tipo_instrumento` (medición): "Micrómetro", "Calibrador vernier",
+   * "Indicador carátula"… Scope del silo /instrumento/[slug]. Predicado extra. */
+  tipoInstrumento?: string;
 };
 
 export const FACETS: { key: FacetKey; param: string; label: string }[] = [
@@ -212,6 +215,7 @@ export function buildCatalog({
   const scopeOk = (p: Product): boolean => {
     if (scope?.tipo && p.type !== scope.tipo) return false;
     if (scope?.familia && p.familia !== scope.familia) return false;
+    if (scope?.tipoInstrumento && p.tipoInstrumento !== scope.tipoInstrumento) return false;
     if (scope?.iso && !isoFamilyMatch(p.iso, scope.iso)) return false;
     // Material a maquinar: matchea si ALGÚN valor del producto tiene el prefijo ISO 513
     // del scope (P/M/K/N/S/H). Multi-valor → un producto puede caer en varias páginas.

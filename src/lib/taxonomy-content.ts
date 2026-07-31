@@ -1605,3 +1605,120 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
     },
   ],
 };
+
+// ── INSTRUMENTOS DE MEDICIÓN ──────────────────────────────────────────────────
+// Silo PARALELO a TIPO_CONTENT pero para la familia MEDICIÓN (hub /instrumentos →
+// /instrumento/[slug]). `name` = valor EXACTO de `tipo_instrumento` (scope). Camino B:
+// se muestran los SKUs reales en existencia (Insize/Mitutoyo) y lo que no hay se
+// canaliza a cotización ("sobre pedido"). Reutiliza la forma de TipoContent.
+export const INSTRUMENTO_CONTENT: Record<string, TipoContent> = {
+  micrometro: {
+    name: "Micrómetro",
+    title: "Micrómetros",
+    metaTitle: "Micrómetros: digitales, de exteriores e interiores | HERCAN",
+    metaDescription:
+      "Micrómetros en HERCAN: digitales y analógicos, de exteriores, interiores y profundidad (Insize y más). Rango, resolución y exactitud por modelo. Cotización B2B y B2C en México.",
+    intro: [
+      "Un micrómetro es el instrumento de medición de precisión que mide dimensiones pequeñas —espesores y diámetros exteriores, interiores o de profundidad— con resolución típica de 0.01 o 0.001 mm, mediante un tornillo micrométrico calibrado.",
+      "Los hay de lectura digital o analógica (de tambor), en rangos por tramos (0-25, 25-50 mm…). En HERCAN encuentras micrómetros de marcas de metrología; filtra por marca y disponibilidad, y cotiza el modelo que necesites.",
+    ],
+    bullets: [
+      {
+        heading: "Por tipo",
+        items: ["De exteriores", "De interiores", "De profundidad", "Digital / analógico"],
+      },
+    ],
+  },
+  "calibrador-vernier": {
+    name: "Calibrador vernier",
+    title: "Calibradores (vernier / pie de rey)",
+    metaTitle: "Calibrador vernier (pie de rey): digital y análogo | HERCAN",
+    metaDescription:
+      "Calibradores vernier o pie de rey en HERCAN: digitales y análogos, 0-150, 0-200 y 0-300 mm (Insize). Miden exterior, interior, profundidad y escalón. Cotización B2B y B2C.",
+    intro: [
+      "Un calibrador vernier (o pie de rey) es el instrumento más versátil del taller: mide dimensiones exteriores, interiores, de profundidad y de escalón con una sola herramienta, con resolución de 0.01 o 0.02 mm.",
+      "Los hay de lectura digital, de carátula o vernier tradicional, en rangos de 0-150, 0-200 y 0-300 mm. En HERCAN encuentras calibradores de metrología; filtra por marca y disponibilidad y cotiza el modelo que necesites.",
+    ],
+    bullets: [
+      {
+        heading: "Por lectura",
+        items: ["Digital", "De carátula", "Vernier tradicional"],
+      },
+      {
+        heading: "Rangos comunes",
+        items: ['0-150 mm (6")', '0-200 mm (8")', '0-300 mm (12")'],
+      },
+    ],
+  },
+  indicador: {
+    name: "Indicador carátula",
+    title: "Indicadores de carátula (comparadores)",
+    metaTitle: "Indicadores de carátula y comparadores (Mitutoyo) | HERCAN",
+    metaDescription:
+      "Indicadores de carátula y comparadores en HERCAN: de cuadrante y de pestaña (palpador), marca Mitutoyo. Para verificar concentricidad, planitud y reglaje. Cotización B2B y B2C.",
+    intro: [
+      "Un indicador de carátula (comparador o reloj indicador) mide diferencias de posición muy pequeñas contra una referencia: verifica concentricidad, planitud y paralelismo, y sirve para reglar máquinas y montajes. La aguja amplifica el desplazamiento del palpador.",
+      "Los hay de cuadrante (vástago vertical) y de pestaña o palpador lateral, con resoluciones de 0.01 hasta 0.001 mm. En HERCAN manejamos indicadores Mitutoyo; filtra por marca y disponibilidad y cotiza el modelo que necesites.",
+    ],
+    bullets: [
+      {
+        heading: "Por tipo",
+        items: ["De cuadrante", "De pestaña / palpador", "Comparador digital"],
+      },
+    ],
+  },
+};
+
+export const INSTRUMENTO_FAQS: Record<string, Faq[]> = {
+  micrometro: [
+    {
+      question: "¿Qué mide un micrómetro y con qué precisión?",
+      answer:
+        "Mide dimensiones pequeñas —espesores y diámetros exteriores, interiores o de profundidad— con resolución típica de 0.01 mm (y hasta 0.001 mm en modelos de precisión), mucho más fino que un calibrador vernier.",
+    },
+    {
+      question: "¿Qué diferencia hay entre un micrómetro y un calibrador vernier?",
+      answer:
+        "El micrómetro es más preciso (0.001-0.01 mm) pero mide un rango corto por tramos (0-25, 25-50 mm…); el calibrador vernier es más versátil (exterior, interior, profundidad) y de mayor rango, pero con menor resolución (0.01-0.02 mm).",
+    },
+    {
+      question: "¿Manejan micrómetros en existencia y bajo pedido?",
+      answer:
+        "Sí. HERCAN es distribuidor B2B y B2C de metrología. Mostramos los modelos en existencia y, si necesitas un rango o marca que no esté en stock, lo conseguimos: solicita tu cotización en línea.",
+    },
+  ],
+  "calibrador-vernier": [
+    {
+      question: "¿Qué es un calibrador vernier o pie de rey?",
+      answer:
+        "Es el instrumento de medición más usado en el taller: con una sola herramienta mides dimensiones exteriores, interiores, de profundidad y de escalón, con resolución de 0.01 a 0.02 mm.",
+    },
+    {
+      question: "¿Cuál es mejor, digital o de carátula?",
+      answer:
+        "El digital es el más rápido de leer y evita el error de paralaje; el de carátula no depende de batería y es robusto para taller; el vernier tradicional es el más económico. Elige según uso y preferencia.",
+    },
+    {
+      question: "¿Tienen calibradores en existencia y bajo pedido?",
+      answer:
+        "Sí. Mostramos los modelos disponibles (0-150, 0-200, 0-300 mm) y, si necesitas otro rango o marca, lo cotizamos y conseguimos. Solicita tu cotización en línea.",
+    },
+  ],
+  indicador: [
+    {
+      question: "¿Para qué sirve un indicador de carátula?",
+      answer:
+        "Sirve para verificar diferencias de posición muy pequeñas contra una referencia: concentricidad, planitud, paralelismo y reglaje de máquinas y montajes. La aguja amplifica el desplazamiento del palpador.",
+    },
+    {
+      question: "¿Qué diferencia hay entre un comparador de cuadrante y uno de pestaña?",
+      answer:
+        "El de cuadrante tiene el palpador en línea con el vástago (medición vertical) y más recorrido; el de pestaña o palpador lateral es compacto y llega a lugares estrechos, ideal para reglar en máquina.",
+    },
+    {
+      question: "¿Manejan indicadores Mitutoyo?",
+      answer:
+        "Sí, manejamos indicadores y comparadores Mitutoyo. Mostramos los modelos en existencia y cotizamos bajo pedido los que no estén en stock. Solicita tu cotización en línea.",
+    },
+  ],
+};

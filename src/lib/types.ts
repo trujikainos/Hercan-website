@@ -12,6 +12,9 @@ export interface Product {
   category: string;
   mpn?: string | null; // número de parte del fabricante (≠ sku), clave para SEO/B2B
   familia?: string | null;
+  /** Tipo de instrumento de MEDICIÓN (metafield specs.tipo_instrumento): "Micrómetro",
+   * "Calibrador vernier", "Indicador carátula"… Scope del silo /instrumento/[slug]. */
+  tipoInstrumento?: string | null;
   unidadVenta?: string | null; // Pieza, Caja, Juego, Par (metafield specs.unidad_venta)
   disponibilidad?: string | null; // "En stock" / "Sobre pedido" (metafield, etiqueta de negocio)
   fichaTecnicaPdf?: string | null; // URL del datasheet del fabricante

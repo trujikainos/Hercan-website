@@ -239,6 +239,7 @@ function mapProduct(n: ShopifyProductNode): Product {
     category: n.productType || "—",
     mpn: mf.get("mpn") ?? null,
     familia: mf.get("familia") ?? null,
+    tipoInstrumento: mf.get("tipo_instrumento") ?? null,
     unidadVenta: mf.get("unidad_venta") ?? null,
     disponibilidad: mf.get("disponibilidad") ?? null,
     fichaTecnicaPdf: mf.get("ficha_tecnica_pdf") ?? null,
@@ -280,6 +281,7 @@ const PRODUCT_LIST_FIELDS = `${PRODUCT_FIELDS}
   metafields(identifiers: [
     { namespace: "specs", key: "material_a_maquinar" },
     { namespace: "specs", key: "tipo_herramienta" },
+    { namespace: "specs", key: "tipo_instrumento" },
     { namespace: "specs", key: "familia" },
     { namespace: "specs", key: "mpn" }
   ]) { key value }`;

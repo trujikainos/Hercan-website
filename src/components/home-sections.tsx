@@ -448,6 +448,7 @@ export function SiteFooter() {
               { href: "/categorias", label: "Categorías" },
               { href: "/marcas", label: "Marcas" },
               { href: "/tipos", label: "Tipos de herramienta" },
+              { href: "/instrumentos", label: "Instrumentos de medición" },
               { href: "/para", label: "Por material a maquinar" },
               { href: "/materiales", label: "Material de la herramienta" },
               { href: "/recubrimientos", label: "Recubrimientos" },

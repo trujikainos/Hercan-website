@@ -5,6 +5,7 @@ import { brandSlug } from "@/lib/catalog";
 import {
   CATEGORY_CONTENT,
   TIPO_CONTENT,
+  INSTRUMENTO_CONTENT,
   ISO_CONTENT,
   MATERIAL_CONTENT,
   RECUBRIMIENTO_CONTENT,
@@ -113,6 +114,7 @@ export function paginasUrls(): UrlEntry[] {
     { loc: `${site.url}/categorias`, lastmod: now, changefreq: "weekly", priority: 0.9 },
     { loc: `${site.url}/marcas`, lastmod: now, changefreq: "weekly", priority: 0.9 },
     { loc: `${site.url}/tipos`, lastmod: now, changefreq: "weekly", priority: 0.9 },
+    { loc: `${site.url}/instrumentos`, lastmod: now, changefreq: "weekly", priority: 0.9 },
     { loc: `${site.url}/para`, lastmod: now, changefreq: "weekly", priority: 0.9 },
     { loc: `${site.url}/materiales`, lastmod: now, changefreq: "weekly", priority: 0.9 },
     { loc: `${site.url}/recubrimientos`, lastmod: now, changefreq: "weekly", priority: 0.9 },
@@ -144,6 +146,7 @@ export function paginasUrls(): UrlEntry[] {
     ...brand,
     ...taxo("categoria", Object.keys(CATEGORY_CONTENT), 0.8),
     ...taxo("tipo", Object.keys(TIPO_CONTENT), 0.8),
+    ...taxo("instrumento", Object.keys(INSTRUMENTO_CONTENT), 0.8),
     ...taxo("material", Object.keys(MATERIAL_CONTENT), 0.8),
     ...taxo("recubrimiento", Object.keys(RECUBRIMIENTO_CONTENT), 0.8),
     // "Para maquinar [material]" (ISO 513: P/M/K/N/S/H): pilar de aplicación,
