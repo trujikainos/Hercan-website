@@ -38,6 +38,20 @@ export async function addToCartAction(variantId: string, quantity = 1): Promise<
   }
 }
 
+/** Re-lee el carrito autoritativo del servidor (el que vive en la cookie). Red de
+ *  seguridad del cliente cuando la respuesta de una mutación se pierde en tránsito
+ *  (aborto/red): el producto pudo SÍ guardarse, así que reconciliamos con la verdad. */
+export async function getCartAction(): Promise<CartActionResult> {
+  if (!isShopifyConnected) return DISABLED;
+  try {
+    const cart = await api.getCart();
+    return { ok: true, cart, notices: [] };
+  } catch (e) {
+    console.error("[cart] get", e);
+    return netFail();
+  }
+}
+
 export async function reorderAction(
   items: { variantId: string; quantity: number }[],
 ): Promise<CartActionResult> {

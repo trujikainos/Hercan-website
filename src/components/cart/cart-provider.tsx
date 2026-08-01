@@ -6,6 +6,7 @@ import {
   useState,
   useTransition,
   useCallback,
+  useRef,
 } from "react";
 import type { Cart, CartLine, CartNotice, Money } from "@/lib/cart-types";
 import {
@@ -14,6 +15,7 @@ import {
   removeLineAction,
   reorderAction,
   clearCartAction,
+  getCartAction,
 } from "@/app/cart/actions";
 import { CartDrawer } from "./cart-drawer";
 
@@ -132,21 +134,57 @@ export function CartProvider({
   const [isOpen, setOpen] = useState(false);
   const [notices, setNotices] = useState<CartNotice[]>([]);
 
+  // Serializa las mutaciones del carrito: la 2ª espera a que la 1ª termine (y
+  // escriba la cookie del carrito) antes de correr. Elimina la carrera de "agregar
+  // dos productos casi al mismo tiempo con el carrito vacío → cada petición no ve
+  // la cookie aún, crea un carrito y se pisa con la otra → se pierde un producto".
+  const chain = useRef<Promise<void>>(Promise.resolve());
+  const serialized = useCallback((fn: () => Promise<void>) => {
+    const prev = chain.current;
+    let release!: () => void;
+    chain.current = new Promise<void>((r) => (release = r));
+    return (async () => {
+      try {
+        await prev;
+        await fn();
+      } finally {
+        release();
+      }
+    })();
+  }, []);
+
+  // Red de seguridad: si la respuesta de una mutación se pierde/aborta EN TRÁNSITO
+  // (el producto pudo SÍ guardarse en la cookie del servidor), re-lee el carrito
+  // autoritativo para que el cliente refleje la verdad y no se "pierda" nada.
+  const reconcile = useCallback(async () => {
+    const fresh = await getCartAction().catch(() => null);
+    if (fresh?.cart) setBase(fresh.cart);
+    return fresh?.cart ?? null;
+  }, []);
+
   const run = useCallback(
     (
       oa: OA,
       action: () => Promise<{ ok: boolean; cart: Cart | null; notices: CartNotice[]; recovered?: boolean }>,
     ) => {
       start(async () => {
-        applyOptimistic(oa); // UI instantánea (cantidades absolutas)
-        const r = await action();
-        if (r.cart) setBase(r.cart); // reconciliación autoritativa
-        else if (r.recovered) setBase(null); // el carrito del servidor expiró → descartar la base vieja
-        // NETWORK (cart == null && !ok && !recovered): conserva la base; el optimista se revierte solo
-        setNotices(r.notices);
+        applyOptimistic(oa); // UI instantánea (no espera la serialización)
+        await serialized(async () => {
+          try {
+            const r = await action();
+            if (r.cart) setBase(r.cart); // reconciliación autoritativa
+            else if (r.recovered) setBase(null); // el carrito del servidor expiró
+            // NETWORK (cart == null && ok=false): el cambio NO se aplicó en el
+            // servidor → conserva la base; el optimista se revierte solo.
+            setNotices(r.notices);
+          } catch {
+            // Fetch del Server Action abortado/caído: reconcilia con el servidor.
+            await reconcile();
+          }
+        });
       });
     },
-    [applyOptimistic],
+    [applyOptimistic, serialized, reconcile],
   );
 
   const add = useCallback(
@@ -164,13 +202,19 @@ export function CartProvider({
       if (!enabled) return;
       setOpen(true);
       start(async () => {
-        const r = await reorderAction(items);
-        if (r.cart) setBase(r.cart);
-        else if (r.recovered) setBase(null);
-        setNotices(r.notices);
+        await serialized(async () => {
+          try {
+            const r = await reorderAction(items);
+            if (r.cart) setBase(r.cart);
+            else if (r.recovered) setBase(null);
+            setNotices(r.notices);
+          } catch {
+            await reconcile();
+          }
+        });
       });
     },
-    [enabled],
+    [enabled, serialized, reconcile],
   );
   const updateQty = useCallback(
     (lineId: string, qty: number) => run({ kind: "update", lineId, qty }, () => updateLineAction(lineId, qty)),
@@ -184,13 +228,19 @@ export function CartProvider({
   const clear = useCallback(() => {
     if (!enabled) return;
     start(async () => {
-      const r = await clearCartAction();
-      if (r.cart) setBase(r.cart);
-      else if (r.recovered) setBase(null);
-      else setBase(null);
-      setNotices(r.notices);
+      await serialized(async () => {
+        try {
+          const r = await clearCartAction();
+          if (r.cart) setBase(r.cart);
+          else if (r.recovered) setBase(null);
+          else setBase(null);
+          setNotices(r.notices);
+        } catch {
+          await reconcile();
+        }
+      });
     });
-  }, [enabled]);
+  }, [enabled, serialized, reconcile]);
   // Aviso solo-cliente (p. ej. tope de stock), sin ir al servidor.
   const notify = useCallback((message: string) => {
     setNotices([{ code: "OUT_OF_STOCK", message }]);
