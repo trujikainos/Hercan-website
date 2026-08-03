@@ -3,6 +3,13 @@ import { limited } from "@/lib/rate-limit";
 
 // Live search: el cliente llama /api/search?q=... (debounced). Token server-only.
 const noStore = { "Cache-Control": "no-store" };
+// Respuesta CON resultados: cacheable en el CDN de Vercel por URL (incluye el ?q=). Así
+// las búsquedas populares repetidas ("broca", "iscar", "inserto"…) se sirven del EDGE sin
+// invocar la función ni pegarle a Shopify → mucho menos costo/recursos. El costo escala
+// con queries ÚNICAS, no con el total de tecleo. Tradeoff: el hint "Disponible/Sobre
+// pedido" del dropdown puede ir hasta ~60s atrasado (la ficha del producto sí tiene stock
+// en vivo), aceptable para un autocompletado.
+const cacheable = { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" };
 const empty = (status = 200) => Response.json({ results: [] }, { status, headers: noStore });
 
 export async function GET(request: Request) {
@@ -20,7 +27,7 @@ export async function GET(request: Request) {
 
   try {
     const results = await searchProducts(q, 7);
-    return Response.json({ results }, { headers: noStore });
+    return Response.json({ results }, { headers: cacheable });
   } catch {
     return empty();
   }
