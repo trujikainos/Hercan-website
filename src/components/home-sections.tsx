@@ -466,11 +466,12 @@ export function SiteFooter() {
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-hc-metal/80 sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} {site.legalName}. Todos los derechos reservados.</p>
           <p className="flex items-center gap-1.5">
-            Hecho por
+            Desarrollo web y software por
             <a
-              href="https://weevolveit.com/"
+              href="https://weevolveit.com/?utm_source=footer&utm_medium=partner&utm_campaign=hecho-por&utm_content=hercan"
               target="_blank"
-              rel="noopener noreferrer"
+              rel="noopener"
+              title="Desarrollo de software y web con inteligencia artificial"
               className="inline-flex items-center gap-1.5 font-medium text-hc-metal transition-colors hover:text-hc-sky"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
