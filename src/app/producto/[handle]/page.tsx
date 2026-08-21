@@ -222,7 +222,7 @@ export default async function ProductPage({
                   {stock.tone === "low" ? " — ¡pocas piezas!" : ""}
                 </span>
               ) : stock.units === 0 ? (
-                <span className="text-[#b25e00]">Agotado — solicítalo bajo pedido</span>
+                <span className="text-[#b25e00]">Sobre pedido — te lo conseguimos</span>
               ) : (
                 <span className="text-hc-blue">{stock.label}</span>
               )}

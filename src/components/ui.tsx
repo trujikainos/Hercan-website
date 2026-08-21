@@ -31,12 +31,14 @@ export function stockInfo(product: Product): {
   if (q != null && q > 5) return { units: q, label: `${q} piezas`, tone: "ok" };
   if (q != null && q >= 1)
     return { units: q, label: q === 1 ? "Última pieza" : `Solo ${q} piezas`, tone: "low" };
-  // Con política DENY, stock <= 0 = agotado (no comprable en línea → se solicita).
-  if (q != null && q <= 0) return { units: 0, label: "Agotado", tone: "back" };
+  // Sin stock local: en B2B industrial NO es un callejón sin salida — se trae por
+  // pedido (los descontinuados están archivados, no se muestran). "Sobre pedido"
+  // invita a cotizar en vez de espantar con "Agotado".
+  if (q != null && q <= 0) return { units: 0, label: "Sobre pedido", tone: "back" };
   // Stock desconocido (variante sin rastreo o modo mock): según disponibilidad.
   return {
     units: null,
-    label: product.variantAvailable ? "Disponible" : "Agotado",
+    label: product.variantAvailable ? "Disponible" : "Sobre pedido",
     tone: "back",
   };
 }

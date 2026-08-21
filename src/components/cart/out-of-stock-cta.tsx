@@ -12,7 +12,7 @@ import type { SelectedProduct } from "@/components/product-combobox";
 export function OutOfStockCTA({ product }: { product: SelectedProduct }) {
   return (
     <div className="mt-5 rounded-lg border border-hc-metal-light bg-hc-soft/50 p-4">
-      <p className="text-sm font-semibold text-hc-ink">Agotado en línea</p>
+      <p className="text-sm font-semibold text-hc-ink">Disponible sobre pedido</p>
       <p className="mt-0.5 text-sm text-hc-gunmetal">
         Solicítalo bajo pedido: te confirmamos disponibilidad, precio por volumen y
         tiempo de entrega.
