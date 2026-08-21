@@ -90,7 +90,7 @@ export function ProductCard({ product, view = "grid" }: { product: Product; view
     <div className="flex">
       <div className="card-hover group flex w-full flex-col overflow-hidden rounded-xl border border-hc-metal-light bg-white hover:border-hc-steel">
         <Link href={`/producto/${product.handle}`} className="flex flex-1 flex-col">
-          <div className="relative flex h-36 items-center justify-center overflow-hidden bg-hc-soft text-hc-metal">
+          <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-white text-hc-metal">
             <ProductImage
               src={product.image}
               alt={`${displayTitle(product.title)} — ${product.sku}`}
