@@ -44,10 +44,10 @@ export function CartSummary() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-hc-gunmetal">Subtotal (sin IVA)</span>
+        <span className="text-sm text-hc-gunmetal">Subtotal (IVA incluido)</span>
         <span className="font-heading text-lg text-hc-navy">{formatMoneyOrTBD(cart.subtotal)}</span>
       </div>
-      <p className="text-xs text-hc-gunmetal">El IVA (16%) se calcula en el checkout.</p>
+      <p className="text-xs text-hc-gunmetal">Precios con IVA (16%) incluido. El envío se calcula al finalizar la compra.</p>
       {err && <p className="text-sm text-red-600">{err}</p>}
       <button
         onClick={checkout}
