@@ -7,12 +7,10 @@ import { indexBrands, partNumberRows } from "@/lib/part-number-index";
 
 // Índice de números de parte de UNA marca: tabla N° de parte → ficha.
 // Marcas fijas (site.brands + "Otras marcas"); los productos salen de Shopify.
-export const revalidate = 3600;
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return indexBrands().map((b) => ({ marca: b.slug }));
-}
+// Render por petición, NO en el build: cada página carga el catálogo completo y,
+// prerenderizadas junto con las 3,166 fichas, el build de Vercel se quedó sin
+// memoria (OOM, 2026-11-04). Las lecturas de Shopify siguen en la caché de datos.
+export const dynamic = "force-dynamic";
 
 const brandOf = (slug: string) => indexBrands().find((b) => b.slug === slug) ?? null;
 

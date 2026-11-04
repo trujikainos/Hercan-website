@@ -6,7 +6,8 @@ import { pageGraph, breadcrumbNode } from "@/lib/schema";
 import { indexBrands, partNumberCounts } from "@/lib/part-number-index";
 
 // Hub del índice de números de parte: una entrada por marca con su conteo.
-export const revalidate = 3600;
+// Por petición, no en el build (carga el catálogo completo; ver [marca]/page.tsx).
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: "Números de parte de herramientas de corte y medición | HERCAN" },
