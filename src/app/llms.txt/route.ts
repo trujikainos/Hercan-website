@@ -3,6 +3,8 @@ import { getProducts, getCategories, getArticles } from "@/lib/shopify";
 import { brandSlug } from "@/lib/catalog";
 import { BRAND_CONTENT, CATEGORY_CONTENT } from "@/lib/taxonomy-content";
 import { HOME_FAQS } from "@/lib/faq";
+import { nameWithBrand, partNumber } from "@/lib/product-seo";
+import { indexBrands } from "@/lib/part-number-index";
 
 /**
  * llms.txt para motores de IA (GEO / citabilidad). Todo se DERIVA de la fuente
@@ -55,7 +57,15 @@ export async function GET() {
 
   const productLines = products
     .slice(0, 25)
-    .map((p) => `- ${p.title} — marca ${p.brand}, categoría ${p.category}: ${site.url}/producto/${p.handle}`)
+    .map(
+      (p) =>
+        `- ${nameWithBrand(p)} (número de parte ${partNumber(p)}), categoría ${p.category}: ${site.url}/producto/${p.handle}`,
+    )
+    .join("\n");
+
+  // Índice de números de parte: una página por marca con TODOS los códigos.
+  const partIndexLines = indexBrands()
+    .map((b) => `- ${b.name}: ${site.url}/numeros-de-parte/${b.slug}`)
     .join("\n");
 
   // Guías del blog: título + URL + primera oración del excerpt (contexto citable).
@@ -93,6 +103,10 @@ ${brandLines}
 
 ## Productos (muestra)
 ${productLines}
+
+## Índice de números de parte
+Cada producto se identifica por el número de parte del fabricante (en Iscar, también por su código de catálogo de 7 dígitos). El índice completo por marca está en ${site.url}/numeros-de-parte y cada código enlaza a su ficha con precio, existencia y especificaciones:
+${partIndexLines}
 
 ## Guías técnicas (blog)
 ${guideLines}

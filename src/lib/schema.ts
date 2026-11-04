@@ -5,6 +5,14 @@
  */
 import { site, absoluteUrl } from "./site";
 import type { Product, Article } from "./types";
+import {
+  partNumber,
+  manufacturerCode,
+  partNumberVariants,
+  brandLabel,
+  nameWithBrand,
+  seoDescription,
+} from "./product-seo";
 
 const ORG_ID = `${site.url}/#organization`;
 const WEBSITE_ID = `${site.url}/#website`;
@@ -136,15 +144,28 @@ export function productNode(p: Product, rating?: { average: number; count: numbe
     ...(p.familia ? [{ label: "Familia", value: p.familia }] : []),
     ...(p.specGroups ?? []).flatMap((g) => g.items),
   ].map((it) => ({ "@type": "PropertyValue", name: it.label, value: it.value }));
+  // Identificadores (lib/product-seo.ts): N° de parte, código del fabricante cuando
+  // difiere (Iscar) y las otras formas en que se escribe → búsquedas por número de
+  // parte y respuestas de IA que citan el código exacto.
+  const pn = partNumber(p);
+  const mc = manufacturerCode(p);
+  const variants = partNumberVariants(p);
+  const brand = brandLabel(p);
   return {
     "@type": "Product",
     "@id": `${url}#product`,
-    name: p.title,
-    description: `${p.title} — ${p.brand}, ${p.category}. Herramental industrial en ${site.name}.`,
+    name: nameWithBrand(p),
+    ...(variants.length ? { alternateName: variants } : {}),
+    description: seoDescription(p),
     ...(p.image ? { image: [p.image] } : {}),
     sku: p.sku,
-    mpn: p.mpn || p.sku, // n° de parte del fabricante (clave para búsquedas B2B)
-    brand: { "@type": "Brand", name: p.brand },
+    mpn: pn, // n° de parte del fabricante (clave para búsquedas B2B)
+    identifier: [
+      { "@type": "PropertyValue", propertyID: "MPN", value: pn },
+      ...(mc ? [{ "@type": "PropertyValue", propertyID: mc.label, value: mc.value }] : []),
+    ],
+    // "Otros" no es una marca: sin brand antes que una marca falsa.
+    ...(brand ? { brand: { "@type": "Brand", name: brand } } : {}),
     category: p.category,
     ...(additionalProperty.length ? { additionalProperty } : {}),
     offers: {

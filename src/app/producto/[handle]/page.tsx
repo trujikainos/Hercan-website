@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ImageIcon, Ruler, FileText, Download } from "lucide-react";
-import { StockBadge, stockInfo, formatPrice, displayTitle } from "@/components/ui";
+import { StockBadge, stockInfo, formatPrice } from "@/components/ui";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { OutOfStockCTA } from "@/components/cart/out-of-stock-cta";
 import { WhatsAppRequestButton } from "@/components/whatsapp-request";
@@ -17,6 +17,17 @@ import { pageGraph, productNode, breadcrumbNode, faqNode } from "@/lib/schema";
 import { getProductReviews } from "@/lib/reviews";
 import { ProductReviews } from "@/components/product-reviews";
 import { buildProductFaqs } from "@/lib/faq";
+import {
+  seoTitle,
+  seoDescription,
+  seoH1,
+  imageAlt,
+  partNumber as getPartNumber,
+  partNumberVariants,
+  manufacturerCode,
+  internalSku,
+  brandLabel,
+} from "@/lib/product-seo";
 import {
   getProductByHandle,
   getAllProductHandles,
@@ -37,22 +48,21 @@ export async function generateMetadata({
   const { handle } = await params;
   const product = await getProductByHandle(handle);
   if (!product) return {};
-  const partNo = product.mpn ?? product.sku;
-  const description =
-    `${product.title} — ${product.brand} · N° de parte ${partNo}${product.mpn && product.mpn !== product.sku ? ` (SKU ${product.sku})` : ""}. ${product.category} en HERCAN. Precio ${product.currency}, cotización B2B.`.slice(
-      0,
-      160,
-    );
+  // Título, descripción e identificadores salen de lib/product-seo.ts (fuente única
+  // para todo el catálogo y cada producto nuevo): nombre + marca + número de parte.
+  const mc = manufacturerCode(product);
   return {
-    title: product.title,
-    description,
+    title: { absolute: seoTitle(product) },
+    description: seoDescription(product),
     keywords: [
+      getPartNumber(product),
+      ...partNumberVariants(product),
+      mc?.value,
       product.sku,
-      product.mpn,
-      product.brand,
+      brandLabel(product),
       product.category,
-      product.title,
-    ].filter((k): k is string => Boolean(k)),
+      seoH1(product),
+    ].filter((k, i, a): k is string => Boolean(k) && a.indexOf(k) === i),
     alternates: { canonical: `/producto/${product.handle}` },
     // La OG la genera producto/[handle]/opengraph-image.tsx (marca + título + N° de parte).
   };
@@ -88,7 +98,10 @@ export default async function ProductPage({
   // muestra igual). Si no hay mpn, el N° de parte cae al sku.
   // N° de parte = mpn del fabricante (prominente, en su caja). El SKU (código
   // interno) va aparte, como texto tenue arriba del título.
-  const partNumber = product.mpn ?? product.sku;
+  const partNumber = getPartNumber(product);
+  const mfrCode = manufacturerCode(product);
+  const skuInterno = internalSku(product);
+  const variants = partNumberVariants(product);
 
   // Specs clave para chips de un vistazo, en orden de relevancia.
   const quickSpecs = [
@@ -135,7 +148,7 @@ export default async function ProductPage({
           breadcrumbNode([
             { name: "Inicio", path: "/" },
             { name: "Catálogo", path: "/productos" },
-            { name: product.title },
+            { name: seoH1(product) },
           ]),
           ...(faqs.length ? [faqNode(faqs)] : []),
         )}
@@ -153,7 +166,7 @@ export default async function ProductPage({
             <div className="col-span-2 flex h-72 items-center justify-center overflow-hidden rounded-xl border border-hc-metal-light bg-white">
               <ProductImage
                 src={product.image}
-                alt={`${displayTitle(product.title)} — ${product.sku}`}
+                alt={imageAlt(product)}
                 imgClassName="h-full w-full object-contain p-4"
               />
             </div>
@@ -172,26 +185,49 @@ export default async function ProductPage({
               <span className="font-semibold uppercase tracking-wide text-hc-steel">
                 {product.brand}
               </span>
-              {product.sku && (
+              {/* SKU interno solo si es distinto del N° de parte (en la mayoría coinciden). */}
+              {skuInterno && (
                 <span className="inline-flex items-center gap-0.5 font-mono text-hc-metal">
-                  SKU {product.sku}
-                  <CopyButton value={product.sku} label="SKU" small />
+                  SKU {skuInterno}
+                  <CopyButton value={skuInterno} label="SKU" small />
                 </span>
               )}
             </p>
-            <h1 className="mt-1 font-heading text-2xl text-hc-ink">
-              {displayTitle(product.title)}
-            </h1>
+            <h1 className="mt-1 font-heading text-2xl text-hc-ink">{seoH1(product)}</h1>
 
-            {/* N° de parte del fabricante — prominente, con copiar */}
-            <div className="mt-4 flex items-center gap-2 rounded-lg border border-hc-metal-light bg-hc-soft/60 p-3">
-              <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
-                N° de parte
-              </span>
-              <code className="font-mono text-sm font-semibold text-hc-navy">
-                {partNumber}
-              </code>
-              <CopyButton value={partNumber} label="número de parte" />
+            {/* Identificadores: N° de parte del fabricante (prominente, con copiar),
+                código de catálogo del fabricante cuando difiere (Iscar) y las otras
+                formas en que se escribe. Visibles = indexables y citables (SEO/AEO). */}
+            <div className="mt-4 rounded-lg border border-hc-metal-light bg-hc-soft/60 p-3">
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+                  N° de parte
+                </span>
+                <code className="font-mono text-sm font-semibold text-hc-navy">
+                  {partNumber}
+                </code>
+                <CopyButton value={partNumber} label="número de parte" />
+              </div>
+              {mfrCode && (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-hc-gunmetal">
+                    {mfrCode.label}
+                  </span>
+                  <code className="font-mono text-sm text-hc-navy">{mfrCode.value}</code>
+                  <CopyButton value={mfrCode.value} label={mfrCode.label} small />
+                </div>
+              )}
+              {variants.length > 0 && (
+                <p className="mt-1.5 text-xs text-hc-gunmetal">
+                  También se busca como:{" "}
+                  {variants.map((v, i) => (
+                    <span key={v}>
+                      {i > 0 && " · "}
+                      <code className="font-mono text-hc-navy">{v}</code>
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
 
             {/* Specs clave de un vistazo */}

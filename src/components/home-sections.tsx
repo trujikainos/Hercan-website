@@ -453,6 +453,7 @@ export function SiteFooter() {
               { href: "/materiales", label: "Material de la herramienta" },
               { href: "/recubrimientos", label: "Recubrimientos" },
               { href: "/iso", label: "Insertos ISO" },
+              { href: "/numeros-de-parte", label: "Números de parte" },
             ].map((h) => (
               <Link key={h.href} href={h.href} className="hover:text-hc-sky">
                 {h.label}

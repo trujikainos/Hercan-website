@@ -1,4 +1,16 @@
 import type { Product } from "./types";
+import { site } from "./site";
+import {
+  nameWithBrand,
+  manufacturerCode,
+  partNumberVariants,
+  internalSku,
+  brandLabel,
+  partNumber,
+  partNumberInName,
+  priceText,
+  inStockNow,
+} from "./product-seo";
 
 /**
  * FAQs generadas desde los datos reales del producto (sin inventar). Solo se
@@ -59,7 +71,7 @@ const cleanTitle = (t: string) => t.replace(/\s*\[[^\]]+\]\s*$/, "").trim();
 
 export function buildProductFaqs(product: Product): Faq[] {
   const t = cleanTitle(product.title);
-  const partNo = product.mpn ?? product.sku;
+  const partNo = partNumber(product);
   const spec = (label: string) =>
     product.specGroups?.flatMap((g) => g.items).find((i) => i.label === label)?.value ?? null;
 
@@ -72,13 +84,26 @@ export function buildProductFaqs(product: Product): Faq[] {
 
   const faqs: Faq[] = [];
 
-  // Número de parte / cómo pedir
+  // Número de parte / cómo pedir (answer-first, con todas las formas del código:
+  // es lo que cita una IA cuando le preguntan por el número exacto).
+  const named = nameWithBrand(product);
+  const mc = manufacturerCode(product);
+  const variants = partNumberVariants(product);
+  const skuInterno = internalSku(product);
+  const brand = brandLabel(product);
   faqs.push({
-    question: `¿Cuál es el número de parte de ${t}?`,
-    answer:
-      product.mpn && product.mpn !== product.sku
-        ? `El número de parte del fabricante (${product.brand}) es ${product.mpn}. En HERCAN también lo identificamos con el SKU ${product.sku}; puedes cotizarlo o pedirlo con cualquiera de los dos.`
-        : `El número de parte es ${partNo}. Puedes cotizarlo o pedirlo directamente en HERCAN.`,
+    question: `¿Cuál es el número de parte de ${named}?`,
+    answer: [
+      `El número de parte del fabricante${brand ? ` (${brand})` : ""} es ${partNo}.`,
+      mc ? `En el catálogo de Iscar corresponde al código ${mc.value}.` : "",
+      variants.length ? `También se escribe ${variants.join(", ")}.` : "",
+      skuInterno ? `En HERCAN su SKU es ${skuInterno}.` : "",
+      mc || variants.length || skuInterno
+        ? "Puedes cotizarlo o comprarlo con cualquiera de estos códigos."
+        : "Puedes cotizarlo o comprarlo con ese número.",
+    ]
+      .filter(Boolean)
+      .join(" "),
   });
 
   // Material + recubrimiento
@@ -134,13 +159,27 @@ export function buildProductFaqs(product: Product): Faq[] {
     });
   }
 
-  // Disponibilidad
+  // Dónde comprar + disponibilidad (la pregunta tal como la hace el comprador y
+  // como la resuelve una IA: "¿dónde compro X en México?").
+  const ciudades = site.locations.map((l) => l.city).join(" y ");
+  const precio = priceText(product);
+  const enExistencia = inStockNow(product);
+  // Si el N° de parte ya va en el nombre (Iscar), entre paréntesis va el código de
+  // catálogo; si no, el N° de parte. Nunca el mismo código dos veces.
+  const codigoEnPregunta = partNumberInName(product) ? (mc?.value ?? null) : partNo;
   faqs.push({
-    question: `¿${t} está disponible?`,
-    answer:
-      product.stock != null && product.stock > 0
-        ? `Sí, hay ${product.stock} ${product.stock === 1 ? "pieza" : "piezas"} en existencia listas para envío.`
-        : "Se maneja sobre pedido. Solicita una cotización y te confirmamos el tiempo de entrega.",
+    question: `¿Dónde comprar ${named}${codigoEnPregunta ? ` (${codigoEnPregunta})` : ""} en México?`,
+    answer: [
+      `En HERCAN, distribuidor de herramental para CNC con sucursales en ${ciudades}.`,
+      enExistencia
+        ? `${
+            product.stock != null && product.stock > 0
+              ? `Hay ${product.stock} ${product.stock === 1 ? "pieza" : "piezas"} en existencia`
+              : "Está en existencia"
+          }${precio ? ` a ${precio} con IVA` : ""} y se compra en línea en esta página.`
+        : "Se maneja sobre pedido: solicita una cotización y te confirmamos precio y tiempo de entrega.",
+      "Enviamos a todo México.",
+    ].join(" "),
   });
 
   // Precio / IVA / unidad

@@ -2,6 +2,7 @@ import "server-only";
 import { site } from "@/lib/site";
 import { getAllProductHandles, getArticles } from "@/lib/shopify";
 import { brandSlug } from "@/lib/catalog";
+import { indexBrands } from "@/lib/part-number-index";
 import {
   CATEGORY_CONTENT,
   TIPO_CONTENT,
@@ -119,6 +120,16 @@ export function paginasUrls(): UrlEntry[] {
     { loc: `${site.url}/materiales`, lastmod: now, changefreq: "weekly", priority: 0.9 },
     { loc: `${site.url}/recubrimientos`, lastmod: now, changefreq: "weekly", priority: 0.9 },
     { loc: `${site.url}/iso`, lastmod: now, changefreq: "weekly", priority: 0.9 },
+    // Índice de números de parte (mapa del catálogo por código del fabricante).
+    { loc: `${site.url}/numeros-de-parte`, lastmod: now, changefreq: "weekly", priority: 0.8 },
+    ...indexBrands().map(
+      (b): UrlEntry => ({
+        loc: `${site.url}/numeros-de-parte/${b.slug}`,
+        lastmod: now,
+        changefreq: "weekly",
+        priority: 0.6,
+      }),
+    ),
     { loc: `${site.url}/cotizacion`, lastmod: now, changefreq: "monthly", priority: 0.7 },
     { loc: `${site.url}/contacto`, lastmod: now, changefreq: "monthly", priority: 0.6 },
     { loc: `${site.url}/nosotros`, lastmod: now, changefreq: "monthly", priority: 0.5 },
