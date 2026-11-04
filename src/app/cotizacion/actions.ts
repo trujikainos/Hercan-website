@@ -1,5 +1,6 @@
 "use server";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
+import { ORIGEN_COOKIE, leerOrigen } from "@/lib/origen";
 import { site, absoluteUrl } from "@/lib/site";
 import { customerEmail, leadEmail, type EmailLine } from "@/lib/quote-email";
 import { createQuoteDraftOrder, type DraftLine } from "@/lib/shopify-admin";
@@ -149,6 +150,7 @@ export async function submitQuoteAction(data: QuoteInput): Promise<QuoteResult> 
       mensaje,
       currency: site.currency,
       source: data.source,
+      origen: leerOrigen((await cookies()).get(ORIGEN_COOKIE)?.value),
     });
     if (draft) {
       draftOk = true;

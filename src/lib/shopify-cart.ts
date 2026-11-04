@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { storefront, isShopifyConnected } from "./shopify";
 import type { Cart, CartLine, CartNotice } from "./cart-types";
 import { hasCustomerSession } from "./customer-account";
+import { ORIGEN_COOKIE, leerOrigen, origenAtributos } from "./origen";
 
 const CART_COOKIE = "hercan_cart";
 const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 10; // 10 días (los carritos de Shopify persisten ~10d)
@@ -20,6 +21,7 @@ export interface CartMutationResult {
 const CART_FRAGMENT = `
 fragment CartFields on Cart {
   id checkoutUrl totalQuantity
+  attributes { key value }
   cost {
     subtotalAmount { amount currencyCode }
     totalAmount { amount currencyCode }
@@ -39,7 +41,8 @@ fragment CartFields on Cart {
   }
 }`;
 const Q_CART = `query Cart($id:ID!){ cart(id:$id){ ...CartFields } } ${CART_FRAGMENT}`;
-const M_CREATE = `mutation($lines:[CartLineInput!]){ cartCreate(input:{lines:$lines}){ cart{...CartFields} userErrors{field message} } } ${CART_FRAGMENT}`;
+const M_CREATE = `mutation($lines:[CartLineInput!],$attributes:[AttributeInput!]){ cartCreate(input:{lines:$lines,attributes:$attributes}){ cart{...CartFields} userErrors{field message} } } ${CART_FRAGMENT}`;
+const M_ATTRS = `mutation($cartId:ID!,$attributes:[AttributeInput!]!){ cartAttributesUpdate(cartId:$cartId,attributes:$attributes){ cart{...CartFields} userErrors{field message} } } ${CART_FRAGMENT}`;
 const M_ADD = `mutation($cartId:ID!,$lines:[CartLineInput!]!){ cartLinesAdd(cartId:$cartId,lines:$lines){ cart{...CartFields} userErrors{field message} } } ${CART_FRAGMENT}`;
 const M_UPDATE = `mutation($cartId:ID!,$lines:[CartLineUpdateInput!]!){ cartLinesUpdate(cartId:$cartId,lines:$lines){ cart{...CartFields} userErrors{field message} } } ${CART_FRAGMENT}`;
 const M_REMOVE = `mutation($cartId:ID!,$lineIds:[ID!]!){ cartLinesRemove(cartId:$cartId,lineIds:$lineIds){ cart{...CartFields} userErrors{field message} } } ${CART_FRAGMENT}`;
@@ -87,6 +90,35 @@ function mapCart(raw: any): Cart | null {
     currencyCode: raw.cost.subtotalAmount.currencyCode,
     lines,
   };
+}
+
+// ---- origen de la visita (lib/origen.ts) → atributos del carrito → pedido ----
+async function origenAttrs() {
+  return origenAtributos(leerOrigen((await cookies()).get(ORIGEN_COOKIE)?.value));
+}
+
+/**
+ * Si el carrito no trae el origen actual (carrito anterior a este cambio, o el
+ * visitante volvió por otro canal), lo actualiza. Es best-effort: si falla, el
+ * carrito sigue igual y el pedido sale sin origen, nunca se pierde la venta.
+ */
+async function syncOrigen(raw: any): Promise<any> {
+  try {
+    const attrs = await origenAttrs();
+    const actual = Object.fromEntries((raw?.attributes ?? []).map((a: any) => [a.key, a.value]));
+    const iguales = attrs.every((a) => actual[a.key] === a.value);
+    if (!raw?.id || iguales) return raw;
+    // cartAttributesUpdate reemplaza la lista completa: se conservan los atributos ajenos.
+    const ajenos = (raw.attributes ?? []).filter((a: any) => !String(a.key).startsWith("_origen_"));
+    const d = await call<{ cartAttributesUpdate: { cart: any } }>(M_ATTRS, {
+      cartId: raw.id,
+      attributes: [...ajenos, ...attrs],
+    });
+    return d.cartAttributesUpdate.cart ?? raw;
+  } catch (e) {
+    console.error("[carrito] origen", (e as Error).message);
+    return raw;
+  }
 }
 
 // ---- cookie ----
@@ -160,10 +192,14 @@ export async function addToCart(variantId: string, quantity: number): Promise<Ca
       cartId: id,
       lines,
     });
-    if (d.cartLinesAdd.cart) return finalize(d.cartLinesAdd.cart, d.cartLinesAdd.userErrors, false);
+    if (d.cartLinesAdd.cart)
+      return finalize(await syncOrigen(d.cartLinesAdd.cart), d.cartLinesAdd.userErrors, false);
     await clearCartId(); // expiró → recrear abajo
   }
-  const c = await call<{ cartCreate: { cart: any; userErrors: any[] } }>(M_CREATE, { lines });
+  const c = await call<{ cartCreate: { cart: any; userErrors: any[] } }>(M_CREATE, {
+    lines,
+    attributes: await origenAttrs(),
+  });
   const cart = c.cartCreate.cart;
   if (cart) await writeCartId(cart.id);
   const r = await finalize(cart, c.cartCreate.userErrors, Boolean(id));
@@ -226,10 +262,15 @@ export async function reorderToCart(
     }
   }
   if (!raw) {
-    const c = await call<{ cartCreate: { cart: any; userErrors: any[] } }>(M_CREATE, { lines });
+    const c = await call<{ cartCreate: { cart: any; userErrors: any[] } }>(M_CREATE, {
+      lines,
+      attributes: await origenAttrs(),
+    });
     raw = c.cartCreate.cart;
     userErrors = c.cartCreate.userErrors;
     if (raw) await writeCartId(raw.id);
+  } else {
+    raw = await syncOrigen(raw);
   }
   return { cart: await withCheckoutAuth(mapCart(raw)), notices: noticesFromUserErrors(userErrors), recovered, skipped, added: toAdd.length };
 }

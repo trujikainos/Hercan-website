@@ -7,6 +7,7 @@ import { isShopifyConnected } from "@/lib/shopify";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { SocialProof } from "@/components/social-proof";
 import { Analytics } from "@/components/analytics";
+import { OrigenVisita } from "@/components/origen-visita";
 import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/home-sections";
 
@@ -106,6 +107,8 @@ export default async function RootLayout({
           <SiteFooter />
         </CartProvider>
         <SocialProof />
+        {/* Origen de la visita → atributos del carrito/cotización (comisión por venta originada). */}
+        <OrigenVisita />
         {/* GA4 solo en producción indexable (no en local/preview). */}
         {INDEXABLE && <Analytics />}
       </body>

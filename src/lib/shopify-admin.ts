@@ -1,4 +1,5 @@
 import "server-only";
+import { type Origen, origenAtributos, origenEtiquetas, origenNota } from "./origen";
 /**
  * Cliente del Admin API de Shopify (solo servidor) para crear un Borrador de
  * pedido (draft order) por cada cotización del sitio. Requiere SHOPIFY_ADMIN_TOKEN
@@ -79,6 +80,8 @@ export interface QuoteDraftInput {
   duracion?: string;
   fechaInicio?: string;
   source?: "whatsapp" | "cotizacion"; // canal de origen del lead
+  /** De dónde llegó el visitante (lib/origen.ts): etiquetas, atributos y nota. */
+  origen?: Origen | null;
 }
 
 /**
@@ -139,6 +142,7 @@ export async function createQuoteDraftOrder(
     input.empresa ? `Empresa: ${input.empresa}` : "",
     input.telefono ? `Celular / WhatsApp: ${input.telefono}` : "",
     input.mensaje ? `\nMensaje del cliente:\n${input.mensaje}` : "",
+    `\n${origenNota(input.origen ?? null)}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -159,11 +163,15 @@ export async function createQuoteDraftOrder(
   const baseInput = {
     email: input.email,
     note,
+    // "cotizacion-web" identifica la venta originada por el sitio: si Hercan completa
+    // este borrador en Shopify, el pedido resultante cuenta para la comisión.
     tags: [
       "cotizacion-web",
       input.recurring ? "suministro-recurrente" : "compra-puntual",
       input.source === "whatsapp" ? "canal-whatsapp" : "canal-cotizacion",
+      ...origenEtiquetas(input.origen ?? null),
     ],
+    customAttributes: origenAtributos(input.origen ?? null),
     lineItems,
   };
 
