@@ -72,6 +72,17 @@ export function xmlIndex(children: { loc: string; lastmod: string }[]): string {
 export const siloUrl = (silo: Silo) => `${site.url}/sitemaps/${silo}.xml`;
 
 /** Fecha ISO más reciente de una lista (o fallback si no hay ninguna válida). */
+/**
+ * Última vez que cambió la PLANTILLA de la ficha de producto (título, H1, descripción
+ * y schema que salen de `product-seo.ts`). Ese cambio no toca `updatedAt` en Shopify,
+ * así que sin esto el sitemap seguía diciendo "sin cambios desde el 19 sep" y Google
+ * no volvía a pasar por las fichas (la mayoría con último rastreo a mediados de
+ * agosto). Es verificable: el HTML de cada ficha sí cambió ese día.
+ * **Subir esta fecha cada vez que se publique un cambio en la plantilla de la ficha.**
+ * 2026-11-04: nombres "Nombre Marca | N° de parte" e identificadores en el schema.
+ */
+export const FICHA_PLANTILLA_CAMBIO = "2026-11-04T18:00:00.000Z";
+
 function maxDate(dates: (string | Date | undefined)[], fallback: string): string {
   const times = dates
     .filter(Boolean)
@@ -94,7 +105,7 @@ export async function siloLastmods(): Promise<Record<Silo, string>> {
   return {
     paginas: now,
     productos: maxDate(
-      products.map((p) => p.updatedAt),
+      [...products.map((p) => p.updatedAt), FICHA_PLANTILLA_CAMBIO],
       now,
     ),
     blog: maxDate(
@@ -173,7 +184,8 @@ export async function productosUrls(): Promise<UrlEntry[]> {
   const products = await getAllProductHandles().catch(() => []);
   return products.map((p) => ({
     loc: `${site.url}/producto/${p.handle}`,
-    lastmod: iso(p.updatedAt, now),
+    // Lo más reciente entre el cambio del producto en Shopify y el de la plantilla.
+    lastmod: maxDate([p.updatedAt, FICHA_PLANTILLA_CAMBIO], now),
     changefreq: "weekly",
     priority: 0.7,
   }));
