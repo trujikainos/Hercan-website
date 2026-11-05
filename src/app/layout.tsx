@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Oswald, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { site, INDEXABLE } from "@/lib/site";
 import { getCart } from "@/lib/shopify-cart";
@@ -10,16 +10,23 @@ import { Analytics } from "@/components/analytics";
 import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/home-sections";
 
-const oswald = Oswald({
+// Fuentes ALOJADAS EN EL REPO (src/app/fonts), no next/font/google: el build bajaba
+// los archivos de Google Fonts en cada despliegue y falló dos veces el 4 nov 2026
+// cuando Google no respondió ("next/font/google queries have exactly one entry").
+// Son los mismos archivos que servía Google Fonts (subset latino, variables: un
+// archivo cubre todos los pesos). Licencia SIL Open Font License (Inter y Oswald).
+const oswald = localFont({
+  src: "./fonts/oswald-latin.woff2",
   variable: "--font-oswald",
-  subsets: ["latin"],
-  weight: ["500", "600"],
+  weight: "500 600",
+  display: "swap",
 });
 
-const inter = Inter({
+const inter = localFont({
+  src: "./fonts/inter-latin.woff2",
   variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: "400 600",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
