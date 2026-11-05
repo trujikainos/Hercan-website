@@ -346,7 +346,12 @@ export function SeoBlock() {
             { href: "/tipo/tarraja", label: "Tarrajas" },
             { href: "/tipo/buril", label: "Buriles para torno" },
             { href: "/tipo/escariador", label: "Escariadores" },
-            { href: "/categoria/abrasivos", label: "Discos de corte" },
+            { href: "/tipo/inserto", label: "Insertos de carburo" },
+            { href: "/instrumento/indicador", label: "Indicadores de carátula" },
+            { href: "/tipo/fresa-endmill", label: "Fresas endmill" },
+            { href: "/categoria/torneado", label: "Herramientas para torno" },
+            // Antes decía "Discos de corte": el catálogo no tiene; Abrasivos = limas rotativas.
+            { href: "/categoria/abrasivos", label: "Limas rotativas" },
           ].map((l, i) => (
             <span key={l.href}>
               {i > 0 && " · "}

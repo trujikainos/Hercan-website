@@ -357,7 +357,19 @@ const normText = (s: string) =>
  * productos que coinciden; luego `buildCatalog` aplica facetas y paginación
  * sobre ese resultado (así los resultados de búsqueda se pueden filtrar).
  */
-export function searchProductsLocal(products: Product[], query: string): Product[] {
+export function searchProductsLocal(
+  products: Product[],
+  query: string,
+  opts?: { frase?: boolean },
+): Product[] {
+  // Modo FRASE (`/buscar?q=…&frase=1`): el título debe contener la frase completa,
+  // en ese orden. Lo usan los enlaces de las tablas de medidas: con palabras sueltas,
+  // "broca 1/2"" también trae "1 1/2"" y brocas con zanco de 1/2", y "6mm" trae "16mm".
+  if (opts?.frase) {
+    const frase = normText(query).replace(/\s+/g, " ").trim();
+    if (!frase) return [];
+    return products.filter((p) => normText(p.title).replace(/\s+/g, " ").includes(frase));
+  }
   const tokens = normText(query).split(/\s+/).filter(Boolean);
   if (!tokens.length) return [];
   return products.filter((p) => {

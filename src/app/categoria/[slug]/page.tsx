@@ -10,6 +10,8 @@ import { buildCatalog } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
 import { CATEGORY_CONTENT, CATEGORY_FAQS } from "@/lib/taxonomy-content";
 import { RelatedGuides } from "@/components/related-guides";
+import { MedidasTabla } from "@/components/medidas-tabla";
+import { MezclaTipos } from "@/components/mezcla-tipos";
 
 // Slugs prerenderizados desde las 9 categorías del negocio (CATEGORY_CONTENT).
 export function generateStaticParams() {
@@ -67,6 +69,13 @@ export default async function CategoryPage({
   // para categorías genéricas (p. ej. accesorios): entonces no se renderiza el bloque.
   const faqs = CATEGORY_FAQS[slug] ?? [];
 
+  // Mezcla por tipo: productos de la categoría SIN las facetas del usuario, y el
+  // slug real de la faceta `categoria` (el de la ruta no siempre coincide).
+  const enCategoria = all.filter((p) => p.category === content.name);
+  const catSlug = categories.find((c) => c.name === content.name)?.slug ?? slug;
+  // Solo la primera letra en minúscula: respeta siglas ("para CNC").
+  const enMinuscula = content.title.charAt(0).toLowerCase() + content.title.slice(1);
+
   const siblings = Object.entries(CATEGORY_CONTENT)
     .filter(([s]) => s !== slug)
     .map(([s, c]) => ({ name: c.title, href: `/categoria/${s}` }));
@@ -105,11 +114,18 @@ export default async function CategoryPage({
           basePath={basePath}
           hiddenFacets={["categoria"]}
         />
+        <MezclaTipos
+          productos={enCategoria}
+          titulo={`${content.title} por tipo`}
+          intro={`Cuántos modelos hay de cada tipo en ${enMinuscula}, con el catálogo de hoy. Cada tipo abre su página ya filtrada.`}
+          filtro={{ param: "categoria", valor: catSlug }}
+        />
+        {content.medidas && <MedidasTabla medidas={content.medidas} productos={all} />}
         {faqs.length > 0 && (
           <section className="border-t border-hc-metal-light bg-hc-soft/30">
             <div className="reveal mx-auto max-w-3xl px-4 py-12">
               <h2 className="mb-4 font-heading text-[length:var(--step-h2)] text-hc-navy">
-                Preguntas frecuentes sobre {content.title.toLowerCase()}
+                Preguntas frecuentes sobre {enMinuscula}
               </h2>
               <FaqAccordion faqs={faqs} />
             </div>

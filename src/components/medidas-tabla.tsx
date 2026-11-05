@@ -1,19 +1,45 @@
 import Link from "next/link";
 import type { Product } from "@/lib/types";
 import type { MedidasContent } from "@/lib/taxonomy-content";
+import { isoFamilyMatch, searchProductsLocal } from "@/lib/catalog";
+
+type Fila = MedidasContent["filas"][number];
 
 /**
- * Tabla de medidas de un nodo de tienda (/tipo, /instrumento). Si las filas traen
- * `patron`, se cuenta en el catálogo REAL cuántos modelos hay de esa medida y se
- * enlazan (búsqueda del sitio); sin modelos, la fila manda a cotización. Contenido
- * único frente a la competencia (medida → modelos en existencia) y citable por IA.
+ * Tabla de medidas de un nodo de tienda (/tipo, /instrumento, /categoria). Cada fila
+ * puede enlazar a los modelos del catálogo REAL de esa medida, y el número que
+ * muestra es SIEMPRE el mismo que verá el usuario al dar clic:
+ * - `iso`: cuenta con la familia ISO y enlaza a /iso/<código> (insertos).
+ * - `buscar`: cuenta con la misma búsqueda del sitio que abre el enlace.
+ * - `patron` (regex sobre el título): solo control en desarrollo; si la búsqueda trae
+ *   algo distinto a lo que dice la fila (p. ej. "6mm" también encuentra "16mm"), se
+ *   avisa en consola para corregir la fila antes de publicar.
+ * Sin modelos, la fila manda a cotización ("Sobre pedido").
  */
 export function MedidasTabla({ medidas, productos }: { medidas: MedidasContent; productos: Product[] }) {
-  const conConteo = medidas.filas.some((f) => f.patron);
-  const conteo = (patron?: string) => {
-    if (!patron) return 0;
-    const re = new RegExp(patron, "i");
-    return productos.filter((p) => re.test(p.title)).length;
+  const conConteo = medidas.filas.some((f) => f.patron || f.buscar || f.iso);
+
+  const destino = (f: Fila): { n: number; href: string } | null => {
+    if (f.iso) {
+      return {
+        n: productos.filter((p) => isoFamilyMatch(p.iso, f.iso!)).length,
+        href: `/iso/${f.iso.toLowerCase()}`,
+      };
+    }
+    if (f.buscar) {
+      const n = searchProductsLocal(productos, f.buscar, { frase: f.frase }).length;
+      if (process.env.NODE_ENV !== "production" && f.patron) {
+        const re = new RegExp(f.patron, "i");
+        const porTitulo = productos.filter((p) => re.test(p.title)).length;
+        if (porTitulo !== n) {
+          console.warn(
+            `[MedidasTabla] "${medidas.titulo}" · ${f.celdas[0]}: la búsqueda "${f.buscar}" trae ${n} y el título dice ${porTitulo}`,
+          );
+        }
+      }
+      return { n, href: `/buscar?q=${encodeURIComponent(f.buscar)}${f.frase ? "&frase=1" : ""}` };
+    }
+    return null;
   };
 
   return (
@@ -39,7 +65,7 @@ export function MedidasTabla({ medidas, productos }: { medidas: MedidasContent; 
             </thead>
             <tbody className="divide-y divide-hc-metal-light">
               {medidas.filas.map((f) => {
-                const n = conteo(f.patron);
+                const d = destino(f);
                 return (
                   <tr key={f.celdas[0]}>
                     {f.celdas.map((c, i) => (
@@ -52,12 +78,12 @@ export function MedidasTabla({ medidas, productos }: { medidas: MedidasContent; 
                     ))}
                     {conConteo && (
                       <td className="whitespace-nowrap px-4 py-2">
-                        {n > 0 && f.buscar ? (
+                        {d && d.n > 0 ? (
                           <Link
-                            href={`/buscar?q=${encodeURIComponent(f.buscar)}`}
+                            href={d.href}
                             className="font-medium text-hc-blue hover:text-hc-steel hover:underline"
                           >
-                            {n} {n === 1 ? "modelo" : "modelos"} →
+                            {d.n} {d.n === 1 ? "modelo" : "modelos"} →
                           </Link>
                         ) : (
                           <Link href="/cotizacion" className="text-hc-gunmetal hover:text-hc-blue hover:underline">

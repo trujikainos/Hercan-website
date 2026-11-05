@@ -28,7 +28,9 @@ export default async function BuscarPage({
   const [all, categories] = await Promise.all([getProducts(), getCategories()]);
   // Búsqueda de texto → subconjunto; buildCatalog aplica facetas + paginación
   // sobre ese subconjunto (los resultados de búsqueda se pueden filtrar).
-  const matched = hasQuery ? searchProductsLocal(all, q) : [];
+  // `frase=1`: coincidencia exacta en el título (enlaces de las tablas de medidas).
+  const frase = sp.frase === "1";
+  const matched = hasQuery ? searchProductsLocal(all, q, { frase }) : [];
   const result = buildCatalog({ products: matched, categories, searchParams: sp });
 
   return (

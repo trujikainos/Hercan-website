@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { CatalogSection } from "@/components/catalog-section";
 import { TaxonomyHero, SiblingStrip } from "@/components/taxonomy";
 import { JsonLd } from "@/components/json-ld";
-import { pageGraph, brandNode, collectionNode, breadcrumbNode } from "@/lib/schema";
+import { pageGraph, brandNode, collectionNode, breadcrumbNode, faqNode } from "@/lib/schema";
 import { buildCatalog, brandSlug } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
 import { site } from "@/lib/site";
-import { BRAND_CONTENT } from "@/lib/taxonomy-content";
+import { BRAND_CONTENT, BRAND_FAQS } from "@/lib/taxonomy-content";
+import { FaqAccordion } from "@/components/faq-accordion";
+import { MezclaTipos } from "@/components/mezcla-tipos";
 
 // Slugs prerenderizados desde site.brands (fuente de verdad de las marcas).
 export function generateStaticParams() {
@@ -58,6 +60,10 @@ export default async function BrandPage({
   });
   const basePath = `/marca/${slug}`;
 
+  // Mezcla por tipo (productos de la marca SIN las facetas del usuario) y FAQ.
+  const deLaMarca = all.filter((p) => p.brand === content.name);
+  const faqs = BRAND_FAQS[slug] ?? [];
+
   const siblings = site.brands
     .filter((b) => brandSlug(b.name) !== slug)
     .map((b) => ({ name: b.name, href: `/marca/${brandSlug(b.name)}` }));
@@ -73,6 +79,7 @@ export default async function BrandPage({
             { name: "Marcas", path: "/marcas" },
             { name: content.name },
           ]),
+          ...(faqs.length ? [faqNode(faqs)] : []),
         )}
       />
       <main id="contenido" className="flex-1">
@@ -86,6 +93,22 @@ export default async function BrandPage({
           intro={content.intro}
         />
         <CatalogSection result={result} basePath={basePath} hiddenFacets={["marca"]} />
+        <MezclaTipos
+          productos={deLaMarca}
+          titulo={`Qué hay de ${content.name === "YG" ? "YG-1" : content.name} en HERCAN`}
+          intro="Cuántos modelos hay de cada tipo de herramienta de esta marca, con el catálogo de hoy. Cada tipo abre su página ya filtrada por la marca."
+          filtro={{ param: "marca", valor: content.name }}
+        />
+        {faqs.length > 0 && (
+          <section className="border-t border-hc-metal-light bg-hc-soft/30">
+            <div className="reveal mx-auto max-w-3xl px-4 py-12">
+              <h2 className="mb-4 font-heading text-[length:var(--step-h2)] text-hc-navy">
+                Preguntas frecuentes sobre {content.name === "YG" ? "YG-1" : content.name}
+              </h2>
+              <FaqAccordion faqs={faqs} />
+            </div>
+          </section>
+        )}
         <SiblingStrip
           heading="Otras marcas que distribuimos"
           items={siblings}

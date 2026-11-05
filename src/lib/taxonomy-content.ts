@@ -42,6 +42,8 @@ export type CategoryContent = {
   metaDescription: string;
   intro: string[];
   bullets?: { heading: string; items: string[] }[];
+  /** Tabla comercial (se pinta con <MedidasTabla>). */
+  medidas?: MedidasContent;
 };
 
 export type TipoContent = {
@@ -72,7 +74,9 @@ export type MedidasContent = {
   titulo: string;
   intro: string;
   columnas: string[];
-  filas: { celdas: string[]; patron?: string; buscar?: string }[];
+  /** `iso`: familia ISO 1832 (CNMG…): cuenta y enlaza como la página /iso/<código>.
+   * `frase`: `buscar` se usa como frase exacta en el título (/buscar?…&frase=1). */
+  filas: { celdas: string[]; patron?: string; buscar?: string; iso?: string; frase?: boolean }[];
   pie?: { href: string; texto: string };
 };
 
@@ -135,8 +139,8 @@ export type ParaContent = {
 export const BRAND_CONTENT: Record<string, BrandContent> = {
   iscar: {
     name: "Iscar",
-    title: "Herramientas Iscar",
-    metaTitle: "Herramientas Iscar en México | HERCAN",
+    title: "Herramientas Iscar en México",
+    metaTitle: "Iscar México: distribuidor de insertos y fresas | HERCAN",
     metaDescription:
       "Distribución de herramientas de corte Iscar en México: insertos, fresas y portaherramientas para torneado, fresado y perforación. Cotización B2B en HERCAN.",
     intro: [
@@ -146,8 +150,8 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   },
   toolmex: {
     name: "Toolmex",
-    title: "Herramientas Toolmex",
-    metaTitle: "Herramientas Toolmex en México | HERCAN",
+    title: "Herramientas Toolmex en México",
+    metaTitle: "Toolmex México: distribuidor de brocas y machuelos | HERCAN",
     metaDescription:
       "Herramental industrial Toolmex en HERCAN: herramienta de corte HSS y de carburo para torno, fresado y taladrado. Amplio catálogo con cotización B2B en México.",
     intro: [
@@ -157,8 +161,8 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   },
   yg: {
     name: "YG",
-    title: "Herramientas YG-1",
-    metaTitle: "Herramientas YG-1 en México | HERCAN",
+    title: "Herramientas YG-1 en México",
+    metaTitle: "YG-1 México: distribuidor de fresas, brocas y machuelos | HERCAN",
     metaDescription:
       "Fresas, brocas y machuelos de carburo y HSS de YG-1 en HERCAN. Herramienta de corte de alto rendimiento con cotización B2B en México.",
     intro: [
@@ -168,8 +172,8 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   },
   palbit: {
     name: "Palbit",
-    title: "Herramientas Palbit",
-    metaTitle: "Herramientas Palbit en México | HERCAN",
+    title: "Herramientas Palbit en México",
+    metaTitle: "Palbit México: distribuidor de insertos de carburo | HERCAN",
     metaDescription:
       "Insertos y herramienta de corte de metal duro (carburo) Palbit en HERCAN. Distribución B2B para maquinado en México.",
     intro: [
@@ -216,8 +220,8 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   },
   insize: {
     name: "Insize",
-    title: "Instrumentos Insize",
-    metaTitle: "Instrumentos de medición Insize en México | HERCAN",
+    title: "Instrumentos Insize en México",
+    metaTitle: "Insize México: distribuidor de instrumentos de medición | HERCAN",
     metaDescription:
       "Instrumentos de medición Insize en HERCAN: calibradores, micrómetros e indicadores para control dimensional. Cotización B2B en México.",
     intro: [
@@ -227,8 +231,8 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   },
   mitutoyo: {
     name: "Mitutoyo",
-    title: "Instrumentos Mitutoyo",
-    metaTitle: "Instrumentos de medición Mitutoyo en México | HERCAN",
+    title: "Instrumentos Mitutoyo en México",
+    metaTitle: "Mitutoyo México: distribuidor de instrumentos de medición | HERCAN",
     metaDescription:
       "Equipos de medición de precisión Mitutoyo en HERCAN: calibradores, micrómetros e indicadores de carátula. Cotización B2B en México.",
     intro: [
@@ -236,6 +240,108 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       "En HERCAN distribuimos equipos de medición Mitutoyo para control dimensional en taller y laboratorio, con atención B2B en México.",
     ],
   },
+};
+
+// ── FAQ DE MARCAS ─────────────────────────────────────────────────────────────
+// Para "[marca] México" y "distribuidor [marca]" (plan SEO, nov 2026): esas búsquedas
+// las gana el sitio del fabricante y, del 4 al 8, distribuidores. Solo datos ya
+// publicados en el sitio (origen de la marca, operación y envíos de HERCAN); el qué
+// maneja cada marca sale del catálogo y se ve con números en la tabla por tipo.
+export const BRAND_FAQS: Record<string, Faq[]> = {
+  iscar: [
+    {
+      question: "¿Dónde comprar herramientas Iscar en México?",
+      answer:
+        "En HERCAN, distribuidor B2B y B2C con operación en Monterrey y Saltillo y envíos a todo México. En esta página ves los modelos Iscar con precio y existencia; lo que no esté en stock se cotiza.",
+    },
+    {
+      question: "¿De dónde es Iscar?",
+      answer:
+        "Iscar es un fabricante israelí de herramientas de corte de metal y forma parte del grupo IMC (International Metalworking Companies).",
+    },
+    {
+      question: "¿Qué herramientas Iscar maneja HERCAN?",
+      answer:
+        "Sobre todo insertos de torneado, fresado, roscado y ranurado, además de portaherramientas, cortadores, brocas y barras de mandrinar. En esta página está la tabla con cuántos modelos hay de cada tipo.",
+    },
+  ],
+  toolmex: [
+    {
+      question: "¿Dónde comprar herramientas Toolmex en México?",
+      answer:
+        "En HERCAN, distribuidor B2B y B2C con operación en Monterrey y Saltillo y envíos a todo México. En esta página ves los modelos Toolmex con precio y existencia; lo que no esté en stock se cotiza.",
+    },
+    {
+      question: "¿Qué herramientas Toolmex maneja HERCAN?",
+      answer:
+        "Sobre todo brocas y machuelos, además de portaherramientas, cortadores, fresas, escariadores y limas rotativas de carburo, en acero rápido (HSS) y carburo. En esta página está la tabla con cuántos modelos hay de cada tipo.",
+    },
+  ],
+  yg: [
+    {
+      question: "¿Dónde comprar herramientas YG-1 en México?",
+      answer:
+        "En HERCAN, distribuidor B2B y B2C con operación en Monterrey y Saltillo y envíos a todo México. En esta página ves los modelos YG-1 con precio y existencia; lo que no esté en stock se cotiza.",
+    },
+    {
+      question: "¿De dónde es YG-1?",
+      answer:
+        "YG-1 es un fabricante surcoreano de herramientas de corte, reconocido por sus fresas integrales (endmills), brocas y machuelos de carburo y acero rápido (HSS).",
+    },
+    {
+      question: "¿Qué herramientas YG-1 maneja HERCAN?",
+      answer:
+        "Sobre todo fresas integrales (endmills), brocas y machuelos, además de insertos y escariadores. En esta página está la tabla con cuántos modelos hay de cada tipo.",
+    },
+  ],
+  palbit: [
+    {
+      question: "¿Dónde comprar herramientas Palbit en México?",
+      answer:
+        "En HERCAN, distribuidor B2B y B2C con operación en Monterrey y Saltillo y envíos a todo México. En esta página ves los modelos Palbit con precio y existencia; lo que no esté en stock se cotiza.",
+    },
+    {
+      question: "¿De dónde es Palbit?",
+      answer:
+        "Palbit es un fabricante portugués de metal duro (carburo), con insertos intercambiables y herramienta de corte para torneado, fresado y perforación.",
+    },
+    {
+      question: "¿Qué herramientas Palbit maneja HERCAN?",
+      answer:
+        "Sobre todo insertos de carburo para torneado y fresado, además de cortadores y brocas. En esta página está la tabla con cuántos modelos hay de cada tipo.",
+    },
+  ],
+  // "¿Quiénes son los distribuidores de INSIZE en México?" y "¿Cuánto cuesta el
+  // calibrador Insize?" son preguntas que Google muestra para "insize mexico".
+  insize: [
+    {
+      question: "¿Quiénes son los distribuidores de Insize en México?",
+      answer:
+        "HERCAN es uno de ellos: distribuye instrumentos de medición Insize, como calibradores, micrómetros e indicadores, con operación en Monterrey y Saltillo y envíos a todo México.",
+    },
+    {
+      question: "¿Cuánto cuesta un calibrador Insize?",
+      answer:
+        "Depende del rango y del tipo de lectura. En esta página ves el precio y la existencia de cada instrumento Insize; si buscas otro modelo, se cotiza sobre pedido.",
+    },
+  ],
+  mitutoyo: [
+    {
+      question: "¿Dónde comprar Mitutoyo en México?",
+      answer:
+        "En HERCAN, distribuidor B2B y B2C de equipos de medición con operación en Monterrey y Saltillo y envíos a todo México. En esta página ves los instrumentos Mitutoyo en existencia, con precio.",
+    },
+    {
+      question: "¿De dónde es Mitutoyo?",
+      answer:
+        "Mitutoyo es un fabricante japonés de instrumentos de metrología y medición de precisión, como calibradores vernier, micrómetros e indicadores de carátula.",
+    },
+    {
+      question: "¿Consiguen vernier y micrómetros Mitutoyo?",
+      answer:
+        "Sí. Lo que está en existencia aparece en esta página; si buscas un modelo Mitutoyo que no ves, como un vernier o un micrómetro, se cotiza sobre pedido.",
+    },
+  ],
 };
 
 // ── CATEGORÍAS ────────────────────────────────────────────────────────────────
@@ -246,10 +352,11 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
 export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
   fresado: {
     name: "Fresado",
-    title: "Fresado",
-    metaTitle: "Fresado: fresas, insertos y cabezales | HERCAN",
+    // Término comercial ("herramientas para fresadora"), no el informativo ("fresado").
+    title: "Herramientas para fresadora",
+    metaTitle: "Herramientas para fresadora: fresas, cortadores e insertos | HERCAN",
     metaDescription:
-      "Herramienta de fresado en HERCAN: fresas integrales, cortadores con insertos y cabezales de careado para CNC. Filtra por marca, material y recubrimiento.",
+      "Herramientas para fresadora en HERCAN: fresas integrales (endmills), cortadores con insertos, insertos de fresado y cabezales de careado para fresadora convencional y CNC. Filtra por marca, material y recubrimiento.",
     intro: [
       "El fresado es una operación de arranque de viruta en la que una herramienta rotativa de varios filos (la fresa) remueve material de una pieza que suele permanecer fija. Es una de las operaciones más versátiles del maquinado CNC.",
       "Comprende fresas integrales (endmills), cortadores con insertos intercambiables y cabezales de careado, y se emplea para planeado, ranurado, contorneado y cajeado, entre otras operaciones.",
@@ -272,10 +379,11 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
   },
   torneado: {
     name: "Torneado",
-    title: "Torneado",
-    metaTitle: "Torneado: insertos, portaherramientas y barras | HERCAN",
+    // Término comercial ("herramientas para torno"); "torneado" lo ganan Wikipedia y Sandvik.
+    title: "Herramientas para torno",
+    metaTitle: "Herramientas para torno: insertos, buriles y portaherramientas | HERCAN",
     metaDescription:
-      "Herramienta de torneado en HERCAN: insertos intercambiables, portaherramientas y barras de mandrinar para torno CNC. Filtra por marca y material.",
+      "Herramientas para torno en HERCAN: insertos de carburo, buriles, portaherramientas y barras de mandrinar para torno convencional y CNC. Filtra por marca y material; cotización B2B y B2C.",
     intro: [
       "El torneado es una operación en la que la pieza gira sobre su eje mientras una herramienta de un solo filo remueve material, normalmente en un torno. Permite generar superficies cilíndricas y cónicas con buena precisión.",
       "Se realiza con insertos intercambiables montados en portaherramientas y con barras de mandrinar para operaciones en el interior de la pieza.",
@@ -319,10 +427,10 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
   },
   roscado: {
     name: "Roscado",
-    title: "Roscado",
-    metaTitle: "Roscado: machuelos, fresas e insertos de rosca | HERCAN",
+    title: "Herramientas para roscar",
+    metaTitle: "Herramientas para roscar: machuelos, tarrajas y fresas | HERCAN",
     metaDescription:
-      "Herramienta de roscado en HERCAN: machuelos, fresas de roscar e insertos de roscado para roscas internas y externas. Filtra por marca y material.",
+      "Herramientas para roscar en HERCAN: machuelos, tarrajas (dados de roscar), fresas de roscar e insertos de roscado para roscas internas y externas, métricas y en pulgada. Filtra por marca y material.",
     intro: [
       "El roscado es la generación de roscas internas o externas sobre una pieza. Por arranque de viruta se realiza con machuelos, fresas de roscar e insertos de roscado; también existe el roscado por conformado.",
       "La herramienta se elige según el tipo de rosca, el material a maquinar y si la rosca es interior o exterior.",
@@ -330,7 +438,7 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     bullets: [
       {
         heading: "Herramientas típicas",
-        items: ["Machuelos", "Fresas de roscar", "Insertos de roscado", "Dados"],
+        items: ["Machuelos", "Tarrajas (dados de roscar)", "Fresas de roscar", "Insertos de roscado"],
       },
       {
         heading: "Aplicaciones",
@@ -365,7 +473,9 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
   },
   portaherramientas: {
     name: "Portaherramientas",
-    title: "Portaherramientas",
+    // "para CNC" en el H1: "portaherramientas" a secas también es el cinturón o la
+    // bolsa de herramientas (Home Depot, Klein en el top 6, nov 2026).
+    title: "Portaherramientas para CNC",
     metaTitle: "Portaherramientas para CNC: conos, boquillas y mandriles | HERCAN",
     metaDescription:
       "Portaherramientas para CNC en HERCAN: conos (BT, HSK, CAT), boquillas, mandriles y extensiones para sujetar herramienta de corte. Cotización B2B.",
@@ -386,25 +496,49 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
   },
   abrasivos: {
     name: "Abrasivos",
-    title: "Abrasivos",
-    metaTitle: "Abrasivos: discos de corte, muelas y puntas montadas | HERCAN",
+    // Lo que hay en esta categoría (nov 2026) son 41 limas rotativas de carburo, no
+    // discos ni muelas: la página se titula por lo que vende. "lima rotativa" 1,000/mes,
+    // "limas rotativas" 390, "limas rotativas para metal" 170 (México).
+    title: "Limas rotativas de carburo",
+    metaTitle: "Limas rotativas de carburo para metal | HERCAN",
     metaDescription:
-      "Abrasivos en HERCAN: muelas de rectificado, discos de corte y desbaste, puntas montadas y bandas para acabado de superficies. Cotización B2B.",
+      "Limas rotativas (fresas rotativas) de carburo de tungsteno en HERCAN: cabezas cilíndrica, esférica, de árbol, flama y cónica, de 1/8\" a 5/8\", para desbarbar y dar forma a metal. Cotización B2B y B2C.",
     intro: [
-      "Los abrasivos son herramientas que remueven material por abrasión, mediante granos de corte unidos en muelas, discos, bandas o puntas montadas. Se usan en rectificado, desbaste, corte y acabado de superficies.",
-      "La elección del abrasivo depende del material a trabajar, el acabado buscado y el tipo de máquina.",
+      "Una lima rotativa (también llamada fresa rotativa) de carburo es una herramienta con cabeza de carburo de tungsteno que gira a alta velocidad, montada en un esmeril recto o rectificador, para desbarbar, rebajar, dar forma y ajustar agujeros en metal.",
+      "La forma de la cabeza se identifica con un código de dos letras (SB, SC, SD…): cilíndrica, esférica, ovalada, de árbol, de flama o cónica. En HERCAN hay limas rotativas de 1/8\" a 5/8\" de diámetro de cabeza.",
     ],
     bullets: [
       {
-        heading: "Tipos comunes",
-        items: [
-          "Muelas de rectificado",
-          "Discos de corte y desbaste",
-          "Puntas montadas",
-          "Lijas y bandas",
-        ],
+        heading: "Formas más comunes",
+        items: ["Cilíndrica (SB, SC)", "Esférica (SD)", "Árbol (SF, SG)", "Flama (SH)", "Cónica (SL, SM)"],
+      },
+      {
+        heading: "Usos",
+        items: ["Desbarbado", "Rebaje y forma", "Ajuste de agujeros"],
       },
     ],
+    // Códigos de forma de la nomenclatura estándar de limas rotativas (SA a SN).
+    medidas: {
+      titulo: "Formas de lima rotativa por código",
+      intro:
+        "Cada forma de cabeza tiene su código de dos letras; el número que sigue (SB-1, SB-3…) es la medida. Estas son las formas que hay en el catálogo y cuántos modelos de cada una.",
+      columnas: ["Código", "Forma de la cabeza"],
+      filas: [
+        { celdas: ["SB", "Cilíndrica con corte en la punta"], patron: "Rotativa.*\\bSB-\\d", buscar: "rotativa sb-" },
+        { celdas: ["SC", "Cilíndrica con punta redonda"], patron: "Rotativa.*\\bSC-\\d", buscar: "rotativa sc-" },
+        { celdas: ["SD", "Esférica (bola)"], patron: "Rotativa.*\\bSD-\\d", buscar: "rotativa sd-" },
+        { celdas: ["SE", "Ovalada"], patron: "Rotativa.*\\bSE-\\d", buscar: "rotativa se-" },
+        { celdas: ["SF", "Árbol con punta redonda"], patron: "Rotativa.*\\bSF-\\d", buscar: "rotativa sf-" },
+        { celdas: ["SG", "Árbol con punta aguda"], patron: "Rotativa.*\\bSG-\\d", buscar: "rotativa sg-" },
+        { celdas: ["SH", "Flama"], patron: "Rotativa.*\\bSH-\\d", buscar: "rotativa sh-" },
+        { celdas: ["SL", "Cónica con punta redonda"], patron: "Rotativa.*\\bSL-\\d", buscar: "rotativa sl-" },
+        { celdas: ["SM", "Cónica con punta aguda"], patron: "Rotativa.*\\bSM-\\d", buscar: "rotativa sm-" },
+      ],
+      pie: {
+        href: "/blog/carburo-de-tungsteno-que-es",
+        texto: "Qué es el carburo de tungsteno y por qué corta metal",
+      },
+    },
   },
   medicion: {
     name: "Medición",
@@ -427,6 +561,22 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
         ],
       },
     ],
+    // Resoluciones y usos de las guías verificadas (vernier, micrómetro, indicador).
+    medidas: {
+      titulo: "Qué instrumento de medición usar",
+      intro:
+        "Los tres instrumentos básicos del taller, cuánto resuelven y para qué se usa cada uno. Para tolerancias finas, micrómetro; para trabajo general, vernier; para comparar contra una referencia, indicador.",
+      columnas: ["Instrumento", "Resolución típica", "Qué mide", "Cuándo usarlo"],
+      filas: [
+        { celdas: ["Vernier (calibrador pie de rey)", "0.01 a 0.02 mm", "Exterior, interior, profundidad y escalón; rangos de 0-150 a 0-300 mm", "Trabajo general del taller"] },
+        { celdas: ["Micrómetro", "0.01 mm; 0.001 mm en modelos de precisión", "Exteriores por tramos de 25 mm; también hay de interiores y de profundidad", "Tolerancias finas"] },
+        { celdas: ["Indicador de carátula", "0.01 mm; 0.001 mm en modelos finos", "Diferencias contra una referencia: concentricidad, planitud y paralelismo", "Reglaje de máquinas y centrado de piezas"] },
+      ],
+      pie: {
+        href: "/blog/como-usar-un-micrometro",
+        texto: "Micrómetro o vernier: cuándo conviene cada uno",
+      },
+    },
   },
   accesorios: {
     name: "Accesorios",
@@ -467,11 +617,34 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
         items: ["CNMG", "TNMG", "DNMG", "WNMG", "CCMT / DCMT"],
       },
     ],
+    // Formas y usos: tabla verificada de la guía de insertos (ISO 1832).
+    medidas: {
+      titulo: "Códigos de inserto más usados",
+      intro:
+        "Las designaciones ISO que más se piden, qué forma tienen y para qué se usan, con cuántos modelos hay de cada una en el catálogo. La primera letra es la forma del inserto y la segunda, su ángulo de incidencia.",
+      columnas: ["Código ISO", "Forma", "Uso típico"],
+      filas: [
+        { celdas: ["CNMG", "Rombo 80°, negativo", "Torneado general, desbaste y semiacabado"], iso: "CNMG" },
+        { celdas: ["DNMG", "Rombo 55°, negativo", "Perfilado y copiado en espacios reducidos"], iso: "DNMG" },
+        { celdas: ["TNMG", "Triángulo 60°, negativo", "Torneado general y refrentado"], iso: "TNMG" },
+        { celdas: ["WNMG", "Trigón 80°, negativo", "Torneado con más filos utilizables por cara"], iso: "WNMG" },
+        { celdas: ["SNMG", "Cuadrado 90°, negativo", "Torneado a 90°, refrentado y ranurado ligero"], iso: "SNMG" },
+        { celdas: ["VNMG", "Rombo 35°, negativo", "Copiado y perfiles con ángulos cerrados"], iso: "VNMG" },
+        { celdas: ["CCMT", "Rombo 80°, positivo", "Acabado fino en inoxidables y piezas delgadas"], iso: "CCMT" },
+        { celdas: ["DCMT", "Rombo 55°, positivo", "Acabado en espacios reducidos"], iso: "DCMT" },
+        { celdas: ["APMT", "Positivo para fresado", "Fresado de careado y hombros"], iso: "APMT" },
+      ],
+      pie: {
+        href: "/blog/insertos-de-carburo-guia",
+        texto: "Cómo leer el código ISO completo de un inserto (las 7 posiciones)",
+      },
+    },
   },
   "fresa-endmill": {
     name: "Fresa/Endmill",
-    title: "Fresas de carburo (endmills)",
-    metaTitle: "Fresas de carburo y HSS (endmills) para CNC | HERCAN",
+    // "para metal": "fresas de carburo" a secas la ganan tiendas dentales (nov 2026).
+    title: "Fresas de carburo para metal (endmills)",
+    metaTitle: "Fresas endmill de carburo y HSS para metal y CNC | HERCAN",
     metaDescription:
       "Fresas integrales o endmills en HERCAN: de carburo y HSS para ranurado, contorneado y refrentado en CNC, para acero, inoxidable y aluminio. Filtra por marca, material y recubrimiento.",
     intro: [
@@ -488,6 +661,23 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
         items: ["Acero (ISO P)", "Acero inoxidable (ISO M)", "Aluminio y no ferrosos (ISO N)"],
       },
     ],
+    // Geometrías: tabla verificada de la guía de fresas de carburo.
+    medidas: {
+      titulo: "Tipos de fresa por la forma de la punta",
+      intro:
+        "La forma de la punta define qué superficie deja la fresa. Estas son las geometrías de uso común y cuántos modelos hay de cada una en el catálogo.",
+      columnas: ["Geometría", "También se llama", "Para qué se usa"],
+      filas: [
+        { celdas: ["Plana", "Testa plana, escuadra (square end)", "Escuadrado a 90°, ranurado y cajeado de paredes rectas"], patron: "Endmill.*\\bplano\\b", buscar: "endmill plano" },
+        { celdas: ["Bola", "Punta esférica (ball nose)", "Superficies 3D, moldes, matrices y contornos suaves"], patron: "Endmill.*\\bbola\\b", buscar: "endmill bola" },
+        { celdas: ["Radio o toroidal", "Bull nose", "Desbaste robusto y acabado con menos marca de herramienta"], patron: "Endmill.*toroidal", buscar: "endmill toroidal" },
+        { celdas: ["Chaflán", "Achaflanadora", "Biseles, desbarbado y romper aristas vivas"], patron: "Endmill.*chafl[aá]n", buscar: "endmill chaflan" },
+      ],
+      pie: {
+        href: "/blog/fresas-de-carburo-guia",
+        texto: "Guía: cuántas flautas y qué recubrimiento usar según el material",
+      },
+    },
   },
   broca: {
     name: "Broca",
@@ -517,16 +707,16 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
         "Las brocas fraccionales más pedidas con su medida exacta en milímetros (1 pulgada = 25.4 mm) y cuántos modelos hay de cada una en el catálogo.",
       columnas: ["Broca (pulgadas)", "Milímetros", "Pulgadas en decimal"],
       filas: [
-        { celdas: ['1/16"', "1.59 mm", '0.0625"'], patron: '^Broca\\s+1/16"', buscar: 'broca 1/16"' },
-        { celdas: ['1/8"', "3.18 mm", '0.125"'], patron: '^Broca\\s+1/8"', buscar: 'broca 1/8"' },
-        { celdas: ['5/32"', "3.97 mm", '0.1563"'], patron: '^Broca\\s+5/32"', buscar: 'broca 5/32"' },
-        { celdas: ['3/16"', "4.76 mm", '0.1875"'], patron: '^Broca\\s+3/16"', buscar: 'broca 3/16"' },
-        { celdas: ['7/32"', "5.56 mm", '0.2188"'], patron: '^Broca\\s+7/32"', buscar: 'broca 7/32"' },
-        { celdas: ['1/4"', "6.35 mm", '0.25"'], patron: '^Broca\\s+1/4"', buscar: 'broca 1/4"' },
-        { celdas: ['5/16"', "7.94 mm", '0.3125"'], patron: '^Broca\\s+5/16"', buscar: 'broca 5/16"' },
-        { celdas: ['3/8"', "9.53 mm", '0.375"'], patron: '^Broca\\s+3/8"', buscar: 'broca 3/8"' },
-        { celdas: ['7/16"', "11.11 mm", '0.4375"'], patron: '^Broca\\s+7/16"', buscar: 'broca 7/16"' },
-        { celdas: ['1/2"', "12.70 mm", '0.5"'], patron: '^Broca\\s+1/2"', buscar: 'broca 1/2"' },
+        { celdas: ['1/16"', "1.59 mm", '0.0625"'], patron: '^Broca\\s+1/16"', buscar: 'broca 1/16"', frase: true },
+        { celdas: ['1/8"', "3.18 mm", '0.125"'], patron: '^Broca\\s+1/8"', buscar: 'broca 1/8"', frase: true },
+        { celdas: ['5/32"', "3.97 mm", '0.1563"'], patron: '^Broca\\s+5/32"', buscar: 'broca 5/32"', frase: true },
+        { celdas: ['3/16"', "4.76 mm", '0.1875"'], patron: '^Broca\\s+3/16"', buscar: 'broca 3/16"', frase: true },
+        { celdas: ['7/32"', "5.56 mm", '0.2188"'], patron: '^Broca\\s+7/32"', buscar: 'broca 7/32"', frase: true },
+        { celdas: ['1/4"', "6.35 mm", '0.25"'], patron: '^Broca\\s+1/4"', buscar: 'broca 1/4"', frase: true },
+        { celdas: ['5/16"', "7.94 mm", '0.3125"'], patron: '^Broca\\s+5/16"', buscar: 'broca 5/16"', frase: true },
+        { celdas: ['3/8"', "9.53 mm", '0.375"'], patron: '^Broca\\s+3/8"', buscar: 'broca 3/8"', frase: true },
+        { celdas: ['7/16"', "11.11 mm", '0.4375"'], patron: '^Broca\\s+7/16"', buscar: 'broca 7/16"', frase: true },
+        { celdas: ['1/2"', "12.70 mm", '0.5"'], patron: '^Broca\\s+1/2"', buscar: 'broca 1/2"', frase: true },
       ],
       pie: {
         href: "/blog/brocas-para-metal-guia",
@@ -562,17 +752,17 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
         "Las medidas más pedidas, con el diámetro de broca para el barreno previo y cuántos modelos hay de cada una en el catálogo.",
       columnas: ["Machuelo", "Broca para el barreno", "Uso típico"],
       filas: [
-        { celdas: ["M3 x 0.5", "2.5 mm", "Tapas, placas, electrónica"], patron: "^Machuelo\\s+M3\\s*x\\s*0?\\.5\\b", buscar: "machuelo M3x0.5" },
-        { celdas: ["M4 x 0.7", "3.3 mm", "Ensambles ligeros, moldes"], patron: "^Machuelo\\s+M4\\s*x\\s*0?\\.7\\b", buscar: "machuelo M4x0.7" },
-        { celdas: ["M5 x 0.8", "4.2 mm", "Uso general en taller"], patron: "^Machuelo\\s+M5\\s*x\\s*0?\\.8\\b", buscar: "machuelo M5x0.8" },
-        { celdas: ["M6 x 1.0", "5.0 mm", "Uso general, la medida más común"], patron: "^Machuelo\\s+M6\\s*x\\s*1(\\.0+)?\\b", buscar: "machuelo M6x1" },
-        { celdas: ["M8 x 1.25", "6.8 mm", "Estructuras, maquinaria"], patron: "^Machuelo\\s+M8\\s*x\\s*1\\.25\\b", buscar: "machuelo M8x1.25" },
-        { celdas: ["M10 x 1.5", "8.5 mm", "Maquinaria media, bridas"], patron: "^Machuelo\\s+M10\\s*x\\s*1\\.5\\b", buscar: "machuelo M10x1.5" },
-        { celdas: ["M12 x 1.75", "10.2 mm", "Maquinaria pesada"], patron: "^Machuelo\\s+M12\\s*x\\s*1\\.75\\b", buscar: "machuelo M12x1.75" },
-        { celdas: ['1/4"-20 UNC', "#7 (5.1 mm)", "Tornillería en pulgada"], patron: '^Machuelo\\s+1/4"?\\s*-\\s*20\\b', buscar: 'machuelo 1/4"-20' },
-        { celdas: ['5/16"-18 UNC', "F (6.5 mm)", "Tornillería en pulgada"], patron: '^Machuelo\\s+5/16"?\\s*-\\s*18\\b', buscar: 'machuelo 5/16"-18' },
-        { celdas: ['3/8"-16 UNC', '5/16" (7.9 mm)', "Tornillería en pulgada"], patron: '^Machuelo\\s+3/8"?\\s*-\\s*16\\b', buscar: 'machuelo 3/8"-16' },
-        { celdas: ['1/2"-13 UNC', '27/64" (10.7 mm)', "Tornillería en pulgada"], patron: '^Machuelo\\s+1/2"?\\s*-\\s*13\\b', buscar: 'machuelo 1/2"-13' },
+        { celdas: ["M3 x 0.5", "2.5 mm", "Tapas, placas, electrónica"], patron: "^Machuelo\\s+M3\\s*x\\s*0?\\.5\\b", buscar: "machuelo M3x0.5", frase: true },
+        { celdas: ["M4 x 0.7", "3.3 mm", "Ensambles ligeros, moldes"], patron: "^Machuelo\\s+M4\\s*x\\s*0?\\.7\\b", buscar: "machuelo M4x0.7", frase: true },
+        { celdas: ["M5 x 0.8", "4.2 mm", "Uso general en taller"], patron: "^Machuelo\\s+M5\\s*x\\s*0?\\.8\\b", buscar: "machuelo M5x0.8", frase: true },
+        { celdas: ["M6 x 1.0", "5.0 mm", "Uso general, la medida más común"], patron: "^Machuelo\\s+M6\\s*x\\s*1(\\.0+)?\\b", buscar: "machuelo M6x1", frase: true },
+        { celdas: ["M8 x 1.25", "6.8 mm", "Estructuras, maquinaria"], patron: "^Machuelo\\s+M8\\s*x\\s*1\\.25\\b", buscar: "machuelo M8x1.25", frase: true },
+        { celdas: ["M10 x 1.5", "8.5 mm", "Maquinaria media, bridas"], patron: "^Machuelo\\s+M10\\s*x\\s*1\\.5\\b", buscar: "machuelo M10x1.5", frase: true },
+        { celdas: ["M12 x 1.75", "10.2 mm", "Maquinaria pesada"], patron: "^Machuelo\\s+M12\\s*x\\s*1\\.75\\b", buscar: "machuelo M12x1.75", frase: true },
+        { celdas: ['1/4"-20 UNC', "#7 (5.1 mm)", "Tornillería en pulgada"], patron: '^Machuelo\\s+1/4"?\\s*-\\s*20\\b', buscar: 'machuelo 1/4"-20', frase: true },
+        { celdas: ['5/16"-18 UNC', "F (6.5 mm)", "Tornillería en pulgada"], patron: '^Machuelo\\s+5/16"?\\s*-\\s*18\\b', buscar: 'machuelo 5/16"-18', frase: true },
+        { celdas: ['3/8"-16 UNC', '5/16" (7.9 mm)', "Tornillería en pulgada"], patron: '^Machuelo\\s+3/8"?\\s*-\\s*16\\b', buscar: 'machuelo 3/8"-16', frase: true },
+        { celdas: ['1/2"-13 UNC', '27/64" (10.7 mm)', "Tornillería en pulgada"], patron: '^Machuelo\\s+1/2"?\\s*-\\s*13\\b', buscar: 'machuelo 1/2"-13', frase: true },
       ],
       pie: {
         href: "/blog/machuelos-para-roscar-guia",
@@ -599,13 +789,14 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
   },
   escariador: {
     name: "Escariador",
-    title: "Escariadores",
-    metaTitle: "Escariadores para acabado de agujeros | HERCAN",
+    // "para metal (rimas)": "escariador" a secas mezcla el dental y el de tubería (nov 2026).
+    title: "Escariadores para metal (rimas)",
+    metaTitle: "Escariadores (rimas) para metal: HSS, cobalto y carburo | HERCAN",
     metaDescription:
-      "Escariadores (rimas) en HERCAN: herramienta rotativa de acabado que calibra y afina agujeros taladrados a tolerancia estrecha. En HSS y metal duro. Cotización B2B.",
+      "Escariadores (rimas) para metal en HERCAN: de acero rápido (HSS), cobalto y carburo, en medidas métricas y en pulgada, para calibrar y afinar agujeros a tolerancia estrecha. Cotización B2B y B2C.",
     intro: [
       "Un escariador (rima) es una herramienta rotativa de acabado que calibra y afina un agujero ya taladrado, mejorando su tolerancia dimensional y su acabado superficial. Remueve una pequeña cantidad de material con varios filos.",
-      "Se emplea cuando el agujero requiere un ajuste preciso, por ejemplo para alojar pasadores o bujes. Existen escariadores de acero rápido (HSS) y de metal duro.",
+      "Se emplea cuando el agujero requiere un ajuste preciso, por ejemplo para alojar pasadores o bujes. Existen escariadores de acero rápido (HSS), cobalto y metal duro.",
     ],
     bullets: [
       {
@@ -613,6 +804,28 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
         items: ["Calibrado de agujeros", "Acabado de precisión"],
       },
     ],
+    // Equivalencias exactas (1 pulgada = 25.4 mm); conteo = resultados de /buscar.
+    medidas: {
+      titulo: "Medidas de escariador",
+      intro:
+        "Las medidas más pedidas, su equivalencia exacta y cuántos modelos hay de cada una en el catálogo (1 pulgada = 25.4 mm).",
+      columnas: ["Escariador", "Equivalencia"],
+      filas: [
+        { celdas: ['1/8"', "3.18 mm"], patron: '^Escariador\\s+1/8"', buscar: 'escariador 1/8"', frase: true },
+        { celdas: ['3/16"', "4.76 mm"], patron: '^Escariador\\s+3/16"', buscar: 'escariador 3/16"', frase: true },
+        { celdas: ['1/4"', "6.35 mm"], patron: '^Escariador\\s+1/4"', buscar: 'escariador 1/4"', frase: true },
+        { celdas: ['5/16"', "7.94 mm"], patron: '^Escariador\\s+5/16"', buscar: 'escariador 5/16"', frase: true },
+        { celdas: ['3/8"', "9.53 mm"], patron: '^Escariador\\s+3/8"', buscar: 'escariador 3/8"', frase: true },
+        { celdas: ['1/2"', "12.70 mm"], patron: '^Escariador\\s+1/2"', buscar: 'escariador 1/2"', frase: true },
+        { celdas: ['5/8"', "15.88 mm"], patron: '^Escariador\\s+5/8"', buscar: 'escariador 5/8"', frase: true },
+        { celdas: ['3/4"', "19.05 mm"], patron: '^Escariador\\s+3/4"', buscar: 'escariador 3/4"', frase: true },
+        { celdas: ["6 mm", '0.236"'], patron: "^Escariador\\s+6\\s*mm", buscar: "escariador 6mm", frase: true },
+        { celdas: ["8 mm", '0.315"'], patron: "^Escariador\\s+8\\s*mm", buscar: "escariador 8mm", frase: true },
+        { celdas: ["10 mm", '0.394"'], patron: "^Escariador\\s+10\\s*mm", buscar: "escariador 10mm", frase: true },
+        { celdas: ["12 mm", '0.472"'], patron: "^Escariador\\s+12\\s*mm", buscar: "escariador 12mm", frase: true },
+        { celdas: ["16 mm", '0.630"'], patron: "^Escariador\\s+16\\s*mm", buscar: "escariador 16mm", frase: true },
+      ],
+    },
   },
   "barra-mandrinar": {
     name: "Barra mandrinar",
@@ -652,23 +865,44 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
     name: "Buril",
     familia: "Buril",
     title: "Buriles para torno",
-    metaTitle: "Buriles para torno: HSS y de forma | HERCAN",
+    metaTitle: "Buriles para torno: HSS, cobalto y calzados con carburo | HERCAN",
     metaDescription:
-      "Buriles para torno en HERCAN: buriles cuadrados y de forma en HSS para cilindrar, refrentar, ranurar y roscar. Por pieza; cotización B2B y B2C en México.",
+      "Buriles para torno en HERCAN: cuadrados de HSS y cobalto y calzados con punta de carburo, de 1/4\" a 3/4\", para cilindrar, refrentar, ranurar y roscar. Por pieza; cotización B2B y B2C en México.",
     intro: [
       "Un buril es la herramienta de corte de un solo filo que se monta en la torreta del torno para cilindrar, refrentar, ranurar o roscar. Se afila según la operación y el material, y define en buena medida el acabado de la pieza.",
-      "Los hay integrales de acero rápido (HSS) —cuadrados o de forma— y con inserto de metal duro intercambiable. La sección del cuerpo (zanco) se elige por la altura de centros del torno.",
+      "Los hay de acero rápido (HSS) y HSS con cobalto, cuadrados o de forma; calzados, con punta de carburo soldada; y con inserto de carburo intercambiable. La sección del cuerpo (zanco) se elige por la altura de centros del torno.",
     ],
     bullets: [
       {
         heading: "Por tipo",
-        items: ["Buril cuadrado HSS", "Buril de forma", "Con inserto de carburo"],
+        items: ["Buril cuadrado HSS", "Buril de forma", "Calzado con carburo", "Con inserto de carburo"],
       },
       {
         heading: "Operaciones",
         items: ["Cilindrado", "Refrentado", "Ranurado", "Roscado"],
       },
     ],
+    // Tipos por operación: tabla verificada de la guía de buriles. Sin conteo: la
+    // búsqueda del sitio no distingue 1/2" de "2 1/2"" (largo del buril).
+    medidas: {
+      titulo: "Tipos de buril según la operación",
+      intro:
+        "Cada operación pide una forma y un ángulo distintos en la punta. Estos son los tipos de buril de uso común en el torno.",
+      columnas: ["Tipo de buril", "Operación", "Ángulo orientativo"],
+      filas: [
+        { celdas: ["Recto de desbaste", "Desbaste y cilindrado grueso", "Posición de unos 45° a 60°"] },
+        { celdas: ["Recto de acabado", "Acabado y cilindrado fino", "Posición de unos 90° a 95°"] },
+        { celdas: ["Refrentador", "Refrentado de caras", "Punta de unos 55° a 72°"] },
+        { celdas: ["Tronzador o ranurador", "Tronzado y ranurado", "Hoja de 1.5 a 6 mm de ancho"] },
+        { celdas: ["Roscador", "Roscado externo o interno", "60° métrica, 55° Whitworth"] },
+        { celdas: ["De mandrinar", "Mandrinado interior", "Posición de unos 90° a 95°"] },
+        { celdas: ["Redondo o de forma", "Copiado y perfiles cóncavos", "Radio según el perfil del plano"] },
+      ],
+      pie: {
+        href: "/blog/buriles-para-torno-guia",
+        texto: "Guía: geometría del buril, ángulos de corte y cómo afilarlo",
+      },
+    },
   },
   avellanador: {
     name: "Avellanador",
@@ -739,15 +973,15 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
         "Las medidas más pedidas, con el diámetro de la varilla antes de roscar y cuántos modelos hay de cada una en el catálogo. La varilla va igual o ligeramente menor al diámetro nominal, nunca mayor.",
       columnas: ["Tarraja", "Sistema de rosca", "Varilla antes de roscar"],
       filas: [
-        { celdas: ["M6 x 1.0", "Métrica, paso grueso", "5.88 a 5.94 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M6\\s*x\\s*1(\\.0+)?(?![.\\d])", buscar: "tarraja M6x1" },
-        { celdas: ["M8 x 1.25", "Métrica, paso grueso", "7.85 a 7.92 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M8\\s*x\\s*1\\.25", buscar: "tarraja M8 1.25" },
-        { celdas: ["M10 x 1.5", "Métrica, paso grueso", "9.80 a 9.90 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M10\\s*x\\s*1\\.5(?!\\d)", buscar: "tarraja M10x1.5" },
-        { celdas: ["M12 x 1.75", "Métrica, paso grueso", "11.80 a 11.90 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M12\\s*x\\s*1\\.75", buscar: "tarraja M12 1.75" },
-        { celdas: ["#10-24", "UNC (pulgada, paso grueso)", '#10 (0.190")'], patron: "TARRAJA\\s+#10-24", buscar: "tarraja #10-24" },
-        { celdas: ['1/4"-20', "UNC (pulgada, paso grueso)", '1/4"'], patron: 'TARRAJA\\s+1/4"?-20', buscar: 'tarraja 1/4"-20' },
-        { celdas: ['3/8"-16', "UNC (pulgada, paso grueso)", '3/8"'], patron: 'TARRAJA\\s+3/8"?-16', buscar: 'tarraja 3/8"-16' },
-        { celdas: ['1/2"-13', "UNC (pulgada, paso grueso)", '1/2"'], patron: 'TARRAJA\\s+1/2"?-13', buscar: 'tarraja 1/2"-13' },
-        { celdas: ['5/8"-18', "UNF (pulgada, paso fino)", '5/8"'], patron: 'TARRAJA\\s+5/8"?-18', buscar: 'tarraja 5/8"-18' },
+        { celdas: ["M6 x 1.0", "Métrica, paso grueso", "5.88 a 5.94 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M6\\s*x\\s*1(\\.0+)?(?![.\\d])", buscar: "tarraja M6x1", frase: true },
+        { celdas: ["M8 x 1.25", "Métrica, paso grueso", "7.85 a 7.92 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M8\\s*x\\s*1\\.25", buscar: "tarraja M8 x 1.25", frase: true },
+        { celdas: ["M10 x 1.5", "Métrica, paso grueso", "9.80 a 9.90 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M10\\s*x\\s*1\\.5(?!\\d)", buscar: "tarraja M10x1.5", frase: true },
+        { celdas: ["M12 x 1.75", "Métrica, paso grueso", "11.80 a 11.90 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M12\\s*x\\s*1\\.75", buscar: "tarraja M12 x 1.75", frase: true },
+        { celdas: ["#10-24", "UNC (pulgada, paso grueso)", '#10 (0.190")'], patron: "TARRAJA\\s+#10-24", buscar: "tarraja #10-24", frase: true },
+        { celdas: ['1/4"-20', "UNC (pulgada, paso grueso)", '1/4"'], patron: 'TARRAJA\\s+1/4"?-20', buscar: 'tarraja 1/4"-20', frase: true },
+        { celdas: ['3/8"-16', "UNC (pulgada, paso grueso)", '3/8"'], patron: 'TARRAJA\\s+3/8"?-16', buscar: 'tarraja 3/8"-16', frase: true },
+        { celdas: ['1/2"-13', "UNC (pulgada, paso grueso)", '1/2"'], patron: 'TARRAJA\\s+1/2"?-13', buscar: 'tarraja 1/2"-13', frase: true },
+        { celdas: ['5/8"-18', "UNF (pulgada, paso fino)", '5/8"'], patron: 'TARRAJA\\s+5/8"?-18', buscar: 'tarraja 5/8"-18', frase: true },
       ],
       pie: {
         href: "/blog/tarrajas-para-roscar-guia",
@@ -1462,6 +1696,17 @@ export const CATEGORY_FAQS: Record<string, Faq[]> = {
       answer:
         "El machuelo genera una rosca del mismo diámetro que la herramienta y avanza girando dentro del agujero; la fresa de roscar interpola la rosca con control CNC, por lo que una misma fresa puede producir distintos diámetros y reduce el riesgo de rotura dentro de la pieza.",
     },
+    // Preguntas que Google muestra para "herramientas para roscar" en México (nov 2026).
+    {
+      question: "¿Qué broca usar para hacer rosca de 8 mm?",
+      answer:
+        "Para una rosca M8 de paso normal (M8 x 1.25) la broca es de 6.8 mm. La regla en rosca métrica es el diámetro nominal menos el paso; la tabla completa está en la página de machuelos.",
+    },
+    {
+      question: "¿Cómo se llama la herramienta que hace rosca a tubos?",
+      answer:
+        "Es la tarraja para tubo: corta rosca cónica (NPT o BSP) en el extremo del tubo para que la conexión selle a presión, y suele montarse en un juego o roscadora para tubería. No es la misma que la tarraja para varilla, que hace rosca recta.",
+    },
   ],
   ranurado: [
     {
@@ -1497,21 +1742,22 @@ export const CATEGORY_FAQS: Record<string, Faq[]> = {
         "El cono BT hace contacto solo por el cono y es un estándar muy extendido; el HSK es un cono hueco que hace contacto simultáneo por cono y cara, lo que aporta mayor rigidez y precisión a altas revoluciones.",
     },
   ],
+  // La categoría "Abrasivos" hoy son limas rotativas de carburo: FAQ de lo que vende.
   abrasivos: [
     {
-      question: "¿Qué son los abrasivos en el maquinado?",
+      question: "¿Qué es una lima rotativa de carburo?",
       answer:
-        "Los abrasivos son herramientas que remueven material por abrasión, mediante granos de corte unidos en muelas, discos, bandas o puntas montadas. Se usan en rectificado, desbaste, corte y acabado de superficies.",
+        "Es una herramienta con cabeza de carburo de tungsteno y filos tallados que gira a alta velocidad, montada en un esmeril recto o rectificador. Sirve para desbarbar, rebajar, dar forma y ajustar agujeros en metal.",
     },
     {
-      question: "¿Qué abrasivo se usa en cada aplicación?",
+      question: "¿Es lo mismo lima rotativa y fresa rotativa?",
       answer:
-        "Para rectificado de precisión se usan muelas; para corte y desbaste, discos; para acabado y zonas de difícil acceso, puntas montadas, lijas y bandas. La elección depende del material, del acabado buscado y del tipo de máquina.",
+        "Sí, son dos nombres para la misma herramienta. A veces también se les dice fresas de carburo, pero ese nombre se confunde con las fresas dentales y con las fresas para CNC (endmills), que son otra cosa.",
     },
     {
-      question: "¿Qué es el rectificado?",
+      question: "¿Qué significan los códigos SB, SD o SF?",
       answer:
-        "El rectificado es una operación de acabado por abrasión que emplea una muela para remover pequeñas cantidades de material, logrando tolerancias estrechas y buen acabado superficial, en especial en piezas endurecidas o de precisión.",
+        "Son el código de forma de la cabeza: SB y SC son cilíndricas, SD esférica, SE ovalada, SF y SG de árbol, SH de flama, y SL y SM cónicas. El número que sigue (SB-1, SB-3…) indica la medida; cada modelo del catálogo trae además el diámetro en pulgadas.",
     },
   ],
   medicion: [
@@ -1529,6 +1775,12 @@ export const CATEGORY_FAQS: Record<string, Faq[]> = {
       question: "¿Qué es un bloque patrón?",
       answer:
         "Un bloque patrón (o galga patrón) es un bloque de longitud altamente precisa que sirve como referencia para calibrar y verificar otros instrumentos de medición.",
+    },
+    // Pregunta que Google muestra para "equipos de medición" en México (nov 2026).
+    {
+      question: "¿Cuáles son los instrumentos básicos de medición mecánica?",
+      answer:
+        "En el taller, tres: el vernier o calibrador pie de rey para trabajo general (0.01 a 0.02 mm), el micrómetro para tolerancias finas (0.01 mm, y 0.001 mm en modelos de precisión) y el indicador de carátula para comparar contra una referencia. Se complementan con bloques patrón, escuadras y compases.",
     },
   ],
 };
@@ -1550,6 +1802,17 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
       answer:
         "Sí. Al estar normalizados por ISO 1832, los insertos de una misma designación (forma, tamaño y geometría) son intercambiables entre fabricantes, aunque el grado del metal duro y el recubrimiento varían según la marca.",
     },
+    // Lectura del código y del material a maquinar: tablas verificadas de la guía de insertos.
+    {
+      question: "¿Cómo se lee el código de un inserto, por ejemplo CNMG 120408?",
+      answer:
+        "Cada posición dice algo: C es la forma (rombo de 80°), N el ángulo de incidencia (0°), M la tolerancia (media, la más común), G el tipo (agujero y rompevirutas en ambas caras), 12 el largo del filo (unos 12.7 mm), 04 el espesor (unos 4.76 mm) y 08 el radio de punta (0.8 mm).",
+    },
+    {
+      question: "¿Qué significan las letras P, M y K en un inserto?",
+      answer:
+        "Son los grupos de material a maquinar de la norma ISO 513: P es acero (azul), M acero inoxidable (amarillo), K fundición (rojo), N no ferrosos como aluminio (verde), S superaleaciones y titanio, y H materiales endurecidos. El grado del inserto indica para cuál está hecho.",
+    },
   ],
   "fresa-endmill": [
     {
@@ -1566,6 +1829,17 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
       question: "¿Qué diferencia hay entre una fresa integral y un cortador de insertos?",
       answer:
         "La fresa integral es de una sola pieza y se reemplaza completa cuando se desgasta; el cortador aloja insertos intercambiables que se reponen por separado. Las fresas integrales dominan en diámetros pequeños y los cortadores de insertos, en diámetros grandes.",
+    },
+    // Recubrimiento por material: tabla verificada de la guía de fresas. La segunda deshace la confusión con las fresas dentales, que ganan "fresas de carburo" en Google.
+    {
+      question: "¿Qué recubrimiento de fresa conviene para cada material?",
+      answer:
+        "Para aluminio y no ferrosos, sin recubrimiento o DLC; para acero al carbono y fundición, TiAlN; para inoxidable y superaleaciones, AlCrN; y para aceros endurecidos de más de 45 HRC, AlCrN o nACo.",
+    },
+    {
+      question: "¿Son las mismas que las fresas de carburo dentales?",
+      answer:
+        "No. Estas fresas (endmills) son para cortar metal en fresadora o centro de maquinado CNC. Las fresas de carburo dentales son instrumental de odontología, y las limas rotativas de carburo, que a veces también llaman fresas, se usan en esmeril recto para desbarbar.",
     },
   ],
   broca: [
@@ -1654,6 +1928,22 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
       question: "¿Venden buriles por pieza?",
       answer:
         "Sí. HERCAN es distribuidor B2B y B2C: manejamos buriles cuadrados y de forma por pieza y para volumen. Solicita tu cotización en línea y te respondemos en horas.",
+    },
+    // Preguntas que Google muestra para "buril" en México (nov 2026); respuestas de la guía de buriles.
+    {
+      question: "¿De qué material son los buriles para torno?",
+      answer:
+        "De acero rápido (HSS), tenaz, económico y fácil de reafilar; de HSS con cobalto, que aguanta más temperatura; y de carburo, soldado en la punta (buril calzado) o como inserto intercambiable, para cortar más rápido en producción.",
+    },
+    {
+      question: "¿Qué otro nombre tiene el buril?",
+      answer:
+        "También se le conoce como cuchilla de torno. Es la herramienta de corte de un solo filo que se monta en el torno para arrancar viruta de la pieza mientras gira.",
+    },
+    {
+      question: "¿Cuáles son los tipos de buril?",
+      answer:
+        "Según la operación: recto de desbaste, recto de acabado, refrentador, tronzador o ranurador, roscador, de mandrinar y redondo o de forma. En esta página está la tabla con el ángulo orientativo de cada uno.",
     },
   ],
   avellanador: [
@@ -1750,6 +2040,17 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
       question: "¿Cuándo se usa un escariador?",
       answer:
         "Se usa cuando el agujero requiere un ajuste preciso, por ejemplo para alojar pasadores o bujes. Primero se taladra el agujero ligeramente por debajo de la medida final y luego el escariador lo lleva a la tolerancia buscada.",
+    },
+    // Preguntas que Google muestra para "escariador" en México (nov 2026).
+    {
+      question: "¿Qué tipos de escariadores existen?",
+      answer:
+        "Los hay de mano, que se giran con maneral, y para máquina, que se montan en taladro, fresadora o centro de maquinado; de canal recto o helicoidal; fijos o ajustables; y cónicos, para agujeros de pasador cónico. Por material, de acero rápido (HSS), cobalto o carburo.",
+    },
+    {
+      question: "¿Cómo se usa un escariador?",
+      answer:
+        "Primero se taladra el agujero un poco por debajo de la medida final. Luego se pasa el escariador a menor velocidad que la broca, con avance constante y lubricante, y al terminar se saca sin girarlo en reversa para no dañar los filos ni el acabado.",
     },
   ],
   "barra-mandrinar": [
@@ -1861,8 +2162,9 @@ export const INSTRUMENTO_CONTENT: Record<string, TipoContent> = {
   },
   indicador: {
     name: "Indicador carátula",
-    title: "Indicadores de carátula (comparadores)",
-    metaTitle: "Indicadores de carátula y comparadores (Mitutoyo) | HERCAN",
+    // "indicador de caratula" 2,400/mes y "reloj comparador" 1,300: los dos nombres en H1.
+    title: "Indicadores de carátula y relojes comparadores",
+    metaTitle: "Indicador de carátula y reloj comparador (Mitutoyo) | HERCAN",
     metaDescription:
       "Indicadores de carátula y comparadores en HERCAN: de cuadrante y de pestaña (palpador), marca Mitutoyo. Para verificar concentricidad, planitud y reglaje. Cotización B2B y B2C.",
     intro: [
@@ -1875,6 +2177,26 @@ export const INSTRUMENTO_CONTENT: Record<string, TipoContent> = {
         items: ["De cuadrante", "De pestaña / palpador", "Comparador digital"],
       },
     ],
+    // Aplicaciones y resolución: tabla verificada de la guía del indicador.
+    medidas: {
+      titulo: "Qué medir con un indicador y con qué resolución",
+      intro:
+        "El indicador no da una medida absoluta: compara contra una referencia. Estas son las aplicaciones de taller más comunes, la resolución que piden y el tipo de indicador que conviene.",
+      columnas: ["Aplicación", "Resolución recomendada", "Tipo recomendado"],
+      filas: [
+        { celdas: ["Concentricidad de un eje o husillo", "0.01 mm (0.001 mm en precisión)", "Carátula con palpador vertical y base magnética"] },
+        { celdas: ["Excentricidad de engranes, levas o cigüeñal", "0.01 mm", "Carátula montado entre centros"] },
+        { celdas: ["Planitud de una superficie", "0.001 a 0.01 mm", "Digital o carátula de alta resolución"] },
+        { celdas: ["Paralelismo entre caras o ejes", "0.01 mm", "Carátula estándar, palpador vertical"] },
+        { celdas: ["Alineación de la prensa en la fresadora", "0.01 mm", "Base magnética y palpador vertical"] },
+        { celdas: ["Centrado de la pieza en el torno", "0.01 mm", "Carátula o de palanca"] },
+        { celdas: ["Espacios reducidos o superficies laterales", "0.01 mm (0.001 mm en modelos finos)", "De palanca (pestaña)"] },
+      ],
+      pie: {
+        href: "/blog/como-usar-indicador-de-caratula",
+        texto: "Cómo montar y leer un indicador de carátula paso a paso",
+      },
+    },
   },
 };
 
@@ -1956,6 +2278,17 @@ export const INSTRUMENTO_FAQS: Record<string, Faq[]> = {
       question: "¿Manejan indicadores Mitutoyo?",
       answer:
         "Sí, manejamos indicadores y comparadores Mitutoyo. Mostramos los modelos en existencia y cotizamos bajo pedido los que no estén en stock. Solicita tu cotización en línea.",
+    },
+    // Preguntas que Google muestra para "indicador de caratula" en México (nov 2026); pasos de la guía del indicador.
+    {
+      question: "¿Es lo mismo indicador de carátula, comparador y reloj comparador?",
+      answer:
+        "Sí. En los talleres mexicanos los tres nombres se usan para el mismo instrumento: compara contra una referencia y convierte el movimiento del palpador en el giro de una aguja sobre la carátula.",
+    },
+    {
+      question: "¿Cómo se mide con un indicador de carátula?",
+      answer:
+        "Se fija el indicador en su base magnética o soporte, se precarga el palpador contra la pieza (de 0.3 a 0.5 mm de recorrido, nunca a tope) y se gira el bisel para poner la aguja en cero. Después se gira o desplaza la pieza: la variación de la aguja es la medida.",
     },
   ],
 };
