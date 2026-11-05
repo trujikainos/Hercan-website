@@ -674,9 +674,9 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
     name: "Avellanador",
     familia: "Avellanador",
     title: "Avellanadores para metal",
-    metaTitle: "Avellanadores para metal: 82° y 90° HSS | HERCAN",
+    metaTitle: "Avellanadores para metal: 60°, 82° y 90° HSS | HERCAN",
     metaDescription:
-      "Avellanadores para metal en HERCAN: de HSS a 82° y 90° para avellanar y desbarbar agujeros y alojar tornillos de cabeza avellanada. Cotización B2B y B2C en México.",
+      "Avellanadores para metal en HERCAN: de HSS a 60°, 82° y 90°, de 1, 3 y 6 filos, para avellanar, desbarbar y alojar tornillos de cabeza avellanada. Cotización B2B y B2C en México.",
     intro: [
       "Un avellanador es la herramienta que abre un chaflán cónico en la boca de un agujero, para alojar la cabeza de un tornillo avellanado o para desbarbar. El ángulo típico es 82° (pulgada) o 90° (métrico).",
       "Se usan en acero rápido (HSS), de uno o varios filos, y se trabajan a baja velocidad para un chaflán limpio sin traqueteo. El diámetro mayor define hasta qué tamaño de tornillo se puede alojar.",
@@ -684,13 +684,31 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
     bullets: [
       {
         heading: "Por ángulo",
-        items: ["82° (pulgada)", "90° (métrico)"],
+        items: ["60° (desbarbado)", "82° (pulgada)", "90° (métrico)"],
       },
       {
-        heading: "Usos",
-        items: ["Alojar tornillo avellanado", "Desbarbado de agujeros"],
+        heading: "Por número de filos",
+        items: ["1 filo (corte rápido)", "3 filos (el más vendido)", "6 filos (mejor acabado)"],
       },
     ],
+    // Ángulos y aplicaciones de la tabla verificada de la guía de avellanadores.
+    medidas: {
+      titulo: "Qué ángulo de avellanador usar",
+      intro:
+        "El ángulo del avellanador debe coincidir con la cabeza del tornillo o con el trabajo que vas a hacer. Estos son los cinco ángulos de uso común y cuántos modelos hay de cada uno en el catálogo.",
+      columnas: ["Ángulo", "Para qué se usa", "Contexto típico"],
+      filas: [
+        { celdas: ["60°", "Desbarbado general de agujeros, sin tornillo", "Uso universal de taller"], patron: "avellanador.*\\b60°", buscar: "avellanador 60°" },
+        { celdas: ["82°", "Tornillos de cabeza plana en pulgada (UNC/UNF)", "Tornillería americana (ANSI), equipo importado de EE. UU."], patron: "avellanador.*\\b82°", buscar: "avellanador 82°" },
+        { celdas: ["90°", "Tornillos de cabeza plana métrica", "Tornillería métrica DIN/ISO, la más común en México"], patron: "avellanador.*\\b90°", buscar: "avellanador 90°" },
+        { celdas: ["100°", "Tornillos y remaches avellanados aeronáuticos", "Aeroespacial, lámina delgada"], patron: "avellanador.*\\b100°", buscar: "avellanador 100°" },
+        { celdas: ["120°", "Remaches en lámina gruesa, tornillo autoperforante", "Remachado y lámina industrial"], patron: "avellanador.*\\b120°", buscar: "avellanador 120°" },
+      ],
+      pie: {
+        href: "/blog/avellanadores-guia",
+        texto: "Guía: tipos de avellanador, número de filos y a qué velocidad trabajarlo",
+      },
+    },
   },
   tarraja: {
     name: "Tarraja",
@@ -701,7 +719,7 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
       "Tarrajas o dados de roscar en HERCAN: para roscas externas métricas y en pulgada (UNC/UNF) en HSS. Por pieza y en juego; cotización B2B y B2C en México.",
     intro: [
       "Una tarraja (o dado de roscar) es la herramienta que genera roscas externas sobre una barra o tornillo por arranque de viruta. Es la contraparte del machuelo, que hace la rosca interna.",
-      "Las hay métricas y en pulgada (UNC/UNF), normalmente de acero rápido (HSS), y se giran con un porta-dado o maneral. El diámetro de la barra debe ajustarse al de la rosca para un corte limpio.",
+      "Las hay métricas y en pulgada (UNC/UNF), normalmente de acero rápido (HSS), y se giran con un desterrajador (portaterrajas). El diámetro de la varilla debe ajustarse al de la rosca para un corte limpio.",
     ],
     bullets: [
       {
@@ -710,9 +728,32 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
       },
       {
         heading: "Uso",
-        items: ["Roscas externas", "Se usa con maneral / porta-dado"],
+        items: ["Roscas externas", "Se usa con desterrajador (portaterrajas)"],
       },
     ],
+    // Varilla: tabla verificada de la guía (métrica) y su regla para pulgada (barra al
+    // diámetro nominal). #10 = 0.190" es el diámetro nominal del número 10.
+    medidas: {
+      titulo: "Medidas de tarrajas y diámetro de varilla",
+      intro:
+        "Las medidas más pedidas, con el diámetro de la varilla antes de roscar y cuántos modelos hay de cada una en el catálogo. La varilla va igual o ligeramente menor al diámetro nominal, nunca mayor.",
+      columnas: ["Tarraja", "Sistema de rosca", "Varilla antes de roscar"],
+      filas: [
+        { celdas: ["M6 x 1.0", "Métrica, paso grueso", "5.88 a 5.94 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M6\\s*x\\s*1(\\.0+)?(?![.\\d])", buscar: "tarraja M6x1" },
+        { celdas: ["M8 x 1.25", "Métrica, paso grueso", "7.85 a 7.92 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M8\\s*x\\s*1\\.25", buscar: "tarraja M8 1.25" },
+        { celdas: ["M10 x 1.5", "Métrica, paso grueso", "9.80 a 9.90 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M10\\s*x\\s*1\\.5(?!\\d)", buscar: "tarraja M10x1.5" },
+        { celdas: ["M12 x 1.75", "Métrica, paso grueso", "11.80 a 11.90 mm"], patron: "TARRAJA\\s+(IZQ\\.\\s*)?M12\\s*x\\s*1\\.75", buscar: "tarraja M12 1.75" },
+        { celdas: ["#10-24", "UNC (pulgada, paso grueso)", '#10 (0.190")'], patron: "TARRAJA\\s+#10-24", buscar: "tarraja #10-24" },
+        { celdas: ['1/4"-20', "UNC (pulgada, paso grueso)", '1/4"'], patron: 'TARRAJA\\s+1/4"?-20', buscar: 'tarraja 1/4"-20' },
+        { celdas: ['3/8"-16', "UNC (pulgada, paso grueso)", '3/8"'], patron: 'TARRAJA\\s+3/8"?-16', buscar: 'tarraja 3/8"-16' },
+        { celdas: ['1/2"-13', "UNC (pulgada, paso grueso)", '1/2"'], patron: 'TARRAJA\\s+1/2"?-13', buscar: 'tarraja 1/2"-13' },
+        { celdas: ['5/8"-18', "UNF (pulgada, paso fino)", '5/8"'], patron: 'TARRAJA\\s+5/8"?-18', buscar: 'tarraja 5/8"-18' },
+      ],
+      pie: {
+        href: "/blog/tarrajas-para-roscar-guia",
+        texto: "Guía: tipos de tarraja, sistemas de rosca (NPT, BSP) y cómo roscar",
+      },
+    },
   },
 };
 
@@ -1631,12 +1672,24 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
       answer:
         "Sí. Además de avellanar para tornillos, el avellanador elimina la rebaba que deja la broca en la boca del agujero, dejando un borde limpio; se trabaja a baja velocidad.",
     },
+    // Google no muestra preguntas para "avellanador" en México (nov 2026); estas salen
+    // de lo que la guía explica y las fichas no: filos y velocidad.
+    {
+      question: "¿Cuántos filos debe tener un avellanador?",
+      answer:
+        "Depende del acabado que buscas. El de un filo corta más rápido pero vibra más y deja más rebaba si no controlas el avance; el de tres filos es el más vendido por su balance entre acabado y velocidad, y el de varios filos (6) da el mejor acabado y menos vibración en producción en serie.",
+    },
+    {
+      question: "¿A qué velocidad se trabaja un avellanador?",
+      answer:
+        "Más lento que al perforar: entre un tercio y la mitad de las RPM que usarías con una broca del mismo diámetro en ese material, con avance suave y constante. Si la RPM es demasiado alta, el chaflán sale con marcas en forma de polígono (traqueteo) y el filo se gasta antes.",
+    },
   ],
   tarraja: [
     {
       question: "¿Qué es una tarraja o dado de roscar?",
       answer:
-        "Una tarraja (dado de roscar) es la herramienta que genera roscas externas sobre una barra o tornillo por arranque de viruta. Se gira con un maneral o porta-dado alrededor de la pieza.",
+        "Una tarraja (dado de roscar) es la herramienta que genera roscas externas sobre una barra o tornillo por arranque de viruta. Se gira con un desterrajador (portaterrajas) alrededor de la pieza.",
     },
     {
       question: "¿Cuál es la diferencia entre una tarraja y un machuelo?",
@@ -1647,6 +1700,32 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
       question: "¿Vienen métricas y en pulgada?",
       answer:
         "Sí. Manejamos tarrajas métricas y en pulgada (UNC/UNF) en acero rápido (HSS), por pieza y en juego con machuelos y maneral. Solicita tu cotización en línea.",
+    },
+    // Preguntas que Google muestra para "tarraja" en México (nov 2026).
+    {
+      question: "¿Cuáles son los tipos de tarraja?",
+      answer:
+        "Hay cuatro: la sólida (un cuerpo redondo sin ajuste, la más rígida y económica), la partida o ajustable (se abre o cierra un poco para compensar el desgaste), la hexagonal (se gira con dado, matraca o llave, práctica para retocar una rosca dañada) y la tarraja para tubo, que corta rosca cónica NPT o BSP.",
+    },
+    {
+      question: "¿Cómo se llama la pieza para hacer roscas?",
+      answer:
+        "Depende de dónde va la rosca. Para rosca por fuera, sobre una varilla o tornillo, es la tarraja o dado de roscar. Para rosca por dentro de un barreno es el machuelo. Se venden por pieza y en juegos de machuelos y tarrajas.",
+    },
+    {
+      question: "¿Es lo mismo una tarraja para tubo?",
+      answer:
+        "No. La tarraja para tubo corta rosca cónica (NPT o BSP) en el extremo de un tubo para que la conexión selle a presión, y suele montarse en un juego o roscadora para tubería. Las de esta página son para varilla y tornillo, con rosca recta. Si necesitas roscar tubo, pídela en cotización.",
+    },
+    {
+      question: "¿De qué diámetro debe ser la varilla para roscar?",
+      answer:
+        "Igual o ligeramente menor al diámetro nominal de la rosca, nunca mayor. En métrica, la regla es el diámetro nominal menos 0.1 veces el paso (para M8 x 1.25, de 7.85 a 7.92 mm); en pulgada se usa barra al diámetro nominal. Hazle un chaflán de unos 45° en la punta para que la tarraja arranque derecha.",
+    },
+    {
+      question: "¿Cuánto cuesta una tarraja?",
+      answer:
+        "Depende de la medida, el sistema de rosca y si la compras suelta o en juego con machuelos y desterrajador. En esta página ves el precio y la existencia de cada modelo; si tu medida no aparece, cotízala.",
     },
   ],
   cortador: [
@@ -1707,10 +1786,12 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
 export const INSTRUMENTO_CONTENT: Record<string, TipoContent> = {
   micrometro: {
     name: "Micrómetro",
-    title: "Micrómetros",
-    metaTitle: "Micrómetros: digitales, de exteriores e interiores | HERCAN",
+    // Singular y con "digital" al frente: "micrometro" (27,100/mes) y "micrometro
+    // digital" (2,400/mes) son como se busca en México.
+    title: "Micrómetros digitales y analógicos",
+    metaTitle: "Micrómetro digital y analógico: exteriores e interiores | HERCAN",
     metaDescription:
-      "Micrómetros en HERCAN: digitales y analógicos, de exteriores, interiores y profundidad (Insize y más). Rango, resolución y exactitud por modelo. Cotización B2B y B2C en México.",
+      "Micrómetros en HERCAN: digitales y analógicos, de exteriores, interiores y profundidad, en rangos de 0-25, 25-50 mm y más (Insize y otras marcas). Cotización B2B y B2C en México.",
     intro: [
       "Un micrómetro es el instrumento de medición de precisión que mide dimensiones pequeñas —espesores y diámetros exteriores, interiores o de profundidad— con resolución típica de 0.01 o 0.001 mm, mediante un tornillo micrométrico calibrado.",
       "Los hay de lectura digital o analógica (de tambor), en rangos por tramos (0-25, 25-50 mm…). En HERCAN encuentras micrómetros de marcas de metrología; filtra por marca y disponibilidad, y cotiza el modelo que necesites.",
@@ -1721,6 +1802,23 @@ export const INSTRUMENTO_CONTENT: Record<string, TipoContent> = {
         items: ["De exteriores", "De interiores", "De profundidad", "Digital / analógico"],
       },
     ],
+    // Tipos y qué mide cada uno: tabla verificada de la guía del micrómetro.
+    medidas: {
+      titulo: "Tipos de micrómetro y qué mide cada uno",
+      intro:
+        "Todos miden con un tornillo calibrado: al girar el tambor, el husillo avanza una distancia exacta. Cambia qué parte de la pieza mide cada uno y cómo se lee.",
+      columnas: ["Tipo", "Qué mide"],
+      filas: [
+        { celdas: ["De exteriores", "Diámetros y espesores externos. Es el más común y viene por tramos de 25 mm (0-25, 25-50, 50-75 mm…)."] },
+        { celdas: ["De interiores", "Diámetros internos de agujeros."] },
+        { celdas: ["De profundidad", "Profundidad de agujeros y ranuras."] },
+        { celdas: ["Digital o analógico", "El digital da lectura directa y salida de datos; el analógico no usa batería y es robusto."] },
+      ],
+      pie: {
+        href: "/blog/como-usar-un-micrometro",
+        texto: "Cómo leer un micrómetro paso a paso y cuáles son sus partes",
+      },
+    },
   },
   "calibrador-vernier": {
     name: "Calibrador vernier",
@@ -1796,6 +1894,23 @@ export const INSTRUMENTO_FAQS: Record<string, Faq[]> = {
       question: "¿Manejan micrómetros en existencia y bajo pedido?",
       answer:
         "Sí. HERCAN es distribuidor B2B y B2C de metrología. Mostramos los modelos en existencia y, si necesitas un rango o marca que no esté en stock, lo conseguimos: solicita tu cotización en línea.",
+    },
+    // Preguntas que Google muestra para "micrometro" en México (nov 2026). Parte de esa
+    // búsqueda es por la UNIDAD (micra, µm); la primera respuesta deshace la confusión.
+    {
+      question: "¿Un micrómetro mide en micras?",
+      answer:
+        "El nombre se presta a confusión. El micrómetro como unidad (µm), también llamado micra, equivale a 0.001 mm. El micrómetro como instrumento mide en milímetros o pulgadas: lo habitual es una resolución de 0.01 mm (10 micras) y los modelos de precisión llegan a 0.001 mm (1 micra).",
+    },
+    {
+      question: "¿Qué rango de micrómetro necesito?",
+      answer:
+        "El que cubra la medida de tu pieza. Los micrómetros de exteriores vienen por tramos de 25 mm (0-25, 25-50, 50-75 mm…) porque el husillo recorre 25 mm; para una pieza de 30 mm, por ejemplo, necesitas el de 25-50 mm.",
+    },
+    {
+      question: "¿Cuáles son las ventajas de usar un micrómetro?",
+      answer:
+        "Mide más fino que un calibrador vernier (0.01 mm, y 0.001 mm en modelos de precisión) y su trinquete aplica siempre la misma presión de medición, así que la lectura se repite igual entre una medición y otra. Es el instrumento para tolerancias finas.",
     },
   ],
   "calibrador-vernier": [
