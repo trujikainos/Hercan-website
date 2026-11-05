@@ -277,13 +277,16 @@ const PRODUCT_FIELDS = `
 // `tipo_herramienta` (fill 99% en el catálogo; sin él, p.type caía a deriveFromTags y
 // agarraba el tag de lote de importación como "tipo"). 2 metafields → payload mínimo;
 // el resto de specs se derivan de tags en el listado y llegan completas en la ficha.
+// `designacion_iso`: sin él, p.iso llegaba vacío en el listado y las 16 páginas
+// /iso/<familia> mostraban "0 productos" en producción (detectado nov 2026).
 const PRODUCT_LIST_FIELDS = `${PRODUCT_FIELDS}
   metafields(identifiers: [
     { namespace: "specs", key: "material_a_maquinar" },
     { namespace: "specs", key: "tipo_herramienta" },
     { namespace: "specs", key: "tipo_instrumento" },
     { namespace: "specs", key: "familia" },
-    { namespace: "specs", key: "mpn" }
+    { namespace: "specs", key: "mpn" },
+    { namespace: "specs", key: "designacion_iso" }
   ]) { key value }`;
 
 // La ficha de producto además trae la descripción (HTML del admin) y los
