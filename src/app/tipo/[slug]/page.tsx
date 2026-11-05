@@ -10,6 +10,7 @@ import { buildCatalog } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
 import { TIPO_CONTENT, TIPO_FAQS } from "@/lib/taxonomy-content";
 import { RelatedGuides } from "@/components/related-guides";
+import { MedidasTabla } from "@/components/medidas-tabla";
 
 // Slugs prerenderizados desde los tipos de herramienta del negocio (TIPO_CONTENT).
 export function generateStaticParams() {
@@ -100,6 +101,7 @@ export default async function TipoPage({
           }
         />
         <CatalogSection result={result} basePath={basePath} hiddenFacets={["tipo"]} />
+        {content.medidas && <MedidasTabla medidas={content.medidas} productos={all} />}
         {faqs.length > 0 && (
           <section className="border-t border-hc-metal-light bg-hc-soft/30">
             <div className="reveal mx-auto max-w-3xl px-4 py-12">

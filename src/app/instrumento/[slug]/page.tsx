@@ -11,6 +11,7 @@ import { buildCatalog } from "@/lib/catalog";
 import { getProducts, getCategories } from "@/lib/shopify";
 import { INSTRUMENTO_CONTENT, INSTRUMENTO_FAQS } from "@/lib/taxonomy-content";
 import { RelatedGuides } from "@/components/related-guides";
+import { MedidasTabla } from "@/components/medidas-tabla";
 
 // Slugs prerenderizados desde los instrumentos de medición (INSTRUMENTO_CONTENT).
 export function generateStaticParams() {
@@ -94,6 +95,7 @@ export default async function InstrumentoPage({
         />
         {/* La faceta "tipo" (tipo_herramienta) no aplica a medición → oculta. */}
         <CatalogSection result={result} basePath={basePath} hiddenFacets={["tipo"]} />
+        {content.medidas && <MedidasTabla medidas={content.medidas} productos={all} />}
 
         {/* Sobre pedido: la búsqueda de medición supera el stock físico → cotización. */}
         <section className="border-t border-hc-metal-light bg-hc-navy/[0.03]">

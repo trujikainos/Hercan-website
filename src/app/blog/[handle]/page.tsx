@@ -4,6 +4,14 @@ import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, breadcrumbNode, blogPostingNode, faqNode } from "@/lib/schema";
 import { getArticleByHandle } from "@/lib/shopify";
+import { storeForGuide } from "@/lib/blog-links";
+
+// El título SEO de los artículos en Shopify ya trae "| HERCAN"; el template del
+// layout lo volvía a agregar ("… | HERCAN | HERCAN" en las 13 guías). Se usa como
+// `absolute` y solo se agrega la marca si no viene (cubre también "| Guía HERCAN").
+function tituloConMarca(t: string): string {
+  return /HERCAN\s*$/i.test(t) ? t.trim() : `${t.trim()} | HERCAN`;
+}
 
 // Los artículos se publican en Shopify SIN redeploy del sitio → esta ficha debe
 // renderizar ON-DEMAND (dinámica). Si se pre-genera estáticamente, un handle
@@ -89,20 +97,21 @@ export async function generateMetadata({
         },
       ]
     : undefined;
+  const titulo = tituloConMarca(a.seoTitle || a.title);
   return {
-    title: a.seoTitle || a.title,
+    title: { absolute: titulo },
     description: a.seoDescription || a.excerpt || undefined,
     alternates: { canonical: `/blog/${a.handle}` },
     openGraph: {
       type: "article",
-      title: a.seoTitle || a.title,
+      title: titulo,
       description: a.seoDescription || a.excerpt || undefined,
       url: `/blog/${a.handle}`,
       ...(ogImage ? { images: ogImage } : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title: a.seoTitle || a.title,
+      title: titulo,
       description: a.seoDescription || a.excerpt || undefined,
       ...(ogImage ? { images: [ogImage[0].url] } : {}),
     },
@@ -125,6 +134,8 @@ export default async function ArticlePage({
   });
   const enriched = a.contentHtml ? enrichArticle(a.contentHtml) : null;
   const faqs = a.contentHtml ? extractFaqs(a.contentHtml) : [];
+  // Página de tienda de esta guía (enlace visible con el término exacto).
+  const tienda = storeForGuide(a.handle);
 
   return (
     <>
@@ -200,6 +211,16 @@ export default async function ArticlePage({
         {a.excerpt && (
           <p className="reveal mt-7 border-l-4 border-hc-steel pl-4 text-lg leading-relaxed text-hc-ink">
             {a.excerpt}
+          </p>
+        )}
+
+        {tienda && (
+          <p className="reveal mt-5 rounded-xl border border-hc-metal-light bg-hc-soft/60 px-4 py-3 text-sm text-hc-ink">
+            ¿Vas a comprar? Ve {tienda.art}{" "}
+            <Link href={tienda.href} className="font-semibold text-hc-blue hover:text-hc-steel hover:underline">
+              {tienda.termino}
+            </Link>{" "}
+            que tenemos en HERCAN, con precio y existencia.
           </p>
         )}
 

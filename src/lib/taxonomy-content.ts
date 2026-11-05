@@ -57,6 +57,23 @@ export type TipoContent = {
   metaDescription: string;
   intro: string[];
   bullets?: { heading: string; items: string[] }[];
+  /** Tabla de medidas comercial (se pinta con <MedidasTabla>). */
+  medidas?: MedidasContent;
+};
+
+/**
+ * Tabla de medidas de un nodo de tienda. Cada fila puede llevar un `patron`
+ * (regex sobre el título del producto) para contar cuántos modelos hay en el
+ * catálogo de esa medida y enlazarlos con `buscar` (/buscar?q=…). Es distinta de
+ * la tabla de la guía del blog a propósito: la de tienda es comercial (medida →
+ * modelos en existencia), la de la guía es la referencia completa.
+ */
+export type MedidasContent = {
+  titulo: string;
+  intro: string;
+  columnas: string[];
+  filas: { celdas: string[]; patron?: string; buscar?: string }[];
+  pie?: { href: string; texto: string };
 };
 
 export type IsoContent = {
@@ -492,6 +509,30 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
         items: ["Acero (ISO P)", "Acero inoxidable (ISO M)", "Aluminio y no ferrosos (ISO N)", "Fundición (ISO K)"],
       },
     ],
+    // Equivalencias exactas (1 pulgada = 25.4 mm). Responde búsquedas reales de GSC
+    // como "broca 3 16 a mm" y "broca de 3 8 a mm".
+    medidas: {
+      titulo: "Medidas de brocas en pulgadas y su equivalencia en milímetros",
+      intro:
+        "Las brocas fraccionales más pedidas con su medida exacta en milímetros (1 pulgada = 25.4 mm) y cuántos modelos hay de cada una en el catálogo.",
+      columnas: ["Broca (pulgadas)", "Milímetros", "Pulgadas en decimal"],
+      filas: [
+        { celdas: ['1/16"', "1.59 mm", '0.0625"'], patron: '^Broca\\s+1/16"', buscar: 'broca 1/16"' },
+        { celdas: ['1/8"', "3.18 mm", '0.125"'], patron: '^Broca\\s+1/8"', buscar: 'broca 1/8"' },
+        { celdas: ['5/32"', "3.97 mm", '0.1563"'], patron: '^Broca\\s+5/32"', buscar: 'broca 5/32"' },
+        { celdas: ['3/16"', "4.76 mm", '0.1875"'], patron: '^Broca\\s+3/16"', buscar: 'broca 3/16"' },
+        { celdas: ['7/32"', "5.56 mm", '0.2188"'], patron: '^Broca\\s+7/32"', buscar: 'broca 7/32"' },
+        { celdas: ['1/4"', "6.35 mm", '0.25"'], patron: '^Broca\\s+1/4"', buscar: 'broca 1/4"' },
+        { celdas: ['5/16"', "7.94 mm", '0.3125"'], patron: '^Broca\\s+5/16"', buscar: 'broca 5/16"' },
+        { celdas: ['3/8"', "9.53 mm", '0.375"'], patron: '^Broca\\s+3/8"', buscar: 'broca 3/8"' },
+        { celdas: ['7/16"', "11.11 mm", '0.4375"'], patron: '^Broca\\s+7/16"', buscar: 'broca 7/16"' },
+        { celdas: ['1/2"', "12.70 mm", '0.5"'], patron: '^Broca\\s+1/2"', buscar: 'broca 1/2"' },
+      ],
+      pie: {
+        href: "/blog/brocas-para-metal-guia",
+        texto: "Guía: qué broca usar según el metal y a cuántas RPM",
+      },
+    },
   },
   machuelo: {
     name: "Machuelo",
@@ -513,6 +554,31 @@ export const TIPO_CONTENT: Record<string, TipoContent> = {
         items: ["HSS (acero rápido)", "Carburo"],
       },
     ],
+    // Brocas tomadas de la tabla verificada de la guía (julio 2026). Aquí van solo
+    // las medidas más pedidas con su conteo en catálogo; la tabla completa vive en la guía.
+    medidas: {
+      titulo: "Medidas de machuelos y broca para cada rosca",
+      intro:
+        "Las medidas más pedidas, con el diámetro de broca para el barreno previo y cuántos modelos hay de cada una en el catálogo.",
+      columnas: ["Machuelo", "Broca para el barreno", "Uso típico"],
+      filas: [
+        { celdas: ["M3 x 0.5", "2.5 mm", "Tapas, placas, electrónica"], patron: "^Machuelo\\s+M3\\s*x\\s*0?\\.5\\b", buscar: "machuelo M3x0.5" },
+        { celdas: ["M4 x 0.7", "3.3 mm", "Ensambles ligeros, moldes"], patron: "^Machuelo\\s+M4\\s*x\\s*0?\\.7\\b", buscar: "machuelo M4x0.7" },
+        { celdas: ["M5 x 0.8", "4.2 mm", "Uso general en taller"], patron: "^Machuelo\\s+M5\\s*x\\s*0?\\.8\\b", buscar: "machuelo M5x0.8" },
+        { celdas: ["M6 x 1.0", "5.0 mm", "Uso general, la medida más común"], patron: "^Machuelo\\s+M6\\s*x\\s*1(\\.0+)?\\b", buscar: "machuelo M6x1" },
+        { celdas: ["M8 x 1.25", "6.8 mm", "Estructuras, maquinaria"], patron: "^Machuelo\\s+M8\\s*x\\s*1\\.25\\b", buscar: "machuelo M8x1.25" },
+        { celdas: ["M10 x 1.5", "8.5 mm", "Maquinaria media, bridas"], patron: "^Machuelo\\s+M10\\s*x\\s*1\\.5\\b", buscar: "machuelo M10x1.5" },
+        { celdas: ["M12 x 1.75", "10.2 mm", "Maquinaria pesada"], patron: "^Machuelo\\s+M12\\s*x\\s*1\\.75\\b", buscar: "machuelo M12x1.75" },
+        { celdas: ['1/4"-20 UNC', "#7 (5.1 mm)", "Tornillería en pulgada"], patron: '^Machuelo\\s+1/4"?\\s*-\\s*20\\b', buscar: 'machuelo 1/4"-20' },
+        { celdas: ['5/16"-18 UNC', "F (6.5 mm)", "Tornillería en pulgada"], patron: '^Machuelo\\s+5/16"?\\s*-\\s*18\\b', buscar: 'machuelo 5/16"-18' },
+        { celdas: ['3/8"-16 UNC', '5/16" (7.9 mm)', "Tornillería en pulgada"], patron: '^Machuelo\\s+3/8"?\\s*-\\s*16\\b', buscar: 'machuelo 3/8"-16' },
+        { celdas: ['1/2"-13 UNC', '27/64" (10.7 mm)', "Tornillería en pulgada"], patron: '^Machuelo\\s+1/2"?\\s*-\\s*13\\b', buscar: 'machuelo 1/2"-13' },
+      ],
+      pie: {
+        href: "/blog/machuelos-para-roscar-guia",
+        texto: "Ver la tabla completa broca-machuelo (M3 a M20, UNC y UNF)",
+      },
+    },
   },
   cortador: {
     name: "Cortador",
@@ -1487,6 +1553,17 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
       answer:
         "Sí. HERCAN es distribuidor B2B y B2C: manejamos desde piezas sueltas hasta pedidos de producción para CNC, de marcas como Iscar, Toolmex y YG-1. Solicita tu cotización en línea y te respondemos en horas.",
     },
+    // Preguntas que Google muestra para "brocas para metal" en México (nov 2026).
+    {
+      question: "¿Cómo saber si una broca sirve para metal?",
+      answer:
+        "La broca para metal es helicoidal, de acero rápido (HSS), cobalto o carburo, con punta cónica de 118° o 135° y sin la punta de centrado de las brocas para madera ni la pastilla en forma de flecha de las de concreto. Casi siempre lleva grabado HSS, HSS-Co o el material en el zanco.",
+    },
+    {
+      question: "¿Cuántas medidas de brocas para metal hay?",
+      answer:
+        "Se fabrican en milímetros (de décima en décima) y en pulgadas fraccionales, además de las series de número y letra. Las fraccionales más usadas van de 1/16\" (1.59 mm) a 1/2\" (12.70 mm); en esta página está la tabla de equivalencias con los modelos que hay en el catálogo.",
+    },
   ],
   machuelo: [
     {
@@ -1503,6 +1580,22 @@ export const TIPO_FAQS: Record<string, Faq[]> = {
       question: "¿Cuál es la diferencia entre un machuelo para agujero pasante y uno ciego?",
       answer:
         "El machuelo para agujero pasante expulsa la viruta hacia adelante y es más productivo cuando el agujero atraviesa la pieza; el de agujero ciego evacúa la viruta hacia atrás para no acumularla en el fondo del agujero.",
+    },
+    // Preguntas que Google muestra para "machuelos" en México (nov 2026).
+    {
+      question: "¿Cuáles son los tipos principales de machuelos?",
+      answer:
+        "Por su geometría hay tres: el machuelo de mano (se usa en juego de tres: cónico, intermedio y de fondo, para roscar a mano con maneral), el helicoidal o de espiral (saca la viruta hacia atrás, ideal para agujero ciego) y el de punta espiral o gun (empuja la viruta hacia adelante, para agujero pasante y en máquina).",
+    },
+    {
+      question: "¿Cómo saber qué broca usar para un machuelo?",
+      answer:
+        "En rosca métrica, la broca es el diámetro nominal menos el paso: un M8 x 1.25 lleva broca de 6.8 mm y un M6 x 1.0 lleva 5.0 mm. En rosca en pulgada se usa la tabla UNC/UNF; por ejemplo, 1/4\"-20 lleva broca #7 (5.1 mm). Arriba en esta página está la tabla con las medidas más pedidas.",
+    },
+    {
+      question: "¿Qué significa NC y NF en los machuelos?",
+      answer:
+        "Son roscas del sistema unificado en pulgadas: NC (o UNC) es la rosca corriente o gruesa y NF (o UNF) es la rosca fina, con más hilos por pulgada. Por ejemplo, 1/4\"-20 es NC y 1/4\"-28 es NF; cada una lleva una broca distinta para el barreno.",
     },
   ],
   buril: [
@@ -1631,8 +1724,9 @@ export const INSTRUMENTO_CONTENT: Record<string, TipoContent> = {
   },
   "calibrador-vernier": {
     name: "Calibrador vernier",
-    title: "Calibradores (vernier / pie de rey)",
-    metaTitle: "Calibrador vernier (pie de rey): digital y análogo | HERCAN",
+    // "vernier" (40,500/mes en MX) va primero: es como lo busca el taller.
+    title: "Vernier y calibradores (pie de rey)",
+    metaTitle: "Vernier (calibrador pie de rey): digital y análogo | HERCAN",
     metaDescription:
       "Calibradores vernier o pie de rey en HERCAN: digitales y análogos, 0-150, 0-200 y 0-300 mm (Insize). Miden exterior, interior, profundidad y escalón. Cotización B2B y B2C.",
     intro: [
@@ -1649,6 +1743,23 @@ export const INSTRUMENTO_CONTENT: Record<string, TipoContent> = {
         items: ['0-150 mm (6")', '0-200 mm (8")', '0-300 mm (12")'],
       },
     ],
+    // Ventajas y cuidados de la tabla verificada de la guía; resoluciones típicas del
+    // mercado (análogo 0.02/0.05 mm, carátula 0.02 mm, digital 0.01 mm).
+    medidas: {
+      titulo: "Tipos de vernier: cuál elegir",
+      intro:
+        "Los tres tipos miden lo mismo (exterior, interior, profundidad y escalón); cambian la forma de leer, la resolución y el cuidado que piden.",
+      columnas: ["Tipo", "Resolución típica", "Ventaja", "A tener en cuenta"],
+      filas: [
+        { celdas: ["Vernier análogo", "0.02 o 0.05 mm", "Económico, sin batería, robusto", "Requiere práctica para leer el nonio"] },
+        { celdas: ["De carátula", "0.02 mm", "Lectura rápida en el reloj, sin batería", "El engrane puede dañarse con golpes o viruta"] },
+        { celdas: ["Digital", "0.01 mm", "Lectura instantánea, cambia mm/pulg, salida de datos", "Depende de batería"] },
+      ],
+      pie: {
+        href: "/blog/como-leer-calibrador-vernier",
+        texto: "Cómo leer un vernier paso a paso y cuáles son sus partes",
+      },
+    },
   },
   indicador: {
     name: "Indicador carátula",
@@ -1702,6 +1813,17 @@ export const INSTRUMENTO_FAQS: Record<string, Faq[]> = {
       question: "¿Tienen calibradores en existencia y bajo pedido?",
       answer:
         "Sí. Mostramos los modelos disponibles (0-150, 0-200, 0-300 mm) y, si necesitas otro rango o marca, lo cotizamos y conseguimos. Solicita tu cotización en línea.",
+    },
+    // Preguntas que Google muestra para "calibrador vernier" en México (nov 2026).
+    {
+      question: "¿Cómo se lee un vernier?",
+      answer:
+        "Primero lee en la escala principal los milímetros completos que quedan a la izquierda del cero del nonio. Luego busca la línea del nonio que coincide exactamente con una línea de la escala principal y súmala como fracción (por ejemplo, la línea 7 en un vernier de 0.05 mm suma 0.35 mm). La guía de lectura paso a paso está enlazada abajo.",
+    },
+    {
+      question: "¿Cuáles son los tipos de calibradores vernier?",
+      answer:
+        "Por la forma de leer hay tres: vernier análogo (nonio), de carátula (reloj) y digital. Además hay versiones especiales para una sola medición, como el calibrador de profundidad, el de altura y el de interiores.",
     },
   ],
   indicador: [

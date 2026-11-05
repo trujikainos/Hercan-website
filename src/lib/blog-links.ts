@@ -94,3 +94,29 @@ export function relatedGuides(
 ): GuideLink[] {
   return RELATED_GUIDES[`${ns}:${slug}`] ?? [];
 }
+
+/**
+ * Sentido inverso: de cada guía a SU página de tienda, con el término exacto que
+ * esa página debe ganar. Existe porque Google ponía la guía en lugar de la tienda
+ * para "micrómetro" y "tarraja" (tracking nov 2026): el enlace visible arriba de la
+ * guía, con ese texto, le dice cuál es la página de compra.
+ */
+const STORE_FOR_GUIDE: Record<string, { href: string; termino: string; art: "los" | "las" }> = {
+  "brocas-para-metal-guia": { href: "/tipo/broca", termino: "brocas para metal", art: "las" },
+  "machuelos-para-roscar-guia": { href: "/tipo/machuelo", termino: "machuelos", art: "los" },
+  "buriles-para-torno-guia": { href: "/tipo/buril", termino: "buriles para torno", art: "los" },
+  "insertos-de-carburo-guia": { href: "/tipo/inserto", termino: "insertos de carburo", art: "los" },
+  "fresas-de-carburo-guia": { href: "/tipo/fresa-endmill", termino: "fresas de carburo", art: "las" },
+  "como-leer-calibrador-vernier": { href: "/instrumento/calibrador-vernier", termino: "vernier y calibradores", art: "los" },
+  "como-usar-un-micrometro": { href: "/instrumento/micrometro", termino: "micrómetros", art: "los" },
+  "como-usar-indicador-de-caratula": { href: "/instrumento/indicador", termino: "indicadores de carátula", art: "los" },
+  "avellanadores-guia": { href: "/tipo/avellanador", termino: "avellanadores", art: "los" },
+  "tarrajas-para-roscar-guia": { href: "/tipo/tarraja", termino: "tarrajas", art: "las" },
+  "carburo-de-tungsteno-que-es": { href: "/material/carburo", termino: "herramientas de carburo", art: "las" },
+  "discos-de-corte-guia": { href: "/categoria/abrasivos", termino: "discos de corte", art: "los" },
+  "velocidades-y-avances-de-corte": { href: "/tipos", termino: "herramientas de corte", art: "las" },
+};
+
+export function storeForGuide(handle: string): { href: string; termino: string; art: "los" | "las" } | null {
+  return STORE_FOR_GUIDE[handle] ?? null;
+}

@@ -293,22 +293,25 @@ export function SeoBlock() {
       <h2 className="mb-3 font-heading text-[length:var(--step-h2)] text-hc-navy">
         Herramental para CNC y metrología, con asesoría B2B
       </h2>
+      {/* Cada término enlaza a la página que debe ganarlo (tipo o instrumento), no a la
+          categoría general: antes "fresas de carburo", "brocas" y "machuelos" apuntaban
+          a /categoria/* y mandaban a Google una señal cruzada (tracking nov 2026). */}
       <p>
           En <strong className="text-hc-ink">HERCAN</strong> encuentras{" "}
-          <Link href="/categoria/fresado" className="text-hc-blue hover:underline">
+          <Link href="/tipo/fresa-endmill" className="text-hc-blue hover:underline">
             fresas de carburo
           </Link>
           ,{" "}
-          <Link href="/categoria/torneado" className="text-hc-blue hover:underline">
-            insertos de torneado
+          <Link href="/tipo/inserto" className="text-hc-blue hover:underline">
+            insertos de carburo
           </Link>
           ,{" "}
-          <Link href="/categoria/perforacion" className="text-hc-blue hover:underline">
-            brocas para CNC
+          <Link href="/tipo/broca" className="text-hc-blue hover:underline">
+            brocas para metal
           </Link>
           ,{" "}
-          <Link href="/categoria/roscado" className="text-hc-blue hover:underline">
-            machuelos y herramienta de roscado
+          <Link href="/tipo/machuelo" className="text-hc-blue hover:underline">
+            machuelos
           </Link>{" "}
           y{" "}
           <Link href="/categoria/portaherramientas" className="text-hc-blue hover:underline">
@@ -316,9 +319,42 @@ export function SeoBlock() {
           </Link>{" "}
           de carburo de tungsteno de las marcas líderes. También manejamos{" "}
           <Link href="/categoria/medicion" className="text-hc-blue hover:underline">
-            equipos de medición Mitutoyo
+            equipos de medición
           </Link>{" "}
-          (calibradores, micrómetros e indicadores) para control dimensional.
+          Mitutoyo e Insize:{" "}
+          <Link href="/instrumento/calibrador-vernier" className="text-hc-blue hover:underline">
+            vernier
+          </Link>
+          ,{" "}
+          <Link href="/instrumento/micrometro" className="text-hc-blue hover:underline">
+            micrómetros
+          </Link>{" "}
+          e{" "}
+          <Link href="/instrumento/indicador" className="text-hc-blue hover:underline">
+            indicadores de carátula
+          </Link>{" "}
+          para control dimensional.
+        </p>
+        <p className="mt-3">
+          <span className="font-semibold text-hc-ink">Lo más buscado:</span>{" "}
+          {[
+            { href: "/tipo/machuelo", label: "Machuelos" },
+            { href: "/tipo/broca", label: "Brocas para metal" },
+            { href: "/instrumento/calibrador-vernier", label: "Vernier" },
+            { href: "/instrumento/micrometro", label: "Micrómetros" },
+            { href: "/tipo/avellanador", label: "Avellanadores" },
+            { href: "/tipo/tarraja", label: "Tarrajas" },
+            { href: "/tipo/buril", label: "Buriles para torno" },
+            { href: "/tipo/escariador", label: "Escariadores" },
+            { href: "/categoria/abrasivos", label: "Discos de corte" },
+          ].map((l, i) => (
+            <span key={l.href}>
+              {i > 0 && " · "}
+              <Link href={l.href} className="text-hc-blue hover:underline">
+                {l.label}
+              </Link>
+            </span>
+          ))}
         </p>
         <p className="mt-3">
           Somos distribuidor de herramientas de corte en Monterrey, Nuevo León, con
