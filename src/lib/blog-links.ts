@@ -60,6 +60,16 @@ const G: Record<string, GuideLink> = {
     href: "/blog/discos-de-corte-guia",
     title: "Discos de corte: tipos, grosor y RPM máxima",
   },
+  // Guías de nov 2026 (paso 3 del plan SEO). Publicarlas en Shopify ANTES de llevar
+  // este archivo a producción: si no, estos enlaces darían 404.
+  torneado: {
+    href: "/blog/torneado-que-es-y-operaciones",
+    title: "Torneado: qué es, partes del torno y operaciones",
+  },
+  alturas: {
+    href: "/blog/calibrador-de-altura-guia",
+    title: "Calibrador de altura: qué es, tipos y cómo usarlo",
+  },
 };
 
 // Clave: "<namespace>:<slug>". El namespace es el tipo de nodo.
@@ -74,19 +84,19 @@ const RELATED_GUIDES: Record<string, GuideLink[]> = {
   "tipo:avellanador": [G.avellanadores],
 
   // Instrumentos de medición → su guía específica.
-  "instrumento:calibrador-vernier": [G.vernier],
+  "instrumento:calibrador-vernier": [G.vernier, G.alturas],
   "instrumento:micrometro": [G.micrometro],
   "instrumento:indicador": [G.indicador],
 
   // Categorías (operación) → guía(s) de la operación + el pillar de parámetros.
   "categoria:perforacion": [G.brocas, G.avellanadores, G.velocidades],
   "categoria:roscado": [G.machuelos, G.tarrajas, G.velocidades],
-  "categoria:torneado": [G.buriles, G.insertos, G.velocidades],
+  "categoria:torneado": [G.torneado, G.buriles, G.insertos, G.velocidades],
   "categoria:fresado": [G.fresas, G.velocidades],
   "categoria:portaherramientas": [G.insertos],
   // "Abrasivos" hoy son limas rotativas de carburo (no hay discos en el catálogo).
   "categoria:abrasivos": [G.carburo],
-  "categoria:medicion": [G.vernier, G.micrometro, G.indicador],
+  "categoria:medicion": [G.vernier, G.micrometro, G.indicador, G.alturas],
 };
 
 export function relatedGuides(
@@ -117,6 +127,10 @@ const STORE_FOR_GUIDE: Record<string, { href: string; termino: string; art: "los
   // Sin "discos-de-corte-guia": el catálogo no tiene discos de corte; decir "ve los
   // discos de corte que tenemos" sería falso (la categoría Abrasivos son limas rotativas).
   "velocidades-y-avances-de-corte": { href: "/tipos", termino: "herramientas de corte", art: "las" },
+  "torneado-que-es-y-operaciones": { href: "/categoria/torneado", termino: "herramientas para torno", art: "las" },
+  // Hercan no tiene calibradores de altura en línea: el aviso manda a los equipos de
+  // medición que sí hay (la guía misma explica que el de altura se cotiza sobre pedido).
+  "calibrador-de-altura-guia": { href: "/categoria/medicion", termino: "equipos de medición", art: "los" },
 };
 
 export function storeForGuide(handle: string): { href: string; termino: string; art: "los" | "las" } | null {
