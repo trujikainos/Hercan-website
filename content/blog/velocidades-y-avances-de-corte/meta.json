@@ -1,0 +1,25 @@
+{
+  "handle": "velocidades-y-avances-de-corte",
+  "title": "Velocidades y avances de corte: guía y tablas por material",
+  "seoTitle": "Velocidad de corte, RPM y avance: tablas por material",
+  "seoDescription": "Tablas completas de velocidad de corte (Vc), RPM y avance por material: acero, inoxidable, aluminio, fundición y más. Fórmulas, ejemplos y guía para CNC.",
+  "excerpt": "La guía maestra de velocidades y avances de corte para CNC: qué son Vc, RPM y avance, cómo calcularlos con fórmulas y ejemplos resueltos, y tablas completas por material y operación para que dejes de adivinar los parámetros.",
+  "tags": [
+    "avance de corte",
+    "cat:guias",
+    "fresado",
+    "mecanizado CNC",
+    "parametros de corte",
+    "roscado",
+    "RPM",
+    "tablas de corte",
+    "taladrado",
+    "torneado",
+    "velocidad de corte"
+  ],
+  "author": "HERCAN",
+  "publishedAt": "2026-07-31T20:23:26Z",
+  "image": "/blog/velocidades-y-avances-de-corte.jpg",
+  "ogImage": "/blog/velocidades-y-avances-de-corte-og.jpg",
+  "imageAlt": "Técnico ajustando la velocidad del husillo en el cabezal de un torno para lograr la velocidad de corte correcta"
+}

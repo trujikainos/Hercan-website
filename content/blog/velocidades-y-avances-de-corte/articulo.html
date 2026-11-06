@@ -1,0 +1,412 @@
+<p>La <strong>velocidad de corte (Vc)</strong> es qué tan rápido pasa el filo de la herramienta sobre el material, en metros por minuto (m/min). El <strong>RPM</strong> es las revoluciones por minuto a las que tiene que girar el husillo (o la pieza, en torno) para lograr esa Vc según el diámetro que estés usando. Y el <strong>avance</strong> es cuánto se mete la herramienta en el material por cada vuelta o por cada diente de corte. Los tres se calculan con una sola fórmula, y de ahí depende casi todo lo demás en el mecanizado: acabado superficial, vida de la herramienta, tiempo de ciclo y si la pieza sale a medida o se pasa de tolerancia. Esta guía junta en un solo lugar —en español y con ejemplos resueltos— las tablas de velocidad de corte y avance que normalmente están repartidas en catálogos de fabricante. Los valores son <strong>orientativos</strong>: siempre gana la ficha técnica de tu inserto, fresa o broca sobre cualquier tabla genérica, incluida esta.</p>
+
+<h2>¿De qué depende la velocidad de corte?</h2>
+<p>La Vc correcta para una operación no es un número fijo: cambia según media docena de factores que se mueven al mismo tiempo. Los principales son:</p>
+<ul>
+<li>
+<strong>El material a maquinar.</strong> Entre más dura, tenaz o abrasiva sea la pieza, más baja tiene que ser la Vc. Por eso el acero, el inoxidable y el aluminio no se cortan ni remotamente a la misma velocidad (lo ves completo en la tabla de la siguiente sección).</li>
+<li>
+<strong>El material de la herramienta.</strong> El HSS aguanta temperaturas mucho más bajas que el carburo cementado antes de perder el filo, así que trabaja a una fracción de la Vc del carburo. La cerámica y el CBN, en materiales endurecidos o superaleaciones, permiten ir todavía más rápido que el carburo.</li>
+<li>
+<strong>El recubrimiento.</strong> TiN, TiCN, TiAlN, AlCrN o ZrN reducen la fricción y aíslan térmicamente el filo, lo que normalmente permite subir la Vc entre 20% y 50% frente a la misma herramienta sin recubrir.</li>
+<li>
+<strong>La rigidez del sistema.</strong> Máquina, sujeción de la pieza, portaherramienta y voladizo de la herramienta. Un sistema flexible obliga a bajar Vc y avance aunque el material y la herramienta aguanten más, porque antes de eso aparece vibración.</li>
+<li>
+<strong>La refrigeración.</strong> Un buen caudal de refrigerante en el punto de corte permite sostener velocidades más altas sin quemar el filo ni la pieza.</li>
+<li>
+<strong>El objetivo de la pasada.</strong> Desbaste (quitar material rápido) y acabado (dejar buena superficie y medida) casi nunca usan la misma combinación de Vc y avance, aunque sea la misma herramienta y el mismo material.</li>
+</ul>
+<h3>La dureza del material manda sobre casi todo lo demás</h3>
+<p>De todos los factores anteriores, la dureza (y la tenacidad) del material a maquinar es el que más mueve la aguja. La relación es inversa y no es lineal: pasar de un acero de bajo carbono a un inoxidable austenítico ya baja la Vc recomendada a menos de la mitad, y pasar a un endurecido arriba de 45 HRC la baja todavía más, además de sacar al HSS de la jugada por completo. Es la razón por la que ninguna tabla de velocidades de corte sirve “en general”: siempre hay que leerla por material, que es justo como está organizada la siguiente sección.</p>
+
+<h2>La fórmula maestra: de velocidad de corte a RPM (y el avance)</h2>
+<p>Toda la aritmética de parámetros de corte sale de una sola fórmula:</p>
+<p><strong>RPM = (Vc × 1000) / (π × D)</strong></p>
+<p>Donde Vc es la velocidad de corte en m/min, D es el diámetro de la herramienta (fresa, broca, machuelo) o el diámetro de la pieza (en torno) en milímetros, y π ≈ 3.1416. El 1000 solo convierte metros a milímetros para que las unidades cuadren.</p>
+<p>El avance depende de la operación:</p>
+<ul>
+<li>
+<strong>fn (avance por revolución, mm/rev):</strong> se usa en torno y en taladrado. Es cuánto avanza la herramienta (o la pieza) por cada vuelta completa del husillo.</li>
+<li>
+<strong>fz (avance por diente, mm/diente):</strong> se usa en fresado. Es cuánta viruta arranca cada filo de la fresa en cada pasada.</li>
+<li>
+<strong>Vf (avance por minuto, mm/min):</strong> es lo que realmente se programa como velocidad de avance en el control CNC. En fresado, Vf = fz × Z × RPM (donde Z es el número de dientes o filos de la fresa). En torno y taladro, Vf = fn × RPM.</li>
+</ul>
+<p>Tres ejemplos resueltos, de los casos más comunes en un taller:</p>
+
+<h3>Ejemplo 1: broca de 10 mm en acero (HSS)</h3>
+<p>Broca HSS, Ø10 mm, acero de bajo carbono. De la tabla de velocidad de corte, Vc ≈ 25 m/min para HSS en acero.</p>
+<p>RPM = (25 × 1000) / (3.1416 × 10) = 25,000 / 31.42 ≈ <strong>796 RPM</strong>.</p>
+<p>Con un avance fn de 0.15 mm/rev (típico para una broca mediana en acero), el avance por minuto es Vf = 0.15 × 796 ≈ <strong>119 mm/min</strong>.</p>
+
+<h3>Ejemplo 2: fresa de carburo de 12 mm, 4 filos, en aluminio</h3>
+<p>Fresa de carburo, Ø12 mm, Z=4, aluminio. En aluminio el carburo trabaja mucho más rápido: tomamos Vc = 400 m/min.</p>
+<p>RPM = (400 × 1000) / (3.1416 × 12) = 400,000 / 37.70 ≈ <strong>10,611 RPM</strong>.</p>
+<p>Con fz = 0.10 mm/diente, Vf = fz × Z × RPM = 0.10 × 4 × 10,611 ≈ <strong>4,244 mm/min</strong>. Así de rápido se mecaniza el aluminio cuando la máquina lo permite — y por qué compite tan bien contra el acero en tiempo de ciclo a pesar de tener piezas más grandes.</p>
+
+<h3>Ejemplo 3: cilindrado en torno, pieza de 50 mm en acero (carburo)</h3>
+<p>Inserto de carburo, pieza de acero Ø50 mm. Vc = 200 m/min.</p>
+<p>RPM = (200 × 1000) / (3.1416 × 50) = 200,000 / 157.1 ≈ <strong>1,273 RPM</strong>.</p>
+<p>Con fn = 0.2 mm/rev, Vf = 0.2 × 1,273 ≈ <strong>255 mm/min</strong>. Ojo: en torno el diámetro cambia según dónde estés cortando (cilindrado exterior vs. refrentado hacia el centro), así que el RPM ideal también cambia durante la misma pasada — la mayoría de los controles CNC modernos lo ajustan solos con velocidad de corte constante (G96).</p>
+
+<p><img src="https://hercan.com.mx/blog/velocidades-y-avances-de-corte-1.webp" alt="Operador ajustando el RPM en el panel de control de un torno CNC según la velocidad de corte calculada"></p>
+
+<p>Para no tener que sacar la calculadora cada vez, aquí está el resumen:</p>
+<table>
+<thead><tr>
+<th>Quiero calcular</th>
+<th>Fórmula</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>RPM desde Vc</td>
+<td>RPM = (Vc × 1000) / (π × D [mm])</td>
+</tr>
+<tr>
+<td>Vc desde RPM</td>
+<td>Vc = (π × D [mm] × RPM) / 1000</td>
+</tr>
+<tr>
+<td>Avance por minuto en fresado</td>
+<td>Vf = fz × Z × RPM</td>
+</tr>
+<tr>
+<td>Avance por minuto en torno/taladro</td>
+<td>Vf = fn × RPM</td>
+</tr>
+<tr>
+<td>SFM a m/min (catálogos en pulgadas)</td>
+<td>m/min = SFM × 0.3048</td>
+</tr>
+<tr>
+<td>m/min a SFM</td>
+<td>SFM = m/min × 3.281</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Tabla de velocidad de corte (Vc) por material: HSS vs. carburo</h2>
+<p>Esta es la tabla central de toda la guía. Los materiales están agrupados según la <strong>clasificación ISO 513</strong> (P/M/K/N/S/H), el mismo estándar que usan Iscar, Toolmex y prácticamente cualquier fabricante serio para catalogar sus herramientas. Todos los valores son para corte con refrigeración normal y condiciones estables; ajusta a la baja si el sistema es poco rígido o si trabajas en seco.</p>
+<table>
+<thead><tr>
+<th>Grupo ISO</th>
+<th>Material</th>
+<th>Vc con HSS (m/min)</th>
+<th>Vc con carburo (m/min)</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>P</td>
+<td><a href="/para/acero">Acero al carbono / baja aleación</a></td>
+<td>20–35</td>
+<td>120–250</td>
+</tr>
+<tr>
+<td>M</td>
+<td>
+<a href="/para/acero-inoxidable">Acero inoxidable</a> (austenítico/dúplex)</td>
+<td>12–20</td>
+<td>80–150</td>
+</tr>
+<tr>
+<td>K</td>
+<td>
+<a href="/para/fundicion">Fundición</a> gris / nodular</td>
+<td>15–25</td>
+<td>70–150</td>
+</tr>
+<tr>
+<td>N</td>
+<td>
+<a href="/para/aluminio">Aluminio</a> y no ferrosos (latón, cobre)</td>
+<td>60–100</td>
+<td>300–600*</td>
+</tr>
+<tr>
+<td>S</td>
+<td>
+<a href="/para/superaleaciones">Superaleaciones</a> / titanio / base níquel</td>
+<td>No recomendado</td>
+<td>20–70**</td>
+</tr>
+<tr>
+<td>H</td>
+<td>
+<a href="/para/endurecidos">Aceros endurecidos</a> (&gt;45 HRC)</td>
+<td>No aplica</td>
+<td>25–80***</td>
+</tr>
+</tbody>
+</table>
+<p><em>* En aluminio, con recubrimientos especiales y muy alta velocidad se puede llegar hasta 800–1000 m/min. ** El titanio tiende al extremo alto del rango y las aleaciones base níquel (Inconel) al extremo bajo — son familias con comportamiento muy distinto aunque compartan grupo ISO. *** Por encima de ~50 HRC, cerámica o CBN normalmente rinden mejor que el carburo.</em></p>
+<p>Todo esto es orientativo para <a href="/material/carburo">insertos y herramientas de carburo</a> o <a href="/material/hss">HSS</a> en condiciones “de catálogo”. El grado específico (recubrimiento, geometría, calidad del carburo) mueve estos números — la ficha técnica del fabricante siempre es la referencia final.</p>
+
+<h2>Velocidad de corte y avance por operación: torneado, fresado, taladrado y roscado</h2>
+<p>La tabla anterior te da la Vc por material, pero cada operación la aprovecha distinto: no es lo mismo mantener una Vc constante en cilindrado que arrancar y frenar el filo miles de veces por minuto en fresado, o empujar una broca a ciegas dentro de un barreno. Como referencia rápida, así se comportan las cuatro operaciones más comunes, tomando <strong>acero (P)</strong> como material de referencia — ajusta con la tabla anterior si tu material es otro.</p>
+<table>
+<thead><tr>
+<th>Operación</th>
+<th>Vc con HSS (m/min)</th>
+<th>Vc con carburo (m/min)</th>
+<th>Avance orientativo</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Torneado (cilindrado)</td>
+<td>20–35</td>
+<td>120–250</td>
+<td>fn 0.05–0.40 mm/rev</td>
+</tr>
+<tr>
+<td>Fresado</td>
+<td>15–25</td>
+<td>100–200</td>
+<td>fz 0.02–0.15 mm/diente</td>
+</tr>
+<tr>
+<td>Taladrado</td>
+<td>15–30</td>
+<td>60–100</td>
+<td>fn 0.05–0.30 mm/rev</td>
+</tr>
+<tr>
+<td>Roscado con machuelo</td>
+<td>6–12</td>
+<td>15–25</td>
+<td>= paso de la rosca (fijo)</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Torneado</h3>
+<p>En <a href="/categoria/torneado">torneado</a>, la Vc se mantiene razonablemente constante si el control tiene velocidad de corte constante (G96/CSS); si no, hay que recalcular el RPM cada vez que cambia el diámetro de corte. El avance controla directamente el acabado: baja fn para la pasada de acabado, súbelo en desbaste para quitar material más rápido sin perder vida de herramienta. Revisa nuestra <a href="/blog/buriles-para-torno-guia">guía de buriles para torno</a> y la <a href="/blog/insertos-de-carburo-guia">guía de insertos de carburo</a> para elegir geometría y grado según el material.</p>
+
+<h3>Fresado</h3>
+<p>En <a href="/categoria/fresado">fresado</a>, el número de dientes (Z) de la fresa cambia todo: una fresa de más filos permite más avance por minuto a la misma Vc, pero también genera más calor y necesita más potencia de husillo. El diámetro real de corte importa tanto como el nominal — con fresas pequeñas o en corte con parte del diámetro (menos del 50% de engagement radial), casi siempre puedes subir el avance por diente sin problema.</p>
+<blockquote><p>🔧 <strong>¿Vas a elegir una fresa de carburo?</strong> <a href="/blog/fresas-de-carburo-guia">Guía completa de fresas de carburo (endmills) »</a></p></blockquote>
+
+<h3>Taladrado</h3>
+<p>En <a href="/categoria/perforacion">taladrado</a>, la Vc se calcula sobre el diámetro exterior de la broca, que es el punto donde el filo se mueve más rápido y donde más se desgasta. La refrigeración es crítica porque la viruta tiene que salir por la misma flauta por la que entra el refrigerante — en barrenos profundos (más de 3–5 veces el diámetro), hay que bajar Vc y avance, o usar broca con refrigeración interna.</p>
+<blockquote><p>🛠️ <strong>¿Qué broca usar según el metal?</strong> <a href="/blog/brocas-para-metal-guia">Guía completa de brocas para metal »</a></p></blockquote>
+
+<h3>Roscado con machuelo</h3>
+<p>En <a href="/categoria/roscado">roscado</a> con macho (machuelo), el avance <strong>no se elige</strong>: tiene que ser exactamente igual al paso de la rosca (mm/rev = paso), porque el machuelo va guiado por el filete que ya está cortando. Programar un avance distinto al paso rompe el macho o daña la rosca. La Vc sí se ajusta por material, y suele ser más baja que en taladrado del mismo material porque el macho corta por los tres flancos del filete a la vez.</p>
+<blockquote><p>🔩 <strong>¿Cómo elegir el machuelo correcto?</strong> <a href="/blog/machuelos-para-roscar-guia">Guía completa de machuelos para roscar »</a></p></blockquote>
+
+<h2>Avance (fn) en torneado y taladrado, por material</h2>
+<p>El avance por revolución (fn) es la variable que más rápido puedes ajustar en piso para corregir acabado o tiempo de ciclo, sin tener que recalcular RPM. Como referencia:</p>
+<table>
+<thead><tr>
+<th>Material</th>
+<th>Torneado – desbaste (mm/rev)</th>
+<th>Torneado – acabado (mm/rev)</th>
+<th>Taladrado (mm/rev)</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Acero (P)</td>
+<td>0.20–0.40</td>
+<td>0.05–0.15</td>
+<td>0.10–0.20</td>
+</tr>
+<tr>
+<td>Inoxidable (M)</td>
+<td>0.15–0.30</td>
+<td>0.05–0.12</td>
+<td>0.08–0.15</td>
+</tr>
+<tr>
+<td>Fundición (K)</td>
+<td>0.20–0.45</td>
+<td>0.10–0.20</td>
+<td>0.12–0.25</td>
+</tr>
+<tr>
+<td>Aluminio (N)</td>
+<td>0.15–0.40</td>
+<td>0.05–0.15</td>
+<td>0.10–0.25</td>
+</tr>
+<tr>
+<td>Superaleaciones (S)</td>
+<td>0.10–0.25</td>
+<td>0.05–0.10</td>
+<td>0.05–0.10</td>
+</tr>
+<tr>
+<td>Endurecidos (H)</td>
+<td>0.05–0.15</td>
+<td>0.02–0.08</td>
+<td>—*</td>
+</tr>
+</tbody>
+</table>
+<p><em>* Los aceros endurecidos casi siempre se taladran antes del tratamiento térmico; taladrar en duro (&gt;45 HRC) es poco común y requiere broca especial.</em></p>
+<p>El avance de taladrado en la tabla asume una broca de diámetro medio (6–12 mm). Brocas más chicas necesitan avance proporcionalmente menor (para no quebrarse) y brocas más grandes toleran más — lo ves en la siguiente tabla, aplicada a fresado.</p>
+
+<h2>Avance por diente (fz) en fresado, por diámetro de fresa</h2>
+<p>En fresado, el diámetro de la fresa manda sobre el avance por diente casi tanto como el material: una fresa muy delgada se rompe si le exiges el mismo fz que a una gruesa, sin importar qué tan blando sea el material.</p>
+<table>
+<thead><tr>
+<th>Ø de la fresa</th>
+<th>Acero (P)</th>
+<th>Inoxidable / fundición (M/K)</th>
+<th>Aluminio (N)</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>≤ 6 mm</td>
+<td>0.01–0.03</td>
+<td>0.01–0.025</td>
+<td>0.02–0.05</td>
+</tr>
+<tr>
+<td>6–12 mm</td>
+<td>0.03–0.08</td>
+<td>0.02–0.06</td>
+<td>0.05–0.12</td>
+</tr>
+<tr>
+<td>12–20 mm</td>
+<td>0.06–0.12</td>
+<td>0.05–0.10</td>
+<td>0.10–0.20</td>
+</tr>
+<tr>
+<td>&gt; 20 mm</td>
+<td>0.08–0.15</td>
+<td>0.06–0.12</td>
+<td>0.15–0.25</td>
+</tr>
+</tbody>
+</table>
+<p>Valores en mm/diente. Recuerda multiplicar por el número real de dientes (Z) de tu fresa para sacar el avance por minuto (Vf = fz × Z × RPM) — una fresa de 4 filos avanza el doble por minuto que una de 2 filos a la misma fz y el mismo RPM.</p>
+
+<h2>Refrigerante y lubricación: qué usar según el material</h2>
+<table>
+<thead><tr>
+<th>Material</th>
+<th>Refrigerante recomendado</th>
+<th>Por qué</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Acero (P)</td>
+<td>Emulsión soluble 5–8%</td>
+<td>Mejora acabado y vida de herramienta; en seco funciona solo a Vc baja</td>
+</tr>
+<tr>
+<td>Inoxidable (M)</td>
+<td>Emulsión soluble 8–10%, caudal alto</td>
+<td>Baja conductividad térmica: el calor se queda en el filo si no lo sacas con refrigerante</td>
+</tr>
+<tr>
+<td>Fundición (K)</td>
+<td>De preferencia en seco (o aire)</td>
+<td>El grafito libre ya lubrica; el refrigerante mezclado con polvo de fundición forma pasta abrasiva</td>
+</tr>
+<tr>
+<td>Aluminio (N)</td>
+<td>Emulsión soluble o aceite entero en roscado</td>
+<td>Evita que el material se pegue al filo (filo recrecido / BUA); una herramienta bien afilada ayuda más que el refrigerante</td>
+</tr>
+<tr>
+<td>Superaleaciones (S)</td>
+<td>Aceite entero o emulsión a alta presión, caudal abundante</td>
+<td>Generan calor muy localizado en el filo; la presión ayuda a que el refrigerante realmente llegue ahí</td>
+</tr>
+<tr>
+<td>Endurecidos (H)</td>
+<td>De preferencia en seco (con CBN/cerámica)</td>
+<td>El choque térmico del refrigerante puede fisurar insertos de cerámica o CBN</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Señales de que los parámetros de corte están mal puestos</h2>
+<p>Antes de tocar el programa, la pieza y la viruta ya te están diciendo qué está mal:</p>
+<p><img src="https://hercan.com.mx/blog/velocidades-y-avances-de-corte-2.webp" alt="Viruta metálica saliendo con el color correcto al tener bien ajustada la velocidad de corte y el avance"></p>
+<table>
+<thead><tr>
+<th>Señal</th>
+<th>Causa probable</th>
+<th>Qué ajustar</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Viruta azulada, violeta o quemada</td>
+<td>Vc demasiado alta, o refrigerante insuficiente</td>
+<td>Baja Vc 10–20% y revisa el caudal de refrigerante</td>
+</tr>
+<tr>
+<td>Vibración o chillido (chatter)</td>
+<td>Vc/avance inadecuados, voladizo excesivo, sujeción floja</td>
+<td>Baja Vc, ajusta avance, reduce voladizo y revisa sujeción de pieza y herramienta</td>
+</tr>
+<tr>
+<td>Acabado superficial rugoso</td>
+<td>Avance muy alto para el radio de punta, o Vc muy baja (filo recrecido)</td>
+<td>Baja el avance o sube la Vc; en aluminio revisa si hay material pegado al filo</td>
+</tr>
+<tr>
+<td>Desgaste de flanco acelerado</td>
+<td>Vc demasiado alta para el material o el recubrimiento</td>
+<td>Baja Vc 10–15% y confirma que el recubrimiento sea el correcto para ese material</td>
+</tr>
+<tr>
+<td>El filo se astilla o se rompe</td>
+<td>Avance o profundidad de corte excesivos, entrada brusca al material</td>
+<td>Baja avance/profundidad y suaviza la entrada</td>
+</tr>
+<tr>
+<td>Viruta larga, enredada o en rizo continuo</td>
+<td>Avance bajo o geometría rompevirutas inadecuada para ese material</td>
+<td>Sube el avance moderadamente o cambia a un inserto con la geometría rompevirutas correcta</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Errores comunes al calcular velocidades y avances</h2>
+<ul>
+<li>
+<strong>Usar el diámetro equivocado.</strong> En torno, el RPM se calcula con el diámetro de la pieza en el punto de corte, no con un diámetro fijo — en refrentado, el RPM ideal cambia a cada instante conforme te acercas al centro.</li>
+<li>
+<strong>Copiar la Vc de otro material.</strong> La tabla que usaste para acero no aplica a inoxidable ni a aluminio, aunque sea “parecido”. Cada material tiene su propia fila.</li>
+<li>
+<strong>Ignorar el voladizo.</strong> Una fresa o barra de mandrinar montada con mucho voladizo vibra a parámetros que serían perfectamente normales con menos voladizo. Si aparece chatter, antes de bajar Vc revisa cuánto sobresale la herramienta.</li>
+<li>
+<strong>Olvidar el número real de filos o dientes (Z).</strong> Programar el avance por minuto sin multiplicar por Z (o multiplicando por el Z equivocado si la fresa tiene insertos faltantes) da un avance por diente totalmente distinto al que crees que estás usando.</li>
+<li>
+<strong>Tratar el avance del machuelo como si fuera ajustable.</strong> Ya lo vimos arriba: en roscado con macho, el avance es el paso de la rosca, punto.</li>
+<li>
+<strong>No ajustar por recubrimiento.</strong> Un inserto sin recubrir y uno con <a href="/recubrimiento/tialn">TiAlN</a> no deberían correr a la misma Vc, aunque sea el mismo sustrato de carburo.</li>
+<li>
+<strong>Usar los mismos parámetros en desbaste y acabado.</strong> Son objetivos distintos (velocidad de remoción vs. calidad superficial): casi nunca comparten la mejor combinación de Vc y avance.</li>
+<li>
+<strong>No bajar parámetros conforme se desgasta la herramienta.</strong> Un inserto o una fresa cerca del final de su vida útil ya no aguanta la Vc del día uno, aunque el programa no haya cambiado.</li>
+</ul>
+<p>Si después de revisar todo esto sigues sin estar seguro del grado de inserto, el recubrimiento o la geometría correcta para tu aplicación, es más rápido <a href="/cotizacion">cotizar con un especialista Hercan</a> que perder material y horas de máquina probando a ciegas.</p>
+
+<h2>Preguntas frecuentes</h2>
+
+<h3>¿Qué es la velocidad de corte?</h3>
+<p>Es la rapidez con la que el filo de la herramienta se desplaza sobre la superficie del material mientras corta, medida en metros por minuto (m/min). No es lo mismo que el RPM: el RPM es la velocidad de giro del husillo, y depende del diámetro de la herramienta o de la pieza para lograr una Vc determinada. A mayor diámetro, se necesita menos RPM para la misma Vc.</p>
+
+<h3>¿De qué depende la velocidad de corte?</h3>
+<p>Principalmente del material a maquinar (entre más duro o abrasivo, más baja), del material de la herramienta (HSS, carburo, cerámica o CBN), del recubrimiento, de la rigidez del sistema máquina-pieza-herramienta y de si buscas desbastar rápido o dejar buen acabado. Ningún valor de Vc es universal: siempre se ajusta por esa combinación de factores.</p>
+
+<h3>¿Para qué sirven los parámetros de corte en CNC?</h3>
+<p>Los parámetros de corte (Vc, RPM, avance y profundidad de corte) traducen un programa de CNC en un resultado físico: determinan cuánto tarda la pieza, qué acabado superficial queda, cuánto dura la herramienta antes de desgastarse y si el corte sale estable o con vibración. Ponerlos bien es la diferencia entre una operación repetible y una de prueba y error.</p>
+
+<h3>¿Para qué sirve el avance de corte?</h3>
+<p>El avance controla cuánto material se quita por vuelta (fn) o por diente (fz), lo que define directamente el espesor de viruta, el acabado superficial y buena parte del tiempo de ciclo. Un avance bajo da mejor acabado pero tarda más y puede generar filo recrecido; uno alto quita material más rápido pero deja una superficie más rugosa y exige más de la herramienta.</p>
+
+<h3>¿Cuál es la relación entre la velocidad de corte y la dureza del material?</h3>
+<p>Es una relación inversa: entre más duro o tenaz el material, más baja debe ser la Vc, porque genera más calor y desgasta el filo más rápido a la misma velocidad. Por eso el aluminio se corta varias veces más rápido que el acero, el acero más rápido que el inoxidable, y los aceros endurecidos (arriba de 45 HRC) requieren velocidades bajas y casi siempre herramienta de carburo, cerámica o CBN en vez de HSS.</p>
+
+<h3>¿Qué diferencia hay entre velocidad de corte, avance y RPM?</h3>
+<p>La velocidad de corte (Vc) es qué tan rápido se mueve el filo sobre el material, en m/min. El RPM es la velocidad de giro necesaria para lograr esa Vc según el diámetro. El avance es cuánto se desplaza la herramienta por vuelta o por diente. Los tres están relacionados por la fórmula RPM = (Vc × 1000) / (π × D), pero cada uno controla un aspecto distinto del corte.</p>
+
+<h2>Conclusión</h2>
+<p>Las tablas de esta guía te dan un punto de partida confiable para calcular velocidad de corte, RPM y avance en acero, inoxidable, fundición, aluminio, superaleaciones y endurecidos — en torneado, fresado, taladrado y roscado. Pero siguen siendo eso: un punto de partida orientativo. El grado exacto del carburo, el recubrimiento, la geometría del inserto y la rigidez real de tu máquina mueven estos números hacia arriba o hacia abajo, y la ficha técnica del fabricante siempre tiene la última palabra. Si algo no cuadra —vibración, viruta quemada, vida de herramienta más corta de lo esperado— revisa primero la tabla de señales antes de cambiar todo el programa.</p>
+<blockquote><p>💬 <strong>¿Necesitas ayuda para elegir la herramienta correcta para tus parámetros de corte?</strong> <a href="/cotizacion">Solicita tu cotización con un especialista Hercan »</a></p></blockquote>

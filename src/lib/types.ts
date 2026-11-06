@@ -53,7 +53,12 @@ export interface Article {
   excerpt: string | null;
   contentHtml?: string | null;
   publishedAt: string;
+  /** Última edición del contenido (si la hubo); va a dateModified y al sitemap. */
+  updatedAt?: string | null;
+  /** Portada para la página (ruta local /blog/… o URL). */
   image: string | null;
+  /** Versión 1200x630 de la portada para redes (Open Graph / X). */
+  ogImage?: string | null;
   imageAlt: string | null;
   author: string | null;
   tags: string[];

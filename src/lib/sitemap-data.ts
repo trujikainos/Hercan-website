@@ -1,6 +1,7 @@
 import "server-only";
 import { site } from "@/lib/site";
-import { getAllProductHandles, getArticles } from "@/lib/shopify";
+import { getAllProductHandles } from "@/lib/shopify";
+import { getArticles } from "@/lib/blog";
 import { brandSlug } from "@/lib/catalog";
 import { indexBrands } from "@/lib/part-number-index";
 import {
@@ -109,7 +110,7 @@ export async function siloLastmods(): Promise<Record<Silo, string>> {
       now,
     ),
     blog: maxDate(
-      articles.map((a) => a.publishedAt),
+      articles.map((a) => a.updatedAt ?? a.publishedAt),
       now,
     ),
   };
@@ -199,7 +200,8 @@ export async function blogUrls(): Promise<UrlEntry[]> {
     { loc: `${site.url}/blog`, lastmod: now, changefreq: "weekly", priority: 0.7 },
     ...articles.map((a): UrlEntry => ({
       loc: `${site.url}/blog/${a.handle}`,
-      lastmod: iso(a.publishedAt, now),
+      // Última edición real (p. ej. la corrección de la guía de discos) o la publicación.
+      lastmod: iso(a.updatedAt ?? a.publishedAt, now),
       changefreq: "monthly",
       priority: 0.6,
     })),

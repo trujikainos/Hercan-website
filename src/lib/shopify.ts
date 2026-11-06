@@ -1,8 +1,8 @@
 import "server-only";
 import { cache } from "react";
-import type { Product, Category, Availability, Article } from "./types";
+import type { Product, Category, Availability } from "./types";
 import { MOCK_PRODUCTS, CATEGORIES } from "./mock-data";
-import { sanitizeHtml, sanitizeRichHtml } from "./sanitize";
+import { sanitizeHtml } from "./sanitize";
 
 /**
  * Capa de acceso a datos de la tienda.
@@ -595,77 +595,6 @@ export async function searchProducts(query: string, limit = 7): Promise<SearchRe
   });
 }
 
-// ---- Blog (Shopify nativo, vía Storefront API) ----
-const BLOG_HANDLE = process.env.SHOPIFY_BLOG_HANDLE || "news";
-
-const ARTICLE_FIELDS = `
-  id handle title excerpt publishedAt tags
-  image { url altText }
-  authorV2 { name }`;
-
-const ARTICLES_QUERY = `
-  query Articles($blog: String!, $first: Int!) {
-    blog(handle: $blog) {
-      articles(first: $first, sortKey: PUBLISHED_AT, reverse: true) {
-        nodes { ${ARTICLE_FIELDS} }
-      }
-    }
-  }`;
-
-const ARTICLE_BY_HANDLE_QUERY = `
-  query Article($blog: String!, $handle: String!) {
-    blog(handle: $blog) {
-      articleByHandle(handle: $handle) {
-        ${ARTICLE_FIELDS}
-        contentHtml
-        seo { title description }
-      }
-    }
-  }`;
-
-type ShopifyArticleNode = {
-  id: string;
-  handle: string;
-  title: string;
-  excerpt: string | null;
-  contentHtml?: string;
-  publishedAt: string;
-  tags?: string[] | null;
-  image?: { url: string; altText: string | null } | null;
-  authorV2?: { name: string } | null;
-  seo?: { title: string | null; description: string | null } | null;
-};
-
-function mapArticle(n: ShopifyArticleNode): Article {
-  return {
-    id: n.id,
-    handle: n.handle,
-    title: n.title,
-    excerpt: n.excerpt || null,
-    contentHtml: n.contentHtml ? sanitizeRichHtml(n.contentHtml) || null : null,
-    publishedAt: n.publishedAt,
-    image: n.image?.url ?? null,
-    imageAlt: n.image?.altText ?? null,
-    author: n.authorV2?.name ?? null,
-    tags: n.tags ?? [],
-    seoTitle: n.seo?.title ?? null,
-    seoDescription: n.seo?.description ?? null,
-  };
-}
-
-export async function getArticles(first = 24): Promise<Article[]> {
-  if (!isShopifyConnected) return [];
-  const data = await storefront<{
-    blog: { articles: { nodes: ShopifyArticleNode[] } } | null;
-  }>(ARTICLES_QUERY, { blog: BLOG_HANDLE, first });
-  return (data.blog?.articles?.nodes ?? []).map(mapArticle);
-}
-
-export async function getArticleByHandle(handle: string): Promise<Article | null> {
-  if (!isShopifyConnected) return null;
-  const data = await storefront<{
-    blog: { articleByHandle: ShopifyArticleNode | null } | null;
-  }>(ARTICLE_BY_HANDLE_QUERY, { blog: BLOG_HANDLE, handle });
-  const a = data.blog?.articleByHandle;
-  return a ? mapArticle(a) : null;
-}
+// ---- Blog ----
+// Desde el 6 nov 2026 el blog se lee del repo (src/lib/blog.ts + content/blog), no de
+// Shopify. Los artículos originales siguen en el blog "news" de Shopify como respaldo.

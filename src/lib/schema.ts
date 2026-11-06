@@ -204,9 +204,16 @@ export function blogPostingNode(a: Article) {
     "@id": `${url}#article`,
     headline: a.title,
     ...(a.excerpt ? { description: a.excerpt } : {}),
-    ...(a.image ? { image: [a.image] } : {}),
+    // Las portadas viven en el sitio (/blog/…jpg): el schema pide URL absoluta.
+    ...(a.image ? { image: [a.image.startsWith("/") ? absoluteUrl(a.image) : a.image] } : {}),
     datePublished: a.publishedAt,
-    ...(a.author ? { author: { "@type": "Person", name: a.author } } : {}),
+    ...(a.updatedAt ? { dateModified: a.updatedAt } : {}),
+    // "HERCAN" es la organización, no una persona: se enlaza al nodo Organization.
+    ...(a.author
+      ? a.author.trim().toUpperCase() === site.name.toUpperCase()
+        ? { author: { "@id": ORG_ID } }
+        : { author: { "@type": "Person", name: a.author } }
+      : {}),
     publisher: { "@id": ORG_ID },
     mainEntityOfPage: url,
     inLanguage: site.lang,

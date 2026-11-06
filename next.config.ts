@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
   // sharp es binario nativo: se usa en /api/og-image (optimizador de OG image).
   // Marcarlo como externo evita que el bundler del server intente empaquetarlo.
   serverExternalPackages: ["sharp"],
+  // El blog se lee de content/blog con fs en tiempo de petición (src/lib/blog.ts).
+  // Lo usan /blog, /blog/[handle], los sitemaps y /llms.txt: se incluye la carpeta
+  // en todas las funciones para que Vercel la empaquete (son ~300 KB de texto).
+  outputFileTracingIncludes: {
+    "/**": ["./content/blog/**/*"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArticleCard } from "@/components/article-card";
-import { getArticles } from "@/lib/shopify";
+import { getArticles } from "@/lib/blog";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, breadcrumbNode } from "@/lib/schema";
 import { BLOG_CATEGORIES, articleCategory } from "@/lib/blog-categories";

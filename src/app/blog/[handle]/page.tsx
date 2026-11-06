@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
 import { pageGraph, breadcrumbNode, blogPostingNode, faqNode } from "@/lib/schema";
-import { getArticleByHandle } from "@/lib/shopify";
+import { getArticleByHandle } from "@/lib/blog";
 import { storeForGuide } from "@/lib/blog-links";
 
 // El título SEO de los artículos en Shopify ya trae "| HERCAN"; el template del
@@ -13,12 +13,10 @@ function tituloConMarca(t: string): string {
   return /HERCAN\s*$/i.test(t) ? t.trim() : `${t.trim()} | HERCAN`;
 }
 
-// Los artículos se publican en Shopify SIN redeploy del sitio → esta ficha debe
-// renderizar ON-DEMAND (dinámica). Si se pre-genera estáticamente, un handle
-// nuevo (no visto en el build) intenta generarse en runtime y el layout —que lee
-// cookies del carrito— rompe con "Page changed from static to dynamic at runtime,
-// reason: cookies". force-dynamic evita ese conflicto; el fetch a Shopify sigue
-// cacheado a su nivel, así que no es más lento de forma notable.
+// Desde el 6 nov 2026 las guías se leen del repo (src/lib/blog.ts), no de Shopify.
+// Se mantiene force-dynamic porque el layout lee las cookies del carrito: una
+// página pre-generada rompería con "Page changed from static to dynamic at runtime,
+// reason: cookies". Leer los archivos de content/blog es instantáneo.
 export const dynamic = "force-dynamic";
 
 // Quita acentos y símbolos → id estable para las anclas del índice (TOC).
@@ -82,15 +80,19 @@ export async function generateMetadata({
   const { handle } = await params;
   const a = await getArticleByHandle(handle);
   if (!a) return {};
-  // OG/Twitter usan una versión OPTIMIZADA (JPG 1200x630, <200 KB) de la MISMA
-  // featured image, servida por /api/og-image. Así el preview carga en todas las
-  // plataformas —incluido WhatsApp, que descarta la featured original en PNG
-  // pesado (~1.5 MB)—. width/height explícitos → el preview aparece al instante.
-  // Si el artículo no tiene portada, cae al OG por defecto del layout.
-  const ogImage = a.image
+  // OG/Twitter usan la versión 1200x630 de la portada (JPG <150 KB) que vive junto a
+  // ella en public/blog (`ogImage`), para que el preview cargue en todas las
+  // plataformas, incluido WhatsApp. Si una portada fuera una URL externa sin versión
+  // OG, se optimiza al vuelo con /api/og-image. Sin portada, cae al OG del layout.
+  const ogUrl = a.ogImage
+    ? a.ogImage
+    : a.image && /^https?:\/\//.test(a.image)
+      ? `/api/og-image?src=${encodeURIComponent(a.image)}`
+      : a.image;
+  const ogImage = ogUrl
     ? [
         {
-          url: `/api/og-image?src=${encodeURIComponent(a.image)}`,
+          url: ogUrl,
           width: 1200,
           height: 630,
           alt: a.imageAlt ?? a.title,

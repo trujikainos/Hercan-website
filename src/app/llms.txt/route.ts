@@ -1,5 +1,6 @@
 import { site } from "@/lib/site";
-import { getProducts, getCategories, getArticles } from "@/lib/shopify";
+import { getProducts, getCategories } from "@/lib/shopify";
+import { getArticles } from "@/lib/blog";
 import { brandSlug } from "@/lib/catalog";
 import { BRAND_CONTENT, CATEGORY_CONTENT } from "@/lib/taxonomy-content";
 import { HOME_FAQS } from "@/lib/faq";
