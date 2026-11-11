@@ -10,7 +10,8 @@ export type GuideLink = { href: string; title: string };
 const G: Record<string, GuideLink> = {
   brocas: {
     href: "/blog/brocas-para-metal-guia",
-    title: "Brocas para metal: cómo elegir la correcta",
+    // "Tipos de brocas" (3,600/mes) es de la guía; "brocas para metal" es de /tipo/broca.
+    title: "Tipos de brocas y cómo elegir la de metal",
   },
   machuelos: {
     href: "/blog/machuelos-para-roscar-guia",

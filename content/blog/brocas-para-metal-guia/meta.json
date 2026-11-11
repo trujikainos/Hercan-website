@@ -1,9 +1,9 @@
 {
   "handle": "brocas-para-metal-guia",
-  "title": "Brocas para metal: guía para elegir la correcta (tipos y usos)",
-  "seoTitle": "Brocas para metal: cómo elegir la correcta | HERCAN",
-  "seoDescription": "Guía de brocas para metal: HSS, cobalto, carburo y bimetal, qué broca usar según el metal, RPM recomendadas y errores comunes. Cotiza con HERCAN en México.",
-  "excerpt": "¿Broca quemada o pieza arruinada? Casi siempre es la broca equivocada. Te explicamos qué broca para metal usar según el material, sus RPM y cómo reconocer una buena.",
+  "title": "Tipos de brocas: guía para elegir la broca para metal correcta",
+  "seoTitle": "Tipos de brocas: para metal, madera y concreto | HERCAN",
+  "seoDescription": "Tipos de brocas para metal, madera, concreto y vidrio, cómo reconocerlas y cómo elegir la broca para metal correcta: HSS, cobalto o carburo y sus RPM.",
+  "excerpt": "Hay una broca para cada material: metal, madera, concreto o vidrio. Te mostramos los tipos de brocas, cómo reconocerlas y cómo elegir la broca para metal correcta según el material, sus RPM y su calidad.",
   "tags": [
     "brocas",
     "carburo",
@@ -17,5 +17,6 @@
   "publishedAt": "2026-07-30T21:43:08Z",
   "image": "/blog/brocas-para-metal-guia.jpg",
   "ogImage": "/blog/brocas-para-metal-guia-og.jpg",
-  "imageAlt": "Mecánico tomando una broca para metal de un juego en un taller"
+  "imageAlt": "Mecánico tomando una broca para metal de un juego en un taller",
+  "updatedAt": "2026-11-11T18:00:00Z"
 }
